@@ -39,7 +39,7 @@
   "env": {
     "VERCEL": "1",
     "APP_ENV": "production",
-    "APP_DEBUG": "true",
+    "APP_DEBUG": "false",
     "DB_CONNECTION": "mysql",
     "CACHE_STORE": "array",
     "SESSION_DRIVER": "cookie",
