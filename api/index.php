@@ -1,10 +1,39 @@
 <?php
 
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+ini_set('display_errors', '0');
+error_reporting(0);
 
-// Ensure valid file paths for cache files so Laravel never tries to require the root directory
+// 1. Direct Static File Serving for Vercel Serverless Runtime
+$uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
+$publicFile = realpath(__DIR__ . '/../public' . $uri);
+$publicBase = realpath(__DIR__ . '/../public');
+
+if ($publicFile && $publicBase && str_starts_with($publicFile, $publicBase) && is_file($publicFile) && $uri !== '/' && !str_ends_with($publicFile, 'index.php')) {
+    $ext = strtolower(pathinfo($publicFile, PATHINFO_EXTENSION));
+    $mimes = [
+        'css'   => 'text/css; charset=utf-8',
+        'js'    => 'application/javascript; charset=utf-8',
+        'png'   => 'image/png',
+        'jpg'   => 'image/jpeg',
+        'jpeg'  => 'image/jpeg',
+        'gif'   => 'image/gif',
+        'svg'   => 'image/svg+xml',
+        'ico'   => 'image/x-icon',
+        'webp'  => 'image/webp',
+        'woff'  => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf'   => 'font/ttf',
+        'json'  => 'application/json',
+        'txt'   => 'text/plain',
+    ];
+    header('Content-Type: ' . ($mimes[$ext] ?? 'text/plain'));
+    header('Cache-Control: public, max-age=31536000, immutable');
+    header('Content-Length: ' . filesize($publicFile));
+    readfile($publicFile);
+    exit;
+}
+
+// 2. Ensure valid file paths for cache files so Laravel never tries to require the root directory
 putenv('APP_CONFIG_CACHE=/tmp/storage/framework/cache/config.php');
 $_ENV['APP_CONFIG_CACHE'] = '/tmp/storage/framework/cache/config.php';
 $_SERVER['APP_CONFIG_CACHE'] = '/tmp/storage/framework/cache/config.php';
@@ -25,7 +54,7 @@ putenv('APP_EVENTS_CACHE=/tmp/storage/framework/cache/events.php');
 $_ENV['APP_EVENTS_CACHE'] = '/tmp/storage/framework/cache/events.php';
 $_SERVER['APP_EVENTS_CACHE'] = '/tmp/storage/framework/cache/events.php';
 
-// Set serverless storage and driver defaults
+// 3. Set serverless storage and driver defaults
 putenv('VERCEL=1');
 $_ENV['VERCEL'] = '1';
 $_SERVER['VERCEL'] = '1';
@@ -69,7 +98,7 @@ if (empty($_ENV['APP_MAINTENANCE_DRIVER']) && empty($_SERVER['APP_MAINTENANCE_DR
     $_SERVER['APP_MAINTENANCE_DRIVER'] = 'file';
 }
 
-// Create required /tmp directories for serverless runtime
+// 4. Create required /tmp directories for serverless runtime
 $dirs = [
     '/tmp/storage',
     '/tmp/storage/app',
