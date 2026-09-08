@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION') ?: 'mysql',
 
     /*
     |--------------------------------------------------------------------------
@@ -47,10 +47,10 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
+            'host' => env('DB_HOST') ?: 'mysql-351b4259-anjalimalviya0804-020a.f.aivencloud.com',
+            'port' => env('DB_PORT') ?: '26028',
+            'database' => env('DB_DATABASE') ?: 'defaultdb',
+            'username' => env('DB_USERNAME') ?: 'avnadmin',
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
