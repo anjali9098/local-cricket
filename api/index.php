@@ -5,8 +5,21 @@ error_reporting(0);
 
 // 1. Direct Static File Serving for Vercel Serverless Runtime
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
-$publicFile = realpath(__DIR__ . '/../public' . $uri);
 $publicBase = realpath(__DIR__ . '/../public');
+$publicFile = ($publicBase && $uri !== '/') ? realpath($publicBase . $uri) : false;
+
+// If not found in public and starts with /storage/, check storage/app/public
+if ((!$publicFile || !is_file($publicFile)) && str_starts_with($uri, '/storage/')) {
+    $storageBase = realpath(__DIR__ . '/../storage/app/public');
+    if ($storageBase) {
+        $storageRel = substr($uri, 8); // e.g. /stories/xxx.png
+        $candidate = realpath($storageBase . $storageRel);
+        if ($candidate && str_starts_with($candidate, $storageBase) && is_file($candidate)) {
+            $publicFile = $candidate;
+            $publicBase = $storageBase;
+        }
+    }
+}
 
 if ($publicFile && $publicBase && str_starts_with($publicFile, $publicBase) && is_file($publicFile) && $uri !== '/' && !str_ends_with($publicFile, 'index.php')) {
     $ext = strtolower(pathinfo($publicFile, PATHINFO_EXTENSION));
@@ -20,13 +33,14 @@ if ($publicFile && $publicBase && str_starts_with($publicFile, $publicBase) && i
         'svg'   => 'image/svg+xml',
         'ico'   => 'image/x-icon',
         'webp'  => 'image/webp',
+        'avif'  => 'image/avif',
         'woff'  => 'font/woff',
         'woff2' => 'font/woff2',
         'ttf'   => 'font/ttf',
         'json'  => 'application/json',
         'txt'   => 'text/plain',
     ];
-    header('Content-Type: ' . ($mimes[$ext] ?? 'text/plain'));
+    header('Content-Type: ' . ($mimes[$ext] ?? 'application/octet-stream'));
     header('Cache-Control: public, max-age=31536000, immutable');
     header('Content-Length: ' . filesize($publicFile));
     readfile($publicFile);

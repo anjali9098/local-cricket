@@ -1,2 +1,10 @@
 *
 !.gitignore
+!*/
+!*.jpg
+!*.jpeg
+!*.png
+!*.gif
+!*.webp
+!*.avif
+!*.svg
