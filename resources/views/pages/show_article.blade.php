@@ -19,7 +19,7 @@
                 {{ $article->category ?: 'CRICKET ARTICLE' }}
             </span>
             <div style="font-size: 0.82rem; color: var(--text-dim); font-weight: 600;">
-                ⏱️ {{ $article->read_time ?: '4 MIN READ' }} &bull; {{ $article->created_at ? $article->created_at->format('M d, Y') : ($article->published_date ?: 'Today') }}
+                ⏱️ {{ $article->read_time ?: '4 MIN READ' }} &bull; {{ $article->created_at ? \Carbon\Carbon::parse($article->created_at)->format('M d, Y') : ($article->published_date ?: 'Today') }}
             </div>
         </div>
 

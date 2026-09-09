@@ -109,7 +109,7 @@
 
                 <!-- Card Footer -->
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center;">
-                    <span>CricketKaScore &bull; {{ $item->published_date ?? (isset($item->created_at) && $item->created_at ? $item->created_at->format('M d, Y') : 'Today') }}</span>
+                    <span>CricketKaScore &bull; {{ $item->published_date ?? (isset($item->created_at) && $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('M d, Y') : 'Today') }}</span>
                     @if(!empty($item->read_time))
                         <span>⏱️ {{ $item->read_time }}</span>
                     @endif

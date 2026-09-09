@@ -349,8 +349,8 @@
 
                                 <!-- ADD/UPDATE -->
                                 <td style="padding: 12px 14px; vertical-align: middle; font-size: 0.75rem; color: #475569; line-height: 1.4;">
-                                    <div>{{ $t->created_at ? $t->created_at->format('Y-m-d H:i:s') : '2026-08-31 05:02:24' }} - <strong>{{ $t->user->name ?? 'Admin' }}</strong></div>
-                                    <div>{{ $t->updated_at ? $t->updated_at->format('Y-m-d H:i:s') : '2026-09-02 10:51:33' }} - <strong>{{ $t->user->name ?? 'Admin' }}</strong></div>
+                                    <div>{{ $t->created_at ? \Carbon\Carbon::parse($t->created_at)->format('Y-m-d H:i:s') : '2026-08-31 05:02:24' }} - <strong>{{ $t->user->name ?? 'Admin' }}</strong></div>
+                                    <div>{{ $t->updated_at ? \Carbon\Carbon::parse($t->updated_at)->format('Y-m-d H:i:s') : '2026-09-02 10:51:33' }} - <strong>{{ $t->user->name ?? 'Admin' }}</strong></div>
                                 </td>
 
                                 <!-- ACTION -->

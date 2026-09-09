@@ -341,7 +341,7 @@
                             </div>
                             <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 10px; font-size: 0.72rem; color: var(--text-dim); display: flex; justify-content: space-between;">
                                 <span>CricketKaScore Desk</span>
-                                <span>{{ $p->created_at ? $p->created_at->format('M d') : 'Today' }}</span>
+                                <span>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('M d') : 'Today' }}</span>
                             </div>
                         </div>
                     @empty
@@ -376,7 +376,7 @@
                             </div>
                             <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 10px; font-size: 0.72rem; color: var(--text-dim); display: flex; justify-content: space-between;">
                                 <span>Fantasy Expert</span>
-                                <span>{{ $f->created_at ? $f->created_at->format('M d') : 'Today' }}</span>
+                                <span>{{ $f->created_at ? \Carbon\Carbon::parse($f->created_at)->format('M d') : 'Today' }}</span>
                             </div>
                         </div>
                     @empty
@@ -419,7 +419,7 @@
                         </div>
                         <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 12px; font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between;">
                             <span>CricketKaScore Desk</span>
-                            <span>{{ $preview->created_at ? $preview->created_at->format('M d') : 'Today' }}</span>
+                            <span>{{ $preview->created_at ? \Carbon\Carbon::parse($preview->created_at)->format('M d') : 'Today' }}</span>
                         </div>
                     </div>
                 @endforeach
