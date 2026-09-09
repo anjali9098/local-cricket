@@ -1064,14 +1064,22 @@ class AdminController extends Controller
 
     public function showAddSeriesForm(Request $request)
     {
-        $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = Tournament::find($request->query('edit'));
+        try {
+            $editItem = null;
+            if ($request->query('edit')) {
+                $editItem = Tournament::find($request->query('edit'));
+            }
+            $tournaments = Tournament::with(['teams', 'matches', 'user'])->orderBy('id', 'desc')->get();
+            $allTeams = Team::orderBy('name', 'asc')->get();
+            $allVenues = Venue::orderBy('name', 'asc')->get();
+            return view('admin.add_series', compact('tournaments', 'editItem', 'allTeams', 'allVenues'));
+        } catch (\Throwable $e) {
+            $tournaments = Tournament::orderBy('id', 'desc')->get();
+            $editItem = null;
+            $allTeams = collect([]);
+            $allVenues = collect([]);
+            return view('admin.add_series', compact('tournaments', 'editItem', 'allTeams', 'allVenues'))->with('error', 'Loaded in safe mode: ' . $e->getMessage());
         }
-        $tournaments = Tournament::with(['teams', 'matches', 'user'])->orderBy('id', 'desc')->get();
-        $allTeams = Team::orderBy('name', 'asc')->get();
-        $allVenues = Venue::orderBy('name', 'asc')->get();
-        return view('admin.add_series', compact('tournaments', 'editItem', 'allTeams', 'allVenues'));
     }
 
     public function showAddFantasyTipForm(Request $request)
