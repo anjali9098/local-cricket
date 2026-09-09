@@ -73,6 +73,10 @@ putenv('VERCEL=1');
 $_ENV['VERCEL'] = '1';
 $_SERVER['VERCEL'] = '1';
 
+// Always enforce HTTPS on Vercel
+$_SERVER['HTTPS'] = 'on';
+$_SERVER['SERVER_PORT'] = '443';
+
 putenv('LARAVEL_STORAGE_PATH=/tmp/storage');
 $_ENV['LARAVEL_STORAGE_PATH'] = '/tmp/storage';
 $_SERVER['LARAVEL_STORAGE_PATH'] = '/tmp/storage';
@@ -80,6 +84,18 @@ $_SERVER['LARAVEL_STORAGE_PATH'] = '/tmp/storage';
 putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
 $_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 $_SERVER['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
+
+if (empty($_ENV['APP_KEY']) && empty($_SERVER['APP_KEY'])) {
+    putenv('APP_KEY=base64:cc/wjbEfRbg0NQQuu+FH/uRy9X8Rev5jAjWk9TFX5jE=');
+    $_ENV['APP_KEY'] = 'base64:cc/wjbEfRbg0NQQuu+FH/uRy9X8Rev5jAjWk9TFX5jE=';
+    $_SERVER['APP_KEY'] = 'base64:cc/wjbEfRbg0NQQuu+FH/uRy9X8Rev5jAjWk9TFX5jE=';
+}
+
+if (!empty($_SERVER['HTTP_HOST'])) {
+    putenv('APP_URL=https://' . $_SERVER['HTTP_HOST']);
+    $_ENV['APP_URL'] = 'https://' . $_SERVER['HTTP_HOST'];
+    $_SERVER['APP_URL'] = 'https://' . $_SERVER['HTTP_HOST'];
+}
 
 if (empty($_ENV['DB_CONNECTION']) && empty($_SERVER['DB_CONNECTION'])) {
     putenv('DB_CONNECTION=mysql');
@@ -95,6 +111,11 @@ if (empty($_ENV['SESSION_DRIVER']) && empty($_SERVER['SESSION_DRIVER'])) {
     putenv('SESSION_DRIVER=database');
     $_ENV['SESSION_DRIVER'] = 'database';
     $_SERVER['SESSION_DRIVER'] = 'database';
+}
+if (empty($_ENV['SESSION_SECURE_COOKIE']) && empty($_SERVER['SESSION_SECURE_COOKIE'])) {
+    putenv('SESSION_SECURE_COOKIE=true');
+    $_ENV['SESSION_SECURE_COOKIE'] = 'true';
+    $_SERVER['SESSION_SECURE_COOKIE'] = 'true';
 }
 if (empty($_ENV['LOG_CHANNEL']) && empty($_SERVER['LOG_CHANNEL'])) {
     putenv('LOG_CHANNEL=stderr');

@@ -648,7 +648,10 @@
                         <a href="{{ route('glossary.show', $term->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
                             <!-- Poster Image or Letter Badge -->
                             @if(!empty($term->poster_image))
-                                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);">
+                                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div style="display: none; width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
+                                    {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
+                                </div>
                             @else
                                 <div style="width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
                                     {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}

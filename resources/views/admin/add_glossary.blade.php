@@ -169,7 +169,10 @@
                                 <!-- POSTER -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     @if(!empty($item->poster_image))
-                                        <img src="{{ $item->poster_image }}" alt="Poster" style="width: 65px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; display: block;">
+                                        <img src="{{ $item->poster_image }}" alt="Poster" style="width: 65px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; display: block;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div style="display: none; width: 44px; height: 38px; background: #e0f2fe; color: #0369a1; border-radius: 4px; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 800;">
+                                            {{ $item->letter ?: strtoupper(substr($item->term, 0, 1)) }}
+                                        </div>
                                     @else
                                         <div style="width: 44px; height: 38px; background: #e0f2fe; color: #0369a1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 800;">
                                             {{ $item->letter ?: strtoupper(substr($item->term, 0, 1)) }}

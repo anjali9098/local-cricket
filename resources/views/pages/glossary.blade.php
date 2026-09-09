@@ -60,7 +60,10 @@
                     
                     <!-- Poster Image or Letter Badge -->
                     @if(!empty($term->poster_image))
-                        <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 54px; height: 54px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1.5px solid rgba(34, 197, 94, 0.4);">
+                        <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 54px; height: 54px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1.5px solid rgba(34, 197, 94, 0.4);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div style="display: none; width: 44px; height: 44px; border-radius: 8px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; flex-shrink: 0;">
+                            {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
+                        </div>
                     @else
                         <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; flex-shrink: 0;">
                             {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}

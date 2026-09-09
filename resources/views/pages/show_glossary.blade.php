@@ -17,7 +17,10 @@
         <!-- Top Badge & Label -->
         <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
             @if(!empty($term->poster_image))
-                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 72px; height: 72px; border-radius: 12px; object-fit: cover; border: 2px solid #22c55e; box-shadow: 0 4px 12px rgba(34,197,94,0.25);">
+                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 72px; height: 72px; border-radius: 12px; object-fit: cover; border: 2px solid #22c55e; box-shadow: 0 4px 12px rgba(34,197,94,0.25);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="display: none; width: 64px; height: 64px; border-radius: 12px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 950; font-size: 2rem; flex-shrink: 0;">
+                    {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
+                </div>
             @else
                 <div style="width: 64px; height: 64px; border-radius: 12px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 950; font-size: 2rem; flex-shrink: 0;">
                     {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
@@ -34,7 +37,7 @@
         @if(!empty($term->poster_image))
             <!-- Full Illustration Poster Banner if available -->
             <div style="width: 100%; border-radius: 12px; overflow: hidden; max-height: 380px; border: 1px solid var(--border-color);">
-                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.parentElement.style.display='none';">
             </div>
         @endif
 
