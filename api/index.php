@@ -97,6 +97,10 @@ putenv('SESSION_COOKIE=cricketkascore_session');
 $_ENV['SESSION_COOKIE'] = 'cricketkascore_session';
 $_SERVER['SESSION_COOKIE'] = 'cricketkascore_session';
 
+putenv('BCRYPT_ROUNDS=12');
+$_ENV['BCRYPT_ROUNDS'] = '12';
+$_SERVER['BCRYPT_ROUNDS'] = '12';
+
 if (empty($_ENV['APP_KEY']) && empty($_SERVER['APP_KEY'])) {
     putenv('APP_KEY=base64:cc/wjbEfRbg0NQQuu+FH/uRy9X8Rev5jAjWk9TFX5jE=');
     $_ENV['APP_KEY'] = 'base64:cc/wjbEfRbg0NQQuu+FH/uRy9X8Rev5jAjWk9TFX5jE=';

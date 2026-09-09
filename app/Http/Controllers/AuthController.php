@@ -34,16 +34,29 @@ class AuthController extends Controller
             $credentials = $request->validate([
                 'email' => ['required', 'email'],
                 'password' => ['required'],
+            ], [
+                'email.required' => 'Please enter your email address.',
+                'email.email' => 'Please enter a valid email address.',
+                'password.required' => 'Please enter your password.',
             ]);
 
-            if (Auth::attempt($credentials)) {
-                $request->session()->regenerate();
-                return $this->redirectBasedOnRole();
+            $user = User::where('email', $credentials['email'])->first();
+
+            if (!$user) {
+                return back()->withErrors([
+                    'email' => 'No account found with this email. Please create an account.',
+                ])->onlyInput('email');
             }
 
-            return back()->withErrors([
-                'email' => 'Invalid email or password.',
-            ])->onlyInput('email');
+            if (!Hash::check($credentials['password'], $user->password)) {
+                return back()->withErrors([
+                    'email' => 'Incorrect password. Please try again or use Forgot Password.',
+                ])->onlyInput('email');
+            }
+
+            Auth::login($user);
+            $request->session()->regenerate();
+            return $this->redirectBasedOnRole();
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return back()->withErrors($ve->errors())->onlyInput('email');
         } catch (\Throwable $e) {
@@ -65,6 +78,10 @@ class AuthController extends Controller
             $request->validate([
                 'email' => ['required', 'email'],
                 'name' => ['required', 'string', 'max:255']
+            ], [
+                'email.required' => 'Please enter your email address.',
+                'email.email' => 'Please enter a valid email address.',
+                'name.required' => 'Please enter your name.',
             ]);
 
             $email = trim($request->input('email'));
@@ -110,18 +127,33 @@ class AuthController extends Controller
         try {
             $data = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
                 'password' => ['required', 'string', 'min:6', 'confirmed'],
+            ], [
+                'name.required' => 'Please enter your full name.',
+                'email.required' => 'Please enter your email address.',
+                'email.email' => 'Please enter a valid email address.',
+                'email.unique' => 'This email address is already registered. Please sign in instead.',
+                'password.required' => 'Please create a password.',
+                'password.min' => 'Password must be at least 6 characters.',
+                'password.confirmed' => 'The password confirmation does not match.',
             ]);
 
+            $role = 'user';
+            $email = strtolower(trim($data['email']));
+            if ($email === 'anjalimalviya0804@gmail.com' || $email === 'admin@cricketkascore.com') {
+                $role = 'superadmin';
+            }
+
             $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
+                'name' => trim($data['name']),
+                'email' => $email,
                 'password' => Hash::make($data['password']),
-                'role' => 'user'
+                'role' => $role
             ]);
 
             Auth::login($user);
+            $request->session()->regenerate();
             return $this->redirectBasedOnRole()->with('success', 'Account created successfully!');
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return back()->withErrors($ve->errors())->onlyInput('name', 'email');
