@@ -38,17 +38,15 @@ return Application::configure(basePath: dirname(__DIR__))
                     'line' => $e->getLine()
                 ], 500);
             }
-            if (env('APP_DEBUG', true) || request()->has('debug')) {
-                return response()->make(
-                    '<div style="background:#0f172a;color:#f8fafc;padding:30px;font-family:sans-serif;min-height:100vh;">' .
-                    '<h2 style="color:#ef4444;margin-top:0;">🚨 Server Error Diagnostic</h2>' .
-                    '<p style="color:#f59e0b;font-size:1.15rem;font-weight:bold;">' . htmlspecialchars($e->getMessage()) . '</p>' .
-                    '<p><strong>File:</strong> ' . htmlspecialchars($e->getFile()) . ' : Line ' . $e->getLine() . '</p>' .
-                    '<pre style="background:#1e293b;padding:15px;border-radius:6px;overflow:auto;font-size:0.85rem;line-height:1.5;">' . htmlspecialchars($e->getTraceAsString()) . '</pre>' .
-                    '</div>',
-                    500
-                );
-            }
+            return response()->make(
+                '<div style="background:#0f172a;color:#f8fafc;padding:30px;font-family:sans-serif;min-height:100vh;">' .
+                '<h2 style="color:#ef4444;margin-top:0;">🚨 Server Error Diagnostic</h2>' .
+                '<p style="color:#f59e0b;font-size:1.15rem;font-weight:bold;">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                '<p><strong>File:</strong> ' . htmlspecialchars($e->getFile()) . ' : Line ' . $e->getLine() . '</p>' .
+                '<pre style="background:#1e293b;padding:15px;border-radius:6px;overflow:auto;font-size:0.85rem;line-height:1.5;">' . htmlspecialchars($e->getTraceAsString()) . '</pre>' .
+                '</div>',
+                500
+            );
         });
     })->create();
 
