@@ -30,19 +30,25 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        try {
+            $credentials = $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return $this->redirectBasedOnRole();
+            if (Auth::attempt($credentials)) {
+                $request->session()->regenerate();
+                return $this->redirectBasedOnRole();
+            }
+
+            return back()->withErrors([
+                'email' => 'Invalid email or password.',
+            ])->onlyInput('email');
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return back()->withErrors($ve->errors())->onlyInput('email');
+        } catch (\Throwable $e) {
+            return back()->withErrors(['email' => 'Login failed: ' . $e->getMessage()])->onlyInput('email');
         }
-
-        return back()->withErrors([
-            'email' => 'Invalid email or password.',
-        ])->onlyInput('email');
     }
 
     public function showGoogleLoginSim()
@@ -55,36 +61,40 @@ class AuthController extends Controller
 
     public function googleLoginSimPost(Request $request)
     {
-        $request->validate([
-            'email' => ['required', 'email'],
-            'name' => ['required', 'string', 'max:255']
-        ]);
-
-        $email = trim($request->input('email'));
-        $name = trim($request->input('name'));
-
-        $role = 'user';
-        if ($email === 'anjalimalviya0804@gmail.com' || $email === 'admin@cricketkascore.com') {
-            $role = 'superadmin';
-        }
-
-        $user = User::where('email', $email)->first();
-        if (!$user) {
-            $user = User::create([
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make('google123'),
-                'role' => $role
+        try {
+            $request->validate([
+                'email' => ['required', 'email'],
+                'name' => ['required', 'string', 'max:255']
             ]);
-        } else {
-            if ($role === 'superadmin' && $user->role !== 'superadmin') {
-                $user->role = 'superadmin';
-                $user->save();
-            }
-        }
 
-        Auth::login($user);
-        return $this->redirectBasedOnRole()->with('success', 'Logged in via Google successfully!');
+            $email = trim($request->input('email'));
+            $name = trim($request->input('name'));
+
+            $role = 'user';
+            if ($email === 'anjalimalviya0804@gmail.com' || $email === 'admin@cricketkascore.com') {
+                $role = 'superadmin';
+            }
+
+            $user = User::where('email', $email)->first();
+            if (!$user) {
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'password' => Hash::make('google123'),
+                    'role' => $role
+                ]);
+            } else {
+                if ($role === 'superadmin' && $user->role !== 'superadmin') {
+                    $user->role = 'superadmin';
+                    $user->save();
+                }
+            }
+
+            Auth::login($user);
+            return $this->redirectBasedOnRole()->with('success', 'Logged in via Google successfully!');
+        } catch (\Throwable $e) {
+            return back()->withErrors(['email' => 'Google Login failed: ' . $e->getMessage()]);
+        }
     }
 
     public function showRegister()
@@ -97,21 +107,27 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
+        try {
+            $data = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'password' => ['required', 'string', 'min:6', 'confirmed'],
+            ]);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => 'user'
-        ]);
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role' => 'user'
+            ]);
 
-        Auth::login($user);
-        return $this->redirectBasedOnRole()->with('success', 'Account created successfully!');
+            Auth::login($user);
+            return $this->redirectBasedOnRole()->with('success', 'Account created successfully!');
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return back()->withErrors($ve->errors())->onlyInput('name', 'email');
+        } catch (\Throwable $e) {
+            return back()->withErrors(['email' => 'Registration error: ' . $e->getMessage()])->onlyInput('name', 'email');
+        }
     }
 
     public function showForgotPassword()
