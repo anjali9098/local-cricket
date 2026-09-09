@@ -22,6 +22,38 @@ use App\Models\PlayerBowlingStat;
 
 class AdminController extends Controller
 {
+    protected function handleUploadedImage(Request $request, string $fileKey, string $urlKey, ?string $fallback = null): ?string
+    {
+        if ($request->hasFile($fileKey) && $request->file($fileKey)->isValid()) {
+            $file = $request->file($fileKey);
+            $mime = $file->getMimeType() ?: 'image/jpeg';
+            $data = base64_encode(file_get_contents($file->getRealPath()));
+            return 'data:' . $mime . ';base64,' . $data;
+        }
+
+        if ($request->filled($urlKey)) {
+            return trim($request->input($urlKey));
+        }
+
+        return $fallback;
+    }
+
+    protected function handleUploadedImagesMultiple(Request $request, string $fileKey): array
+    {
+        $urls = [];
+        if ($request->hasFile($fileKey)) {
+            $files = is_array($request->file($fileKey)) ? $request->file($fileKey) : [$request->file($fileKey)];
+            foreach ($files as $file) {
+                if ($file && $file->isValid()) {
+                    $mime = $file->getMimeType() ?: 'image/jpeg';
+                    $data = base64_encode(file_get_contents($file->getRealPath()));
+                    $urls[] = 'data:' . $mime . ';base64,' . $data;
+                }
+            }
+        }
+        return $urls;
+    }
+
     public function index()
     {
         $matchCount = CricketMatch::count();
@@ -477,14 +509,7 @@ class AdminController extends Controller
     {
         $title = trim($request->input('title', ''));
         if (!empty($title)) {
-            $imageUrl = trim($request->input('image_url', ''));
-
-            if ($request->hasFile('poster_file')) {
-                $file = $request->file('poster_file');
-                $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '', $file->getClientOriginalName());
-                $file->move(public_path('images/articles'), $filename);
-                $imageUrl = asset('images/articles/' . $filename);
-            }
+            $imageUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', '');
 
             if (empty($imageUrl)) {
                 $images = [
@@ -532,14 +557,7 @@ class AdminController extends Controller
     {
         $title = trim($request->input('title', ''));
         if (!empty($title)) {
-            $imageUrl = trim($request->input('image_url', ''));
-
-            if ($request->hasFile('poster_file')) {
-                $file = $request->file('poster_file');
-                $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '', $file->getClientOriginalName());
-                $file->move(public_path('images/news'), $filename);
-                $imageUrl = asset('images/news/' . $filename);
-            }
+            $imageUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', '');
 
             $slug = trim($request->input('slug', ''));
             if (empty($slug)) {
@@ -582,11 +600,7 @@ class AdminController extends Controller
         $summary = trim($request->input('summary', ''));
         $type = strtoupper($request->input('type', 'PREDICTION'));
 
-        $posterUrl = trim($request->input('poster_image', ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('predictions', 'public');
-            $posterUrl = asset('storage/' . $path);
-        }
+        $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -652,11 +666,7 @@ class AdminController extends Controller
             $formatsStr = is_array($formats) ? implode(',', $formats) : (string)$formats;
             $primaryFormat = !empty($formats) ? (is_array($formats) ? $formats[0] : $formats) : 'T20';
 
-            $posterUrl = $request->input('banner_url', '');
-            if ($request->hasFile('poster_image') && $request->file('poster_image')->isValid()) {
-                $path = $request->file('poster_image')->store('series', 'public');
-                $posterUrl = asset('storage/' . $path);
-            }
+            $posterUrl = $this->handleUploadedImage($request, 'poster_image', 'banner_url', $request->input('banner_url', ''));
 
             Tournament::create([
                 'user_id' => \Illuminate\Support\Facades\Auth::id() ?? 1,
@@ -715,13 +725,7 @@ class AdminController extends Controller
             $formatsStr = is_array($formats) ? implode(',', $formats) : (string)$formats;
             $primaryFormat = !empty($formats) ? (is_array($formats) ? $formats[0] : $formats) : ($tournament->format ?? 'T20');
 
-            $posterUrl = $tournament->poster_image ?? $tournament->banner_url;
-            if ($request->hasFile('poster_image') && $request->file('poster_image')->isValid()) {
-                $path = $request->file('poster_image')->store('series', 'public');
-                $posterUrl = asset('storage/' . $path);
-            } elseif ($request->filled('banner_url')) {
-                $posterUrl = $request->input('banner_url');
-            }
+            $posterUrl = $this->handleUploadedImage($request, 'poster_image', 'banner_url', $tournament->poster_image ?? $tournament->banner_url);
 
             $tournament->update([
                 'name' => $name,
@@ -760,11 +764,7 @@ class AdminController extends Controller
     {
         $teamName = trim($request->input('team_name', ''));
         if (!empty($teamName)) {
-            $logoUrl = trim($request->input('logo_url', $request->input('poster_image', '')));
-            if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-                $path = $request->file('poster_file')->store('rankings', 'public');
-                $logoUrl = asset('storage/' . $path);
-            }
+            $logoUrl = $this->handleUploadedImage($request, 'poster_file', 'logo_url', $request->input('poster_image', ''));
 
             $slug = trim($request->input('slug', ''));
             if (empty($slug)) {
@@ -796,11 +796,7 @@ class AdminController extends Controller
         $team = TeamRanking::findOrFail($id);
         $teamName = trim($request->input('team_name', $team->team_name));
 
-        $logoUrl = trim($request->input('logo_url', $request->input('poster_image', $team->logo_url ?? '')));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('rankings', 'public');
-            $logoUrl = asset('storage/' . $path);
-        }
+        $logoUrl = $this->handleUploadedImage($request, 'poster_file', 'logo_url', $team->logo_url ?? '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -967,49 +963,21 @@ class AdminController extends Controller
             $author = 'Admin';
         }
 
-        $slides = [];
-        $coverUrl = null;
+        $slides = $this->handleUploadedImagesMultiple($request, 'images');
+        $coverUrl = !empty($slides) ? $slides[0] : null;
 
-        // 1. Process multiple file uploads for slides
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
-                if ($file->isValid()) {
-                    $path = $file->store('stories', 'public');
-                    $url = asset('storage/' . $path);
-                    $slides[] = $url;
-                    if (empty($coverUrl)) {
-                        $coverUrl = $url;
-                    }
-                }
-            }
-        }
-
-        // 2. Process single file upload for cover / fallback
-        if ($request->hasFile('image') && $request->file('image')->isValid()) {
-            $path = $request->file('image')->store('stories', 'public');
-            $url = asset('storage/' . $path);
+        $singleCover = $this->handleUploadedImage($request, 'image', 'image_url', '');
+        if (!empty($singleCover)) {
             if (empty($coverUrl)) {
-                $coverUrl = $url;
+                $coverUrl = $singleCover;
             }
             if (empty($slides)) {
-                $slides[] = $url;
-            }
-        }
-
-        // 3. Fallback to image_url input if no files are uploaded
-        $imageUrlInput = trim($request->input('image_url', ''));
-        if (!empty($imageUrlInput)) {
-            if (empty($coverUrl)) {
-                $coverUrl = $imageUrlInput;
-            }
-            if (empty($slides)) {
-                $slides[] = $imageUrlInput;
+                $slides = [$singleCover];
             }
         }
 
         if (empty($title) && $request->hasFile('images')) {
-            // Auto-generate title from the first uploaded file name
-            $firstFile = $request->file('images')[0];
+            $firstFile = is_array($request->file('images')) ? $request->file('images')[0] : $request->file('images');
             $originalName = pathinfo($firstFile->getClientOriginalName(), PATHINFO_FILENAME);
             $title = ucwords(str_replace(['-', '_'], ' ', $originalName));
         }
@@ -1172,11 +1140,7 @@ class AdminController extends Controller
         $term = trim($request->input('term', ''));
         $definition = trim($request->input('definition', ''));
 
-        $posterUrl = trim($request->input('poster_image', ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('glossary', 'public');
-            $posterUrl = asset('storage/' . $path);
-        }
+        $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1211,12 +1175,6 @@ class AdminController extends Controller
         $title = trim($request->input('title', ''));
         $summary = trim($request->input('summary', ''));
 
-        $posterUrl = trim($request->input('poster_image', ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('predictions', 'public');
-            $posterUrl = asset('storage/' . $path);
-        }
-
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
             $slug = \Illuminate\Support\Str::slug($title);
@@ -1224,6 +1182,7 @@ class AdminController extends Controller
 
         if ($type === 'FANTASY') {
             $item = \App\Models\FantasyTip::find($id);
+            $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', $item ? $item->poster_image : '');
             if (!$item) {
                 \App\Models\Prediction::where('id', $id)->delete();
                 \App\Models\FantasyTip::create([
@@ -1255,6 +1214,7 @@ class AdminController extends Controller
             return redirect()->route('admin.prediction')->with('success', 'Fantasy Tip updated successfully!');
         } else {
             $item = \App\Models\Prediction::find($id);
+            $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', $item ? $item->poster_image : '');
             if (!$item) {
                 \App\Models\FantasyTip::where('id', $id)->delete();
                 \App\Models\Prediction::create([
@@ -1309,13 +1269,7 @@ class AdminController extends Controller
     {
         $item = \App\Models\Article::findOrFail($id);
         
-        $imageUrl = trim($request->input('image_url', $item->image_url));
-        if ($request->hasFile('poster_file')) {
-            $file = $request->file('poster_file');
-            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '', $file->getClientOriginalName());
-            $file->move(public_path('images/articles'), $filename);
-            $imageUrl = asset('images/articles/' . $filename);
-        }
+        $imageUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', $item->image_url);
 
         $title = trim($request->input('title', $item->title));
         $slug = trim($request->input('slug', ''));
@@ -1358,13 +1312,7 @@ class AdminController extends Controller
     {
         $item = \App\Models\News::findOrFail($id);
 
-        $imageUrl = trim($request->input('image_url', $item->image_url));
-        if ($request->hasFile('poster_file')) {
-            $file = $request->file('poster_file');
-            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '', $file->getClientOriginalName());
-            $file->move(public_path('images/news'), $filename);
-            $imageUrl = asset('images/news/' . $filename);
-        }
+        $imageUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', $item->image_url);
 
         $title = trim($request->input('title', $item->title));
         $slug = trim($request->input('slug', ''));
@@ -1409,23 +1357,17 @@ class AdminController extends Controller
         $item = \App\Models\WebStory::findOrFail($id);
         
         $slides = $item->slides ?? [];
-        if ($request->hasFile('images')) {
-            $slides = [];
-            foreach ($request->file('images') as $file) {
-                if ($file->isValid()) {
-                    $path = $file->store('stories', 'public');
-                    $slides[] = asset('storage/' . $path);
-                }
-            }
+        $uploadedSlides = $this->handleUploadedImagesMultiple($request, 'images');
+        if (!empty($uploadedSlides)) {
+            $slides = $uploadedSlides;
         }
 
-        $coverUrl = $item->image_url;
-        if (!empty($slides)) {
-            $coverUrl = $slides[0];
-        } elseif ($request->input('image_url')) {
-            $coverUrl = $request->input('image_url');
+        $coverUrl = !empty($slides) ? $slides[0] : $item->image_url;
+        $singleCover = $this->handleUploadedImage($request, 'image', 'image_url', '');
+        if (!empty($singleCover)) {
+            $coverUrl = $singleCover;
             if (empty($slides)) {
-                $slides = [$coverUrl];
+                $slides = [$singleCover];
             }
         }
 
@@ -1472,11 +1414,7 @@ class AdminController extends Controller
         $item = \App\Models\GlossaryTerm::findOrFail($id);
         $term = trim($request->input('term', $item->term));
 
-        $posterUrl = trim($request->input('poster_image', $item->poster_image ?? ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('glossary', 'public');
-            $posterUrl = asset('storage/' . $path);
-        }
+        $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', $item->poster_image ?? '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1560,11 +1498,7 @@ class AdminController extends Controller
         $playerName = trim($request->input('player_name', ''));
         $type = strtolower($request->input('type', 'batting'));
         if (!empty($playerName)) {
-            $photoUrl = trim($request->input('photo_url', $request->input('poster_image', '')));
-            if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-                $path = $request->file('poster_file')->store('rankings', 'public');
-                $photoUrl = asset('storage/' . $path);
-            }
+            $photoUrl = $this->handleUploadedImage($request, 'poster_file', 'photo_url', $request->input('poster_image', ''));
 
             $slug = trim($request->input('slug', ''));
             if (empty($slug)) {
@@ -1595,11 +1529,7 @@ class AdminController extends Controller
         $playerName = trim($request->input('player_name', $item->player_name));
         $type = strtolower($request->input('type', $item->type));
 
-        $photoUrl = trim($request->input('photo_url', $request->input('poster_image', $item->photo_url ?? '')));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('rankings', 'public');
-            $photoUrl = asset('storage/' . $path);
-        }
+        $photoUrl = $this->handleUploadedImage($request, 'poster_file', 'photo_url', $item->photo_url ?? '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1653,11 +1583,7 @@ class AdminController extends Controller
             return back()->with('error', 'Title is required.')->withInput();
         }
 
-        $posterUrl = trim($request->input('poster_image', ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('previews', 'public');
-            $posterUrl = asset('storage/' . $path);
-        }
+        $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1685,11 +1611,7 @@ class AdminController extends Controller
         $item = \App\Models\Prediction::findOrFail($id);
         $title = trim($request->input('title', $item->title));
 
-        $posterUrl = trim($request->input('poster_image', $item->poster_image ?? ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('previews', 'public');
-            $posterUrl = asset('storage/' . $path);
-        }
+        $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', $item->poster_image ?? '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1739,14 +1661,7 @@ class AdminController extends Controller
             return back()->with('error', 'Team name is required.')->withInput();
         }
         $shortName = strtoupper(trim($request->input('short_name', strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3)))));
-        $logo = trim($request->input('logo_url', $request->input('logo', '')));
-
-        if ($request->hasFile('logo_file')) {
-            $file = $request->file('logo_file');
-            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '', $file->getClientOriginalName());
-            $file->move(public_path('images/teams'), $filename);
-            $logo = asset('images/teams/' . $filename);
-        }
+        $logo = $this->handleUploadedImage($request, 'logo_file', 'logo_url', $request->input('logo', ''));
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1775,14 +1690,7 @@ class AdminController extends Controller
     {
         $team = Team::findOrFail($id);
         $name = trim($request->input('name', $team->name));
-        $logo = trim($request->input('logo_url', $request->input('logo', $team->logo_url ?? $team->logo ?? '')));
-
-        if ($request->hasFile('logo_file')) {
-            $file = $request->file('logo_file');
-            $filename = time() . '_' . preg_replace('/[^A-Za-z0-9\._-]/', '', $file->getClientOriginalName());
-            $file->move(public_path('images/teams'), $filename);
-            $logo = asset('images/teams/' . $filename);
-        }
+        $logo = $this->handleUploadedImage($request, 'logo_file', 'logo_url', $team->logo_url ?? $team->logo ?? '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1836,11 +1744,7 @@ class AdminController extends Controller
         }
         $country = trim($request->input('country', $request->input('nationality', '')));
 
-        $profileImage = trim($request->input('profile_image', ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('players', 'public');
-            $profileImage = asset('storage/' . $path);
-        }
+        $profileImage = $this->handleUploadedImage($request, 'poster_file', 'profile_image', '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1879,11 +1783,7 @@ class AdminController extends Controller
         $name = trim($request->input('name', $player->name));
         $country = trim($request->input('country', $request->input('nationality', $player->country ?? $player->nationality ?? '')));
 
-        $profileImage = trim($request->input('profile_image', $player->profile_image ?? ''));
-        if ($request->hasFile('poster_file') && $request->file('poster_file')->isValid()) {
-            $path = $request->file('poster_file')->store('players', 'public');
-            $profileImage = asset('storage/' . $path);
-        }
+        $profileImage = $this->handleUploadedImage($request, 'poster_file', 'profile_image', $player->profile_image ?? '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1940,17 +1840,7 @@ class AdminController extends Controller
         if (empty($name)) {
             return back()->with('error', 'Venue name is required.')->withInput();
         }
-        $imageUrl = trim($request->input('image_url', ''));
-        if ($request->hasFile('image_file') && $request->file('image_file')->isValid()) {
-            $file = $request->file('image_file');
-            $filename = 'venue_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $uploadPath = public_path('uploads/venues');
-            if (!file_exists($uploadPath)) {
-                mkdir($uploadPath, 0755, true);
-            }
-            $file->move($uploadPath, $filename);
-            $imageUrl = asset('uploads/venues/' . $filename);
-        }
+        $imageUrl = $this->handleUploadedImage($request, 'image_file', 'image_url', '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
@@ -1975,17 +1865,7 @@ class AdminController extends Controller
     {
         $venue = \App\Models\Venue::findOrFail($id);
         $name = trim($request->input('name', $venue->name));
-        $imageUrl = trim($request->input('image_url', $venue->image_url ?? ''));
-        if ($request->hasFile('image_file') && $request->file('image_file')->isValid()) {
-            $file = $request->file('image_file');
-            $filename = 'venue_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $uploadPath = public_path('uploads/venues');
-            if (!file_exists($uploadPath)) {
-                mkdir($uploadPath, 0755, true);
-            }
-            $file->move($uploadPath, $filename);
-            $imageUrl = asset('uploads/venues/' . $filename);
-        }
+        $imageUrl = $this->handleUploadedImage($request, 'image_file', 'image_url', $venue->image_url ?? '');
 
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {

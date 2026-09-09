@@ -21,9 +21,7 @@
             <a href="{{ route('players') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; font-weight: 700; font-size: 0.88rem; text-decoration: none;">
                 🏏 All Players
             </a>
-            <a href="{{ route('stats') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: linear-gradient(135deg, #0284c7, #38bdf8); color: white; border-radius: 10px; font-weight: 800; font-size: 0.88rem; text-decoration: none; box-shadow: 0 4px 14px rgba(2,132,199,0.3);">
-                📊 Rankings &amp; Stats
-            </a>
+          
         </div>
     </div>
 
@@ -41,7 +39,10 @@
                 @foreach($todayBirthdays as $pb)
                     <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; display: flex; align-items: center; gap: 16px;">
                         @if(!empty($pb->profile_image))
-                            <img src="{{ $pb->profile_image }}" alt="{{ $pb->name }}" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                            <img src="{{ $pb->profile_image }}" alt="{{ $pb->name }}" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                            <div style="width: 56px; height: 56px; border-radius: 50%; background: #1e293b; color: var(--primary-text); font-weight: 900; font-size: 1.2rem; display: none; align-items: center; justify-content: center; border: 2px solid var(--primary);">
+                                {{ strtoupper(substr($pb->name, 0, 2)) }}
+                            </div>
                         @else
                             <div style="width: 56px; height: 56px; border-radius: 50%; background: #1e293b; color: var(--primary-text); font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary);">
                                 {{ strtoupper(substr($pb->name, 0, 2)) }}
@@ -92,7 +93,10 @@
                     <!-- Photo -->
                     <div style="flex-shrink: 0;">
                         @if(!empty($pb->profile_image))
-                            <img src="{{ $pb->profile_image }}" alt="{{ $pb->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                            <img src="{{ $pb->profile_image }}" alt="{{ $pb->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #1e293b; color: var(--primary-text); font-weight: 900; font-size: 1.05rem; display: none; align-items: center; justify-content: center; border: 2px solid var(--primary);">
+                                {{ strtoupper(substr($pb->name, 0, 2)) }}
+                            </div>
                         @else
                             <div style="width: 48px; height: 48px; border-radius: 50%; background: #1e293b; color: var(--primary-text); font-weight: 900; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary);">
                                 {{ strtoupper(substr($pb->name, 0, 2)) }}
