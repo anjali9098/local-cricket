@@ -78,9 +78,9 @@ if (empty($_ENV['CACHE_STORE']) && empty($_SERVER['CACHE_STORE'])) {
     $_SERVER['CACHE_STORE'] = 'array';
 }
 if (empty($_ENV['SESSION_DRIVER']) && empty($_SERVER['SESSION_DRIVER'])) {
-    putenv('SESSION_DRIVER=cookie');
-    $_ENV['SESSION_DRIVER'] = 'cookie';
-    $_SERVER['SESSION_DRIVER'] = 'cookie';
+    putenv('SESSION_DRIVER=database');
+    $_ENV['SESSION_DRIVER'] = 'database';
+    $_SERVER['SESSION_DRIVER'] = 'database';
 }
 if (empty($_ENV['LOG_CHANNEL']) && empty($_SERVER['LOG_CHANNEL'])) {
     putenv('LOG_CHANNEL=stderr');
