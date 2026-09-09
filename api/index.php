@@ -85,6 +85,18 @@ putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
 $_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 $_SERVER['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 
+putenv('APP_NAME=CricketKaScore');
+$_ENV['APP_NAME'] = 'CricketKaScore';
+$_SERVER['APP_NAME'] = 'CricketKaScore';
+
+putenv('SESSION_LIFETIME=120');
+$_ENV['SESSION_LIFETIME'] = '120';
+$_SERVER['SESSION_LIFETIME'] = '120';
+
+putenv('SESSION_COOKIE=cricketkascore_session');
+$_ENV['SESSION_COOKIE'] = 'cricketkascore_session';
+$_SERVER['SESSION_COOKIE'] = 'cricketkascore_session';
+
 if (empty($_ENV['APP_KEY']) && empty($_SERVER['APP_KEY'])) {
     putenv('APP_KEY=base64:cc/wjbEfRbg0NQQuu+FH/uRy9X8Rev5jAjWk9TFX5jE=');
     $_ENV['APP_KEY'] = 'base64:cc/wjbEfRbg0NQQuu+FH/uRy9X8Rev5jAjWk9TFX5jE=';
