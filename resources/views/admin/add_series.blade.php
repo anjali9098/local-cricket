@@ -297,7 +297,10 @@
                                         $poster = $t->poster_image ?: $t->banner_url;
                                     @endphp
                                     @if(!empty($poster))
-                                        <img src="{{ $poster }}" alt="Poster" style="width: 65px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; display: block;">
+                                        <img src="{{ $poster }}" alt="Poster" style="width: 65px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; display: block;" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                                        <div style="width: 65px; height: 38px; background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 4px; display: none; align-items: center; justify-content: center; font-size: 0.7rem; color: #94a3b8; font-weight: 600;">
+                                            No Poster
+                                        </div>
                                     @else
                                         <div style="width: 65px; height: 38px; background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #94a3b8; font-weight: 600;">
                                             No Poster

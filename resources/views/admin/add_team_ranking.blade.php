@@ -310,7 +310,10 @@
                             <!-- POSTER / LOGO -->
                             <td style="padding: 10px 12px; vertical-align: middle;">
                                 @if($tr->logo_url)
-                                    <img src="{{ $tr->logo_url }}" alt="{{ $tr->team_name }}" style="width: 50px; height: 38px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; background: #fafafa;">
+                                    <img src="{{ $tr->logo_url }}" alt="{{ $tr->team_name }}" style="width: 50px; height: 38px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; background: #fafafa; display: block;" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                                    <div style="width: 50px; height: 38px; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 4px; display: none; align-items: center; justify-content: center; color: #0284c7; font-weight: 900; font-size: 0.75rem;">
+                                        {{ strtoupper(substr($tr->team_name, 0, 3)) }}
+                                    </div>
                                 @else
                                     <div style="width: 50px; height: 38px; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #0284c7; font-weight: 900; font-size: 0.75rem;">
                                         {{ strtoupper(substr($tr->team_name, 0, 3)) }}
@@ -391,7 +394,10 @@
                             <!-- POSTER / LOGO -->
                             <td style="padding: 10px 12px; vertical-align: middle;">
                                 @if($pr->photo_url)
-                                    <img src="{{ $pr->photo_url }}" alt="{{ $pr->player_name }}" style="width: 50px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                    <img src="{{ $pr->photo_url }}" alt="{{ $pr->player_name }}" style="width: 50px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0; display: block;" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                                    <div style="width: 50px; height: 38px; background: {{ strtolower($pr->type) === 'batting' ? '#fef3c7' : '#dcfce7' }}; border: 1px solid {{ strtolower($pr->type) === 'batting' ? '#fde68a' : '#bbf7d0' }}; border-radius: 4px; display: none; align-items: center; justify-content: center; color: {{ strtolower($pr->type) === 'batting' ? '#d97706' : '#15803d' }}; font-weight: 900; font-size: 0.75rem;">
+                                        {{ $pr->badge_text ?: 'IND' }}
+                                    </div>
                                 @else
                                     <div style="width: 50px; height: 38px; background: {{ strtolower($pr->type) === 'batting' ? '#fef3c7' : '#dcfce7' }}; border: 1px solid {{ strtolower($pr->type) === 'batting' ? '#fde68a' : '#bbf7d0' }}; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: {{ strtolower($pr->type) === 'batting' ? '#d97706' : '#15803d' }}; font-weight: 900; font-size: 0.75rem;">
                                         {{ $pr->badge_text ?: 'IND' }}

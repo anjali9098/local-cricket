@@ -30,7 +30,7 @@
         <!-- Stadium Photo Banner -->
         <div style="position: relative; height: 320px; width: 100%; overflow: hidden;">
             @if(!empty($venue->image_url))
-                <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.outerHTML='<div style=\'width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 5rem;\'>🏟️</div>';">
             @else
                 <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 5rem;">
                     🏟️

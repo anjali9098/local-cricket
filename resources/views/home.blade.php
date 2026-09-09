@@ -443,7 +443,7 @@
                     <a href="{{ route('article.show', $art->id) }}" class="article-item" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                         @if(!empty($art->image_url))
                             <div class="article-img-box">
-                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" loading="lazy">
+                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" loading="lazy" onerror="this.parentElement.style.display='none';">
                             </div>
                         @endif
                         <div class="article-body">
@@ -480,7 +480,7 @@
                             <h4 class="article-title" style="margin-top:6px; color: var(--text-main);">{{ $n->title }}</h4>
                         </div>
                         @if(!empty($n->image_url))
-                            <img src="{{ $n->image_url }}" alt="News" class="news-thumb" loading="lazy" style="width: 72px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0;">
+                            <img src="{{ $n->image_url }}" alt="News" class="news-thumb" loading="lazy" style="width: 72px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0;" onerror="this.style.display='none';">
                         @endif
                     </a>
                 @endforeach
@@ -540,7 +540,7 @@
                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='var(--border)';">
                         @if(!empty($venue->image_url))
                             <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" loading="lazy"
-                                style="width: 100%; height: 100px; object-fit: cover;">
+                                style="width: 100%; height: 100px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\'width: 100%; height: 100px; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 2rem;\'>🏟️</div>';">
                         @else
                             <div style="width: 100%; height: 100px; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 2rem;">🏟️</div>
                         @endif

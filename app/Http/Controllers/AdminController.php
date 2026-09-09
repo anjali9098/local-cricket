@@ -533,7 +533,7 @@ class AdminController extends Controller
             if (empty($imageUrl)) {
                 $images = [
                     'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1531415074868-036b1c57e32b?w=800&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop&q=80',
                     'https://images.unsplash.com/photo-1512719994953-eabf50895df7?w=800&auto=format&fit=crop&q=80'
                 ];
                 $imageUrl = $images[array_rand($images)];

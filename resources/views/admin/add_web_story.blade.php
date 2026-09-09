@@ -202,7 +202,7 @@
 
                                 <!-- POSTER / COVER -->
                                 <td style="padding: 10px 12px; vertical-align: middle;">
-                                    <img src="{{ $item->image_url ?: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=80&h=110&q=80' }}" alt="{{ $item->title }}" style="width: 44px; height: 58px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                    <img src="{{ $item->image_url ?: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=80&h=110&q=80' }}" alt="{{ $item->title }}" style="width: 44px; height: 58px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=80&h=110&q=80';">
                                 </td>
 
                                 <!-- TITLE -->

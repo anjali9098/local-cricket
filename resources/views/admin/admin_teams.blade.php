@@ -217,7 +217,10 @@
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     @php $logo = $item->logo_url ?: $item->logo; @endphp
                                     @if(!empty($logo))
-                                        <img src="{{ $logo }}" alt="Logo" style="width: 44px; height: 38px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; display: block; background: #fafafa; padding: 2px;">
+                                        <img src="{{ $logo }}" alt="Logo" style="width: 44px; height: 38px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; display: block; background: #fafafa; padding: 2px;" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                                        <div style="width: 44px; height: 38px; background: {{ $item->color_code ?? '#2563eb' }}; border-radius: 4px; display: none; align-items: center; justify-content: center; font-size: 0.75rem; color: white; font-weight: 800;">
+                                            {{ $item->short_name ?: substr($item->name, 0, 3) }}
+                                        </div>
                                     @else
                                         <div style="width: 44px; height: 38px; background: {{ $item->color_code ?? '#2563eb' }}; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: white; font-weight: 800;">
                                             {{ $item->short_name ?: substr($item->name, 0, 3) }}

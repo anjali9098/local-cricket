@@ -59,7 +59,7 @@
                     <!-- Image with click to detail -->
                     <a href="{{ route('venues.show', $venue->id) }}" style="display: block; position: relative; height: 160px; overflow: hidden;">
                         @if(!empty($venue->image_url))
-                            <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
+                            <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';" onerror="this.outerHTML='<div style=\'width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 3rem;\'>🏟️</div>';">
                         @else
                             <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
                                 🏟️

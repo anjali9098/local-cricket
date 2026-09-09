@@ -38,7 +38,7 @@
         <!-- Poster Banner Image -->
         @if(!empty($news->image_url))
             <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary);">
-                <img src="{{ $news->image_url }}" alt="{{ $news->title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="{{ $news->image_url }}" alt="{{ $news->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
             </div>
         @endif
 
@@ -74,7 +74,7 @@
                     <a href="{{ route('news.show', $rn->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                         @if(!empty($rn->image_url))
                             <div style="width: 100%; height: 120px; border-radius: 6px; overflow: hidden; background: #fafafa;">
-                                <img src="{{ $rn->image_url }}" alt="{{ $rn->title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                <img src="{{ $rn->image_url }}" alt="{{ $rn->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
                             </div>
                         @endif
                         <div style="font-size: 0.72rem; font-weight: 700; color: #0284c7; text-transform: uppercase;">{{ $rn->category ?: 'NEWS' }}</div>

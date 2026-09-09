@@ -13,6 +13,187 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Tailwind CSS (Full Responsive & Utility System) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Universal Image Preview and Client-side Base64 Compressor
+        function previewAndConvertImage(fileInput, targetInputId, previewImgId, statusBadgeId, maxDimension = 700, quality = 0.85) {
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+            const file = fileInput.files[0];
+            const targetInput = targetInputId ? document.getElementById(targetInputId) : null;
+            const previewImg = previewImgId ? document.getElementById(previewImgId) : null;
+            const statusBadge = statusBadgeId ? document.getElementById(statusBadgeId) : null;
+
+            if (statusBadge) {
+                statusBadge.innerText = '⏳ Converting...';
+                statusBadge.style.display = 'inline-block';
+                statusBadge.style.background = '#fef3c7';
+                statusBadge.style.color = '#b45309';
+                statusBadge.style.padding = '2px 8px';
+                statusBadge.style.borderRadius = '4px';
+                statusBadge.style.fontSize = '0.75rem';
+                statusBadge.style.fontWeight = '700';
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const rawData = e.target.result;
+                
+                // Instant preview right away
+                if (previewImg) {
+                    previewImg.onerror = function() { this.style.display = 'none'; };
+                    previewImg.src = rawData;
+                    previewImg.style.display = 'block';
+                }
+                if (targetInput) {
+                    targetInput.value = rawData;
+                }
+
+                const isSvgOrGif = file.type && (file.type.toLowerCase().includes('svg') || file.type.toLowerCase().includes('gif'));
+                if (isSvgOrGif) {
+                    if (statusBadge) {
+                        statusBadge.innerText = '✓ Ready (' + Math.round(rawData.length / 1024) + ' KB)';
+                        statusBadge.style.background = '#dcfce7';
+                        statusBadge.style.color = '#16a34a';
+                    }
+                    return;
+                }
+
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = Math.round((height * maxDimension) / width);
+                                width = maxDimension;
+                            } else {
+                                width = Math.round((width * maxDimension) / height);
+                                height = maxDimension;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const optimizedBase64 = canvas.toDataURL('image/jpeg', quality);
+
+                        if (targetInput) targetInput.value = optimizedBase64;
+                        if (previewImg) {
+                            previewImg.src = optimizedBase64;
+                            previewImg.style.display = 'block';
+                        }
+                        if (statusBadge) {
+                            statusBadge.innerText = '✓ Ready (' + Math.round(optimizedBase64.length / 1024) + ' KB)';
+                            statusBadge.style.background = '#dcfce7';
+                            statusBadge.style.color = '#16a34a';
+                        }
+                    } catch (err) {
+                        console.warn('Canvas optimization fallback to raw:', err);
+                        if (targetInput) targetInput.value = rawData;
+                        if (statusBadge) {
+                            statusBadge.innerText = '✓ Ready (' + Math.round(rawData.length / 1024) + ' KB)';
+                            statusBadge.style.background = '#dcfce7';
+                            statusBadge.style.color = '#16a34a';
+                        }
+                    }
+                };
+                img.onerror = function() {
+                    if (targetInput) targetInput.value = rawData;
+                    if (statusBadge) {
+                        statusBadge.innerText = '✓ Ready (' + Math.round(rawData.length / 1024) + ' KB)';
+                        statusBadge.style.background = '#dcfce7';
+                        statusBadge.style.color = '#16a34a';
+                    }
+                };
+                img.src = rawData;
+            };
+            reader.onerror = function() {
+                if (statusBadge) {
+                    statusBadge.innerText = '✕ Error reading file';
+                    statusBadge.style.background = '#fee2e2';
+                    statusBadge.style.color = '#b91c1c';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function previewUrlImage(urlInput, previewImgId) {
+            const previewImg = document.getElementById(previewImgId);
+            if (!previewImg) return;
+            const url = (urlInput.value || '').trim();
+            if (url) {
+                previewImg.onerror = function() { this.style.display = 'none'; };
+                previewImg.src = url;
+                previewImg.style.display = 'block';
+            } else {
+                previewImg.style.display = 'none';
+            }
+        }
+
+        function previewAndConvertMultiImages(fileInput, targetContainerId, previewContainerId) {
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+            const previewBox = document.getElementById(previewContainerId);
+            const hiddenContainer = document.getElementById(targetContainerId);
+            if (hiddenContainer) hiddenContainer.innerHTML = '';
+            if (previewBox) previewBox.innerHTML = '';
+
+            Array.from(fileInput.files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const rawData = e.target.result;
+                    const img = new Image();
+                    img.onload = function() {
+                        const maxDim = 800;
+                        let width = img.width, height = img.height;
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
+                            else { width = Math.round((width * maxDim) / height); height = maxDim; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const b64 = canvas.toDataURL('image/jpeg', 0.85);
+
+                        if (hiddenContainer) {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'slides_base64[]';
+                            input.value = b64;
+                            hiddenContainer.appendChild(input);
+                        }
+                        if (previewBox) {
+                            const imgThumb = document.createElement('img');
+                            imgThumb.src = b64;
+                            imgThumb.style.cssText = 'width: 55px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;';
+                            previewBox.appendChild(imgThumb);
+                        }
+                    };
+                    img.onerror = function() {
+                        if (hiddenContainer) {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'slides_base64[]';
+                            input.value = rawData;
+                            hiddenContainer.appendChild(input);
+                        }
+                        if (previewBox) {
+                            const imgThumb = document.createElement('img');
+                            imgThumb.src = rawData;
+                            imgThumb.style.cssText = 'width: 55px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;';
+                            previewBox.appendChild(imgThumb);
+                        }
+                    };
+                    img.src = rawData;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
     <style>
         :root {
             --admin-sidebar-bg: #0b0f17;
@@ -616,149 +797,6 @@
 
                 container.innerHTML = html;
             }
-        }
-
-        // Universal Image Preview and Client-side Base64 Compressor
-        function previewAndConvertImage(fileInput, targetInputId, previewImgId, statusBadgeId, maxDimension = 600, quality = 0.85) {
-            if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            const targetInput = targetInputId ? document.getElementById(targetInputId) : null;
-            const previewImg = previewImgId ? document.getElementById(previewImgId) : null;
-            const statusBadge = statusBadgeId ? document.getElementById(statusBadgeId) : null;
-
-            if (statusBadge) {
-                statusBadge.innerText = '⏳ Processing...';
-                statusBadge.style.display = 'inline-block';
-                statusBadge.style.background = '#fef3c7';
-                statusBadge.style.color = '#b45309';
-                statusBadge.style.padding = '2px 6px';
-                statusBadge.style.borderRadius = '4px';
-                statusBadge.style.fontSize = '0.72rem';
-                statusBadge.style.fontWeight = '700';
-            }
-
-            reader.onload = function(e) {
-                const rawData = e.target.result;
-
-                // If SVG or small/GIF format, bypass canvas re-compression
-                if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
-                    if (targetInput) targetInput.value = rawData;
-                    if (previewImg) {
-                        previewImg.src = rawData;
-                        previewImg.style.display = 'block';
-                    }
-                    if (statusBadge) {
-                        statusBadge.innerText = '✓ Ready (' + Math.round(rawData.length / 1024) + ' KB)';
-                        statusBadge.style.background = '#dcfce7';
-                        statusBadge.style.color = '#16a34a';
-                    }
-                    return;
-                }
-
-                const img = new Image();
-                img.onload = function() {
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > maxDimension || height > maxDimension) {
-                        if (width > height) {
-                            height = Math.round((height * maxDimension) / width);
-                            width = maxDimension;
-                        } else {
-                            width = Math.round((width * maxDimension) / height);
-                            height = maxDimension;
-                        }
-                    }
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const optimizedBase64 = canvas.toDataURL('image/jpeg', quality);
-
-                    if (targetInput) targetInput.value = optimizedBase64;
-                    if (previewImg) {
-                        previewImg.src = optimizedBase64;
-                        previewImg.style.display = 'block';
-                    }
-                    if (statusBadge) {
-                        statusBadge.innerText = '✓ Ready (' + Math.round(optimizedBase64.length / 1024) + ' KB)';
-                        statusBadge.style.background = '#dcfce7';
-                        statusBadge.style.color = '#16a34a';
-                    }
-                };
-                img.onerror = function() {
-                    if (targetInput) targetInput.value = rawData;
-                    if (previewImg) {
-                        previewImg.src = rawData;
-                        previewImg.style.display = 'block';
-                    }
-                };
-                img.src = rawData;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function previewUrlImage(urlInput, previewImgId) {
-            const previewImg = document.getElementById(previewImgId);
-            if (!previewImg) return;
-            const url = (urlInput.value || '').trim();
-            if (url) {
-                previewImg.src = url;
-                previewImg.style.display = 'block';
-            } else {
-                previewImg.style.display = 'none';
-            }
-        }
-
-        function previewAndConvertMultiImages(fileInput, targetContainerId, previewContainerId) {
-            if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
-            const previewBox = document.getElementById(previewContainerId);
-            const hiddenContainer = document.getElementById(targetContainerId);
-            if (hiddenContainer) hiddenContainer.innerHTML = '';
-            if (previewBox) previewBox.innerHTML = '';
-
-            Array.from(fileInput.files).forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const maxDim = 800;
-                        let width = img.width, height = img.height;
-                        if (width > maxDim || height > maxDim) {
-                            if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
-                            else { width = Math.round((width * maxDim) / height); height = maxDim; }
-                        }
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        const b64 = canvas.toDataURL('image/jpeg', 0.85);
-
-                        if (hiddenContainer) {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'slides_base64[]';
-                            input.value = b64;
-                            hiddenContainer.appendChild(input);
-                        }
-                        if (previewBox) {
-                            const imgThumb = document.createElement('img');
-                            imgThumb.src = b64;
-                            imgThumb.style.cssText = 'width: 55px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;';
-                            previewBox.appendChild(imgThumb);
-                        }
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const toasts = document.querySelectorAll('.toast-alert');
             toasts.forEach(toast => {
