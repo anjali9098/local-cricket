@@ -24,6 +24,13 @@ class AdminController extends Controller
 {
     protected function handleUploadedImage(Request $request, string $fileKey, string $urlKey, ?string $fallback = null): ?string
     {
+        if ($request->filled($urlKey)) {
+            $val = trim($request->input($urlKey));
+            if (!empty($val)) {
+                return $val;
+            }
+        }
+
         if ($request->hasFile($fileKey) && $request->file($fileKey)->isValid()) {
             $file = $request->file($fileKey);
             $mime = $file->getMimeType() ?: 'image/jpeg';
@@ -31,8 +38,11 @@ class AdminController extends Controller
             return 'data:' . $mime . ';base64,' . $data;
         }
 
-        if ($request->filled($urlKey)) {
-            return trim($request->input($urlKey));
+        if ($request->filled($fileKey)) {
+            $val = trim($request->input($fileKey));
+            if (!empty($val)) {
+                return $val;
+            }
         }
 
         return $fallback;
@@ -41,7 +51,16 @@ class AdminController extends Controller
     protected function handleUploadedImagesMultiple(Request $request, string $fileKey): array
     {
         $urls = [];
-        if ($request->hasFile($fileKey)) {
+
+        if ($request->has('slides_base64') && is_array($request->input('slides_base64'))) {
+            foreach ($request->input('slides_base64') as $b64) {
+                if (!empty($b64)) {
+                    $urls[] = trim($b64);
+                }
+            }
+        }
+
+        if (empty($urls) && $request->hasFile($fileKey)) {
             $files = is_array($request->file($fileKey)) ? $request->file($fileKey) : [$request->file($fileKey)];
             foreach ($files as $file) {
                 if ($file && $file->isValid()) {

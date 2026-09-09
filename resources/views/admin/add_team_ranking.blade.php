@@ -163,15 +163,16 @@
                 <!-- ROW 4: Team Logo / Poster & SUBMIT -->
                 <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
                     <div style="flex: 1; min-width: 280px;">
-                        <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                            Team Logo / Poster Image
-                        </label>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                                Team Logo / Poster Image
+                            </label>
+                            <span id="ranking-team-logo-badge" style="display: none;"></span>
+                        </div>
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <input type="file" name="poster_file" accept="image/*" style="font-size: 0.82rem; color: #475569;">
-                            <input type="text" name="logo_url" value="{{ old('logo_url', $editTeam->logo_url ?? '') }}" placeholder="" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
-                            @if($editTeam && $editTeam->logo_url)
-                                <img src="{{ $editTeam->logo_url }}" alt="Logo" style="height: 32px; border-radius: 4px; border: 1px solid #cbd5e1;">
-                            @endif
+                            <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'ranking_team_logo_input', 'ranking-team-logo-preview', 'ranking-team-logo-badge')" style="font-size: 0.82rem; color: #475569;">
+                            <input type="text" id="ranking_team_logo_input" name="logo_url" value="{{ old('logo_url', $editTeam->logo_url ?? '') }}" oninput="previewUrlImage(this, 'ranking-team-logo-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                            <img id="ranking-team-logo-preview" src="{{ old('logo_url', $editTeam->logo_url ?? '') }}" alt="Logo" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('logo_url', $editTeam->logo_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                         </div>
                     </div>
 
@@ -242,15 +243,16 @@
                 <!-- ROW 3: Player Photo / Poster & SUBMIT -->
                 <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
                     <div style="flex: 1; min-width: 280px;">
-                        <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                            Player Photo / Poster Image
-                        </label>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                                Player Photo / Poster Image
+                            </label>
+                            <span id="ranking-player-photo-badge" style="display: none;"></span>
+                        </div>
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <input type="file" name="poster_file" accept="image/*" style="font-size: 0.82rem; color: #475569;">
-                            <input type="text" name="photo_url" value="{{ old('photo_url', $editPlayer->photo_url ?? '') }}" placeholder="" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
-                            @if($editPlayer && $editPlayer->photo_url)
-                                <img src="{{ $editPlayer->photo_url }}" alt="Photo" style="height: 32px; border-radius: 4px; border: 1px solid #cbd5e1;">
-                            @endif
+                            <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'ranking_player_photo_input', 'ranking-player-photo-preview', 'ranking-player-photo-badge')" style="font-size: 0.82rem; color: #475569;">
+                            <input type="text" id="ranking_player_photo_input" name="photo_url" value="{{ old('photo_url', $editPlayer->photo_url ?? '') }}" oninput="previewUrlImage(this, 'ranking-player-photo-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                            <img id="ranking-player-photo-preview" src="{{ old('photo_url', $editPlayer->photo_url ?? '') }}" alt="Photo" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('photo_url', $editPlayer->photo_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                         </div>
                     </div>
 

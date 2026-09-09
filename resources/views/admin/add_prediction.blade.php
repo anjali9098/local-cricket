@@ -119,15 +119,16 @@
                 
                 <!-- Poster Image -->
                 <div style="flex: 1; min-width: 280px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Poster Image
-                    </label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                            Poster Image
+                        </label>
+                        <span id="prediction-poster-badge" style="display: none;"></span>
+                    </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <input type="file" name="poster_file" accept="image/*" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" name="poster_image" value="{{ old('poster_image', $editItem->poster_image ?? '') }}" placeholder="" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
-                        @if($editItem && ($editItem->poster_image))
-                            <img src="{{ $editItem->poster_image }}" alt="Poster" style="height: 32px; border-radius: 4px; border: 1px solid #cbd5e1;">
-                        @endif
+                        <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'prediction_poster_image_input', 'prediction-poster-preview', 'prediction-poster-badge')" style="font-size: 0.82rem; color: #475569;">
+                        <input type="text" id="prediction_poster_image_input" name="poster_image" value="{{ old('poster_image', $editItem->poster_image ?? '') }}" oninput="previewUrlImage(this, 'prediction-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <img id="prediction-poster-preview" src="{{ old('poster_image', $editItem->poster_image ?? '') }}" alt="Poster" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('poster_image', $editItem->poster_image ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
 

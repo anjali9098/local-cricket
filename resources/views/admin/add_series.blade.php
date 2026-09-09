@@ -218,14 +218,16 @@
                 
                 <!-- Series Image Poster -->
                 <div style="flex: 1; min-width: 280px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Series Image Poster
-                    </label>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="file" name="poster_image" accept="image/*" style="font-size: 0.82rem; color: #475569;">
-                        @if($editItem && ($editItem->poster_image || $editItem->banner_url))
-                            <img src="{{ $editItem->poster_image ?? $editItem->banner_url }}" alt="Poster" style="height: 32px; border-radius: 4px; border: 1px solid #cbd5e1;">
-                        @endif
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                            Series Image Poster / Banner
+                        </label>
+                        <span id="series-poster-badge" style="display: none;"></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <input type="file" name="poster_image_file" accept="image/*" onchange="previewAndConvertImage(this, 'series_poster_image_input', 'series-poster-preview', 'series-poster-badge')" style="font-size: 0.82rem; color: #475569;">
+                        <input type="text" id="series_poster_image_input" name="poster_image" value="{{ old('poster_image', $editItem->poster_image ?? ($editItem->banner_url ?? '')) }}" oninput="previewUrlImage(this, 'series-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <img id="series-poster-preview" src="{{ old('poster_image', $editItem->poster_image ?? ($editItem->banner_url ?? '')) }}" alt="Poster" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('poster_image', $editItem->poster_image ?? ($editItem->banner_url ?? ''))) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
 

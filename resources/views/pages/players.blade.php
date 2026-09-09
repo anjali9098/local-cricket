@@ -50,17 +50,18 @@
                 
                 <div>
                     <!-- Avatar or Photo -->
-                    @if(!empty($player->profile_image))
-                        <a href="{{ route('player.profile', $player->id) }}">
-                            <img src="{{ $player->profile_image }}" alt="{{ $player->name }}" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin: 0 auto 12px; border: 2px solid #38bdf8; display: block;">
-                        </a>
-                    @else
-                        <a href="{{ route('player.profile', $player->id) }}" style="text-decoration: none;">
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; color: #38bdf8; margin: 0 auto 12px;">
+                    <a href="{{ route('player.profile', $player->id) }}" style="text-decoration: none; display: block; margin: 0 auto 12px; width: 64px; height: 64px;">
+                        @if(!empty($player->profile_image))
+                            <img src="{{ $player->profile_image }}" alt="{{ $player->name }}" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; display: block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: none; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; color: #38bdf8;">
                                 {{ strtoupper(substr($player->name, 0, 2)) }}
                             </div>
-                        </a>
-                    @endif
+                        @else
+                            <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 900; color: #38bdf8;">
+                                {{ strtoupper(substr($player->name, 0, 2)) }}
+                            </div>
+                        @endif
+                    </a>
 
                     <h3 style="font-size: 1.08rem; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0;">
                         <a href="{{ route('player.profile', $player->id) }}" style="text-decoration: none; color: inherit;">

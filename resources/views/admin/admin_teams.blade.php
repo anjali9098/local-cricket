@@ -146,15 +146,16 @@
                 
                 <!-- Poster Image -->
                 <div style="flex: 1; min-width: 280px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Team Logo / Poster
-                    </label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                            Team Logo / Poster
+                        </label>
+                        <span id="team-logo-badge" style="display: none;"></span>
+                    </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <input type="file" name="logo_file" accept="image/*" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" name="logo_url" value="{{ old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? '')) }}" placeholder="" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
-                        @if($editItem && ($editItem->logo_url || $editItem->logo))
-                            <img src="{{ $editItem->logo_url ?: $editItem->logo }}" alt="Logo" style="height: 32px; border-radius: 4px; border: 1px solid #cbd5e1;">
-                        @endif
+                        <input type="file" name="logo_file" accept="image/*" onchange="previewAndConvertImage(this, 'team_logo_url_input', 'team-logo-preview', 'team-logo-badge')" style="font-size: 0.82rem; color: #475569;">
+                        <input type="text" id="team_logo_url_input" name="logo_url" value="{{ old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? '')) }}" oninput="previewUrlImage(this, 'team-logo-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <img id="team-logo-preview" src="{{ old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? '')) }}" alt="Logo" style="height: 38px; width: 38px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? ''))) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
 

@@ -109,19 +109,29 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Upload Story Images (Supports Multiple Slides)
                     </label>
-                    <input type="file" name="images[]" multiple accept="image/*" style="font-size: 0.82rem; color: #475569;">
+                    <input type="file" name="images[]" multiple accept="image/*" onchange="previewAndConvertMultiImages(this, 'story_slides_container', 'story-slides-preview')" style="font-size: 0.82rem; color: #475569;">
                     <p style="font-size: 0.76rem; color: #64748b; margin: 4px 0 0 0;">Select one or multiple images from your device. Each image becomes a full-screen story slide.</p>
+                    <div id="story_slides_container"></div>
+                    <div id="story-slides-preview" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        @if($editItem && !empty($editItem->slides))
+                            @foreach($editItem->slides as $sl)
+                                <img src="{{ $sl }}" alt="Slide" style="width: 55px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;" onerror="this.style.display='none';">
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
 
                 <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        OR Single Cover Image URL / Fallback
-                    </label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                            OR Single Cover Image (Upload or Paste URL)
+                        </label>
+                        <span id="story-cover-badge" style="display: none;"></span>
+                    </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <input type="text" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" placeholder="" style="flex: 1; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; box-sizing: border-box; background: white;">
-                        @if($editItem && $editItem->image_url)
-                            <img src="{{ $editItem->image_url }}" alt="Cover" style="height: 36px; width: 28px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;">
-                        @endif
+                        <input type="file" name="image" accept="image/*" onchange="previewAndConvertImage(this, 'story_image_url_input', 'story-cover-preview', 'story-cover-badge')" style="font-size: 0.82rem; color: #475569;">
+                        <input type="text" id="story_image_url_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="previewUrlImage(this, 'story-cover-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; box-sizing: border-box; background: white;">
+                        <img id="story-cover-preview" src="{{ old('image_url', $editItem->image_url ?? '') }}" alt="Cover" style="height: 38px; width: 30px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('image_url', $editItem->image_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
             </div>

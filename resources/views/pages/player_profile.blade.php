@@ -30,9 +30,12 @@
         <div style="display: flex; gap: 28px; align-items: center; flex-wrap: wrap;">
             
             <!-- Player Image / Avatar -->
-            <div style="flex-shrink: 0;">
+            <div style="flex-shrink: 0; width: 120px; height: 120px;">
                 @if(!empty($player->profile_image))
-                    <img src="{{ $player->profile_image }}" alt="{{ $player->name }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #38bdf8; box-shadow: 0 6px 20px rgba(56, 189, 248, 0.3);">
+                    <img src="{{ $player->profile_image }}" alt="{{ $player->name }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #38bdf8; box-shadow: 0 6px 20px rgba(56, 189, 248, 0.3);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #38bdf8); display: none; align-items: center; justify-content: center; font-size: 2.8rem; font-weight: 900; color: white; box-shadow: 0 6px 20px rgba(2,132,199,0.35);">
+                        {{ strtoupper(substr($player->name, 0, 2)) }}
+                    </div>
                 @else
                     <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 2.8rem; font-weight: 900; color: white; box-shadow: 0 6px 20px rgba(2,132,199,0.35);">
                         {{ strtoupper(substr($player->name, 0, 2)) }}

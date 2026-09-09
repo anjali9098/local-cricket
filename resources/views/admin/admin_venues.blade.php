@@ -107,15 +107,16 @@
                 
                 <!-- Poster Image -->
                 <div style="flex: 1; min-width: 280px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Venue Photo / Poster
-                    </label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                            Venue Photo / Poster
+                        </label>
+                        <span id="venue-poster-badge" style="display: none;"></span>
+                    </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <input type="file" name="image_file" accept="image/*" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" placeholder="" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
-                        @if($editItem && ($editItem->image_url))
-                            <img src="{{ $editItem->image_url }}" alt="Venue" style="height: 32px; border-radius: 4px; border: 1px solid #cbd5e1;">
-                        @endif
+                        <input type="file" name="image_file" accept="image/*" onchange="previewAndConvertImage(this, 'venue_image_url_input', 'venue-poster-preview', 'venue-poster-badge')" style="font-size: 0.82rem; color: #475569;">
+                        <input type="text" id="venue_image_url_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="previewUrlImage(this, 'venue-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <img id="venue-poster-preview" src="{{ old('image_url', $editItem->image_url ?? '') }}" alt="Venue" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('image_url', $editItem->image_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
 
