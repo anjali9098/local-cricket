@@ -9,6 +9,13 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/ping', function () {
+    return response()->json([
+        'status' => 'ok',
+        'csrf_token' => csrf_token(),
+        'time' => time(),
+    ]);
+})->name('ping');
 
 // 2. Dedicated Navigation Pages (Each with its own page & route)
 Route::get('/live', [PageController::class, 'live'])->name('live');

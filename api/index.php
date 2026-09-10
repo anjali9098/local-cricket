@@ -89,9 +89,9 @@ putenv('APP_NAME=CricketKaScore');
 $_ENV['APP_NAME'] = 'CricketKaScore';
 $_SERVER['APP_NAME'] = 'CricketKaScore';
 
-putenv('SESSION_LIFETIME=120');
-$_ENV['SESSION_LIFETIME'] = '120';
-$_SERVER['SESSION_LIFETIME'] = '120';
+putenv('SESSION_LIFETIME=1440');
+$_ENV['SESSION_LIFETIME'] = '1440';
+$_SERVER['SESSION_LIFETIME'] = '1440';
 
 putenv('SESSION_COOKIE=cricketkascore_session');
 $_ENV['SESSION_COOKIE'] = 'cricketkascore_session';
@@ -132,6 +132,11 @@ if (empty($_ENV['SESSION_SECURE_COOKIE']) && empty($_SERVER['SESSION_SECURE_COOK
     putenv('SESSION_SECURE_COOKIE=true');
     $_ENV['SESSION_SECURE_COOKIE'] = 'true';
     $_SERVER['SESSION_SECURE_COOKIE'] = 'true';
+}
+if (empty($_ENV['SESSION_SAME_SITE']) && empty($_SERVER['SESSION_SAME_SITE'])) {
+    putenv('SESSION_SAME_SITE=lax');
+    $_ENV['SESSION_SAME_SITE'] = 'lax';
+    $_SERVER['SESSION_SAME_SITE'] = 'lax';
 }
 if (empty($_ENV['LOG_CHANNEL']) && empty($_SERVER['LOG_CHANNEL'])) {
     putenv('LOG_CHANNEL=stderr');

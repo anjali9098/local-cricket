@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle ?? 'CricketKaScore — Live Scores, Series & Local Cricket' }}</title>
     <!-- Favicon Icon -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">

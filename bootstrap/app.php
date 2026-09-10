@@ -21,32 +21,46 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (TokenMismatchException $e, $request) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'CSRF token mismatch. Please refresh.'], 419);
+        // Handle CSRF Token Mismatch & Session Expiration (TokenMismatchException)
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Your session expired. Please refresh the page.',
+                    'csrf_token' => csrf_token(),
+                ], 419);
             }
             return redirect()->back()
                 ->withInput($request->except('password', 'password_confirmation', '_token'))
-                ->withErrors(['email' => 'Your session expired. Please try signing in again.']);
+                ->with('error', 'Your session expired due to inactivity. Please try submitting again.');
         });
 
+        // Handle 419 HTTP Exceptions (Laravel's prepared TokenMismatchException)
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 419 || str_contains($e->getMessage(), 'CSRF')) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'message' => 'Your session expired. Please refresh the page.',
+                        'csrf_token' => csrf_token(),
+                    ], 419);
+                }
+                return redirect()->back()
+                    ->withInput($request->except('password', 'password_confirmation', '_token'))
+                    ->with('error', 'Your session expired due to inactivity. Please try submitting again.');
+            }
+            return null; // Let Laravel render standard 404, 403, etc. error views
+        });
+
+        // Handle genuine uncaught 500 server errors
         $exceptions->render(function (\Throwable $e, $request) {
-            if ($request->expectsJson()) {
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                return null; // Let Laravel render normal HTTP status page
+            }
+            if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'error' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
                 ], 500);
             }
-            return response()->make(
-                '<div style="background:#0f172a;color:#f8fafc;padding:30px;font-family:sans-serif;min-height:100vh;">' .
-                '<h2 style="color:#ef4444;margin-top:0;">🚨 Server Error Diagnostic</h2>' .
-                '<p style="color:#f59e0b;font-size:1.15rem;font-weight:bold;">' . htmlspecialchars($e->getMessage()) . '</p>' .
-                '<p><strong>File:</strong> ' . htmlspecialchars($e->getFile()) . ' : Line ' . $e->getLine() . '</p>' .
-                '<pre style="background:#1e293b;padding:15px;border-radius:6px;overflow:auto;font-size:0.85rem;line-height:1.5;">' . htmlspecialchars($e->getTraceAsString()) . '</pre>' .
-                '</div>',
-                500
-            );
+            return response()->view('errors.500', ['exception' => $e], 500);
         });
     })->create();
 

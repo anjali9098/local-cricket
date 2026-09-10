@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Error — CricketKaScore</title>
+    <title>Session Expired — CricketKaScore</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -20,20 +20,25 @@
             background: #161b22;
             border: 1px solid #30363d;
             border-radius: 16px;
-            padding: 36px 28px;
-            max-width: 600px;
+            padding: 40px 32px;
+            max-width: 480px;
             width: 100%;
             text-align: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
         .icon {
-            font-size: 3rem;
-            margin-bottom: 12px;
+            font-size: 3.5rem;
+            margin-bottom: 16px;
             display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
         }
         h1 {
             color: #f8fafc;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 800;
             margin-bottom: 10px;
         }
@@ -41,7 +46,7 @@
             color: #94a3b8;
             font-size: 0.95rem;
             line-height: 1.5;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
         .actions {
             display: flex;
@@ -52,7 +57,7 @@
         .btn-primary {
             background: #0284c7;
             color: white;
-            padding: 11px 22px;
+            padding: 12px 24px;
             border-radius: 10px;
             text-decoration: none;
             font-weight: 700;
@@ -65,7 +70,7 @@
         .btn-secondary {
             background: #21262d;
             color: #cbd5e1;
-            padding: 11px 22px;
+            padding: 12px 24px;
             border-radius: 10px;
             text-decoration: none;
             font-weight: 600;
@@ -74,46 +79,17 @@
             transition: all 0.2s;
         }
         .btn-secondary:hover { background: #30363d; color: white; }
-        pre {
-            background: #0f172a;
-            color: #e2e8f0;
-            padding: 14px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 0.8rem;
-            font-family: monospace;
-            text-align: left;
-            margin-top: 16px;
-            max-height: 240px;
-        }
     </style>
 </head>
 <body>
     <div class="error-card">
-        <div class="icon">⚠️</div>
-        <h1>Something Went Wrong</h1>
-        <p>A temporary error occurred while processing your request. Please try refreshing the page or head back to the dashboard.</p>
+        <div class="icon">⏱️</div>
+        <h1>Session Expired</h1>
+        <p>Your session timed out due to inactivity. Please refresh the page to continue right where you left off.</p>
         <div class="actions">
-            <button onclick="window.location.reload();" class="btn-primary">↻ Try Again</button>
+            <button onclick="window.location.reload();" class="btn-primary">↻ Refresh Page</button>
             <a href="{{ url('/') }}" class="btn-secondary">Go to Home</a>
         </div>
-
-        @if(config('app.debug') && isset($exception))
-            <details style="margin-top: 24px; text-align: left;">
-                <summary style="cursor: pointer; color: #f59e0b; font-size: 0.85rem; font-weight: 700;">Debug Details (Visible in Debug Mode)</summary>
-                <div style="margin-top: 10px; font-size: 0.85rem; color: #ef4444; word-break: break-word;">
-                    <strong>{{ get_class($exception) }}:</strong> {{ $exception->getMessage() }}
-                </div>
-                @if(method_exists($exception, 'getFile'))
-                    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">
-                        {{ $exception->getFile() }}:{{ $exception->getLine() }}
-                    </div>
-                @endif
-                @if(method_exists($exception, 'getTraceAsString'))
-                    <pre>{{ $exception->getTraceAsString() }}</pre>
-                @endif
-            </details>
-        @endif
     </div>
 </body>
 </html>

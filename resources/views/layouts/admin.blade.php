@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Super Admin — CricketKaScore</title>
     <!-- Favicon Icon -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
@@ -1118,6 +1119,32 @@
                     }, 300);
                 }
             }
+
+            // CSRF Token auto-refresh and session keep-alive (prevents mobile/idle tab session expiration)
+            function refreshCsrfToken() {
+                fetch('{{ route('ping') }}', { credentials: 'same-origin' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.csrf_token) {
+                            const meta = document.querySelector('meta[name="csrf-token"]');
+                            if (meta) meta.setAttribute('content', data.csrf_token);
+                            document.querySelectorAll('input[name="_token"]').forEach(input => {
+                                input.value = data.csrf_token;
+                            });
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            // Ping every 5 minutes
+            setInterval(refreshCsrfToken, 5 * 60 * 1000);
+
+            // Refresh when tab becomes visible again on mobile/desktop
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    refreshCsrfToken();
+                }
+            });
         });
     </script>
 
