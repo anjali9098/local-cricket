@@ -209,6 +209,10 @@
             --admin-primary: #0ea5e9;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -218,9 +222,10 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            width: 100vw;
         }
 
-        /* Sidebar */
+        /* Sidebar Desktop */
         .admin-sidebar {
             width: 280px;
             background-color: var(--admin-sidebar-bg);
@@ -228,6 +233,8 @@
             flex-direction: column;
             border-right: 1px solid #1e293b;
             overflow-y: auto;
+            flex-shrink: 0;
+            z-index: 1050;
         }
 
         .admin-sidebar::-webkit-scrollbar {
@@ -250,6 +257,24 @@
             gap: 10px;
             border-bottom: 1px solid #1e293b;
             flex-shrink: 0;
+        }
+
+        .admin-sidebar-close-btn {
+            display: none;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #94a3b8;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-sidebar-close-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.15);
         }
 
         .admin-nav {
@@ -293,7 +318,7 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            margin-top: 12px;
+            margin-top: 8px;
             cursor: pointer;
             border-radius: 6px;
             transition: all 0.2s;
@@ -361,41 +386,101 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            width: calc(100vw - 280px);
+            min-width: 0;
+            height: 100vh;
         }
 
-        /* Top Navbar */
-        .admin-header {
-            height: 70px;
-            background-color: var(--admin-card);
+        /* Top Bar */
+        .admin-topbar {
+            height: 60px;
+            background-color: #ffffff;
             border-bottom: 1px solid var(--admin-border);
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            padding: 0 32px;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
 
-        .admin-user {
+        .admin-hamburger-btn {
+            display: none;
+            background: #f8fafc;
+            border: 1px solid var(--admin-border);
+            color: #1e293b;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-hamburger-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .admin-topbar-icon-btn {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 16px;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #1e293b;
+            text-decoration: none;
+            border: 1px solid var(--admin-border);
+            transition: all 0.2s;
+        }
+        .admin-topbar-icon-btn:hover {
+            background: #e2e8f0;
         }
 
-        .admin-logout-btn {
-            background: transparent;
-            border: 1px solid var(--admin-border);
-            color: var(--admin-text-muted);
-            padding: 6px 12px;
+        .admin-topbar-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 900;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+
+        .admin-topbar-web-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: #0ea5e9;
+            color: white;
             border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+        .admin-topbar-web-btn:hover {
+            background: #0284c7;
         }
 
         /* Content Scroll Area */
         .admin-content {
             flex: 1;
             overflow-y: auto;
-            padding: 40px;
+            overflow-x: hidden;
+            padding: 28px 32px;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Enforce proper table layout for all admin data tables */
@@ -418,19 +503,169 @@
             display: table-cell !important;
             box-sizing: border-box !important;
         }
+
+        /* Backdrop Overlay for mobile drawer */
+        .admin-sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1040;
+            opacity: 0;
+            transition: opacity 0.28s ease;
+            pointer-events: none;
+        }
+
+        /* ==========================================================
+           RESPONSIVE BREAKPOINTS (MOBILE & TABLET FIXES)
+           ========================================================== */
+        @media (max-width: 1024px) {
+            body {
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            /* Off-Canvas Sidebar Drawer */
+            .admin-sidebar {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                bottom: 0 !important;
+                width: 290px !important;
+                max-width: 86vw !important;
+                height: 100% !important;
+                z-index: 1050 !important;
+                transform: translateX(-100%);
+                transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: none;
+                border-right: 1px solid #1e293b;
+            }
+
+            body.sidebar-open .admin-sidebar {
+                transform: translateX(0) !important;
+                box-shadow: 10px 0 40px rgba(0,0,0,0.6) !important;
+            }
+
+            .admin-sidebar-backdrop {
+                display: block;
+            }
+            body.sidebar-open .admin-sidebar-backdrop {
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+
+            .admin-sidebar-close-btn {
+                display: flex !important;
+            }
+
+            .admin-hamburger-btn {
+                display: flex !important;
+            }
+
+            .admin-wrapper {
+                width: 100vw !important;
+                max-width: 100vw !important;
+                height: 100vh !important;
+            }
+
+            .admin-content {
+                padding: 16px 14px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-content {
+                padding: 12px 10px !important;
+            }
+
+            /* Collapse multi-column grid forms on mobile to single/double columns */
+            div[style*="grid-template-columns: 2."],
+            div[style*="grid-template-columns: 1."],
+            div[style*="grid-template-columns: 3"],
+            div[style*="grid-template-columns: 4"],
+            div[style*="grid-template-columns: repeat(4"],
+            div[style*="grid-template-columns: repeat(3"],
+            div[style*="grid-template-columns: repeat(2"] {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+
+            /* Responsive toolbar action containers */
+            div[style*="justify-content: space-between"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+            }
+
+            /* Search inputs take full width on mobile */
+            input[id$="-search-input"],
+            input[type="text"][placeholder*="Search"] {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            /* Filter dropdowns take full width */
+            select[id^="filter-"] {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            /* Responsive tables: ensure all tables scroll horizontally without breaking container */
+            .table-responsive,
+            div[style*="overflow-x: auto"],
+            div[style*="overflow: auto"],
+            div:has(> table) {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                border-radius: 6px;
+            }
+
+            /* Form panels padding */
+            div[id$="-form-container"],
+            div[id*="form"] {
+                padding: 16px 12px !important;
+            }
+
+            /* Stats header buttons */
+            h1 {
+                font-size: 1.35rem !important;
+            }
+            h2, h3 {
+                font-size: 1.05rem !important;
+            }
+        }
     </style>
 </head>
 <body>
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="admin-sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
+    @php
+        $navApprovalsCount = \App\Models\Tournament::where('category', 'local')->where('is_approved', false)->count();
+        $navDeletionsCount = \App\Models\Tournament::where('category', 'local')->where('delete_requested', true)->count();
+        $totalNavNotifications = $navApprovalsCount + $navDeletionsCount;
+    @endphp
+
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
-        <a href="{{ route('home') }}" class="admin-brand" style="display:flex; align-items:center; gap:12px; text-decoration:none; padding: 14px 20px;">
-            <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" style="height: 38px; width: 38px; object-fit: contain; border-radius: 8px; background: white; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
-            <div>
-                <div style="font-weight:900; font-size:0.95rem; color:white; line-height:1.1; letter-spacing:-0.02em;">CRICKET<span style="color:#38bdf8;">KASCORE</span></div>
-                <div style="font-size:0.65rem; color:#94a3b8; font-weight:800; letter-spacing:1px; text-transform:uppercase;">SUPER ADMIN</div>
-            </div>
-        </a>
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <!-- Sidebar Brand Header + Close Button (on Mobile) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #1e293b; flex-shrink: 0;">
+            <a href="{{ route('home') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+                <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" style="height: 34px; width: 34px; object-fit: contain; border-radius: 8px; background: white; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+                <div>
+                    <div style="font-weight:900; font-size:0.92rem; color:white; line-height:1.1; letter-spacing:-0.02em;">CRICKET<span style="color:#38bdf8;">KASCORE</span></div>
+                    <div style="font-size:0.62rem; color:#94a3b8; font-weight:800; letter-spacing:1px; text-transform:uppercase;">SUPER ADMIN</div>
+                </div>
+            </a>
+            <button type="button" class="admin-sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close menu">
+                &times;
+            </button>
+        </div>
         
         <nav class="admin-nav">
 
@@ -470,14 +705,6 @@
                 <a href="{{ route('admin.glossary') }}" class="admin-subnav-item {{ request()->routeIs('admin.glossary') ? 'active' : '' }}">
                     <span class="subnav-icon">📚</span> Glossary Terms
                 </a>
-            </div>
-
-            <!-- Cricket Data Sub-Navigation -->
-            <div class="admin-subnav-label expanded" onclick="toggleSubnav(this)" style="margin-top: 8px;">
-                <span>🏏 Cricket Data</span>
-                <span class="chevron">▶</span>
-            </div>
-            <div class="admin-subnav show" id="cricket-data-subnav">
                 <a href="{{ route('admin.players') }}" class="admin-subnav-item {{ request()->routeIs('admin.players*') ? 'active' : '' }}">
                     <span class="subnav-icon">👤</span> Players
                 </a>
@@ -491,11 +718,6 @@
                 Go to Website
             </a>
 
-            @php
-                $navApprovalsCount = \App\Models\Tournament::where('category', 'local')->where('is_approved', false)->count();
-                $navDeletionsCount = \App\Models\Tournament::where('category', 'local')->where('delete_requested', true)->count();
-                $totalNavNotifications = $navApprovalsCount + $navDeletionsCount;
-            @endphp
             <a href="{{ route('admin.notifications') }}" class="admin-nav-link {{ request()->routeIs('admin.notifications') ? 'active' : '' }}" style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="display: flex; align-items: center;">
                     <span style="font-size: 1.1rem; margin-right: 8px;">🔔</span>
@@ -522,8 +744,44 @@
 
     <!-- Main Wrapper -->
     <div class="admin-wrapper">
-        <!-- Top Header -->
-        
+        <!-- Top App Bar / Header (Mobile and Tablet) -->
+        <header class="admin-topbar">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Hamburger Menu Button -->
+                <button type="button" class="admin-hamburger-btn" onclick="toggleMobileSidebar()" aria-label="Toggle navigation menu">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                
+                <!-- Brand Title -->
+                <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px; background: white; padding: 2px;">
+                    <div>
+                        <span style="font-weight: 900; font-size: 0.9rem; color: #0f172a; line-height: 1.1; display: block;">CRICKET<span style="color: #0ea5e9;">KASCORE</span></span>
+                        <span style="font-size: 0.6rem; color: #64748b; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">SUPER ADMIN</span>
+                    </div>
+                </a>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <!-- Notifications Bell -->
+                <a href="{{ route('admin.notifications') }}" class="admin-topbar-icon-btn" title="Notifications">
+                    <span style="font-size: 1.05rem;">🔔</span>
+                    @if($totalNavNotifications > 0)
+                        <span class="admin-topbar-badge">{{ $totalNavNotifications }}</span>
+                    @endif
+                </a>
+
+                <!-- Website Link -->
+                <a href="{{ route('home') }}" class="admin-topbar-web-btn" title="View Public Website">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    <span class="hidden sm:inline">Website</span>
+                </a>
+            </div>
+        </header>
 
         <!-- Content Area -->
         <main class="admin-content">
@@ -532,17 +790,17 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+    <div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: calc(100vw - 48px);">
         @if(session('success'))
-            <div class="toast-alert" style="background: #10b981; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 300px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out;">
+            <div class="toast-alert" style="background: #10b981; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 260px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out; font-size: 0.9rem;">
                 <span>{{ session('success') }}</span>
-                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8;">&times;</button>
+                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8; margin-left: 10px;">&times;</button>
             </div>
         @endif
         @if(session('error'))
-            <div class="toast-alert" style="background: #ef4444; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 300px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out;">
+            <div class="toast-alert" style="background: #ef4444; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 260px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out; font-size: 0.9rem;">
                 <span>{{ session('error') }}</span>
-                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8;">&times;</button>
+                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8; margin-left: 10px;">&times;</button>
             </div>
         @endif
     </div>
@@ -802,7 +1060,36 @@
 
                 container.innerHTML = html;
             }
+        }
+
+        /* Mobile Sidebar Helpers */
+        function toggleMobileSidebar() {
+            document.body.classList.toggle('sidebar-open');
+        }
+        function closeMobileSidebar() {
+            document.body.classList.remove('sidebar-open');
+        }
+        function openMobileSidebar() {
+            document.body.classList.add('sidebar-open');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // Close mobile sidebar on navigation link clicks
+            document.querySelectorAll('.admin-sidebar a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 1024) {
+                        closeMobileSidebar();
+                    }
+                });
+            });
+
+            // Escape key to close mobile sidebar
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeMobileSidebar();
+                }
+            });
+
             const toasts = document.querySelectorAll('.toast-alert');
             toasts.forEach(toast => {
                 setTimeout(() => {
