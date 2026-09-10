@@ -392,15 +392,15 @@
             height: 100vh;
         }
 
-        /* Top Bar */
+        /* Top Bar - Hidden on Desktop, Shown on Mobile & Tablet */
         .admin-topbar {
+            display: none;
             height: 60px;
             background-color: #ffffff;
             border-bottom: 1px solid var(--admin-border);
-            display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 16px;
             flex-shrink: 0;
             z-index: 100;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
@@ -558,6 +558,10 @@
             }
 
             .admin-sidebar-close-btn {
+                display: flex !important;
+            }
+
+            .admin-topbar {
                 display: flex !important;
             }
 
