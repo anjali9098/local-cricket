@@ -304,11 +304,13 @@
             background: rgba(255,255,255,0.03);
         }
         .admin-subnav-label .chevron {
-            transition: transform 0.3s ease;
-            font-size: 0.6rem;
+            transition: transform 0.25s ease;
+            font-size: 0.65rem;
+            display: inline-block;
+            transform: rotate(0deg);
         }
         .admin-subnav-label.expanded .chevron {
-            transform: rotate(180deg);
+            transform: rotate(90deg);
         }
 
         .admin-subnav {
@@ -318,10 +320,10 @@
             padding: 4px 0 4px 8px;
             border-left: 2px solid #1e293b;
             margin-left: 20px;
-            animation: slideDown 0.3s ease;
+            animation: slideDown 0.2s ease;
         }
         .admin-subnav.show {
-            display: flex;
+            display: flex !important;
         }
 
         @keyframes slideDown {
@@ -435,7 +437,7 @@
             <!-- Content Management Sub-Navigation -->
             <div class="admin-subnav-label expanded" onclick="toggleSubnav(this)">
                 <span>📋 Content Management</span>
-                <span class="chevron">▼</span>
+                <span class="chevron">▶</span>
             </div>
             <div class="admin-subnav show" id="content-subnav">
                 <a href="{{ route('admin.match') }}" class="admin-subnav-item {{ request()->routeIs('admin.match') ? 'active' : '' }}">
@@ -471,11 +473,11 @@
             </div>
 
             <!-- Cricket Data Sub-Navigation -->
-            <div class="admin-subnav-label" onclick="toggleSubnav(this)" style="margin-top: 6px;">
+            <div class="admin-subnav-label expanded" onclick="toggleSubnav(this)" style="margin-top: 8px;">
                 <span>🏏 Cricket Data</span>
                 <span class="chevron">▶</span>
             </div>
-            <div class="admin-subnav" id="cricket-data-subnav">
+            <div class="admin-subnav show" id="cricket-data-subnav">
                 <a href="{{ route('admin.players') }}" class="admin-subnav-item {{ request()->routeIs('admin.players*') ? 'active' : '' }}">
                     <span class="subnav-icon">👤</span> Players
                 </a>
@@ -547,9 +549,12 @@
     
     <script>
         function toggleSubnav(label) {
+            if (!label) return;
             label.classList.toggle('expanded');
             const subnav = label.nextElementSibling;
-            subnav.classList.toggle('show');
+            if (subnav && subnav.classList.contains('admin-subnav')) {
+                subnav.classList.toggle('show');
+            }
         }
 
         /* ==========================================================
