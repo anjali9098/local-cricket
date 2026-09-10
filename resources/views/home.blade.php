@@ -309,185 +309,6 @@
         </div>
     </section>
 
-    <!-- ========================================================
-         UNIFIED DASHBOARD SECTION
-         PLAYER RANKINGS, MOST POPULAR PLAYERS, POINTS TABLE & BIRTHDAYS
-         ======================================================== -->
-    <section id="rankings-dashboard" class="dashboard-rankings-section">
-        <div class="container">
-            <div class="dashboard-rankings-grid">
-                
-                <!-- LEFT COLUMN: PLAYER RANKINGS & MOST POPULAR PLAYERS -->
-                <div style="display: flex; flex-direction: column; gap: 28px;">
-                    
-                    <!-- 1. PLAYER RANKINGS PANEL -->
-                    <div>
-                        <div class="section-header" style="margin-bottom: 12px;">
-                            <div class="section-title">
-                                <span class="section-title-icon">📊</span>
-                                <span>PLAYER RANKINGS</span>
-                            </div>
-                            <a href="{{ route('stats') }}" class="view-all-link">FULL RANKINGS &rarr;</a>
-                        </div>
-
-                        <div class="dashboard-panel-card">
-                            <div class="rankings-subcolumns-grid">
-                                <!-- Subcol 1: BATTING — MOST RUNS -->
-                                <div>
-                                    <div class="rankings-subcol-title">BATTING &mdash; MOST RUNS</div>
-                                    <div style="display: flex; flex-direction: column;">
-                                        @forelse($battingRankings->take(10) as $bat)
-                                            <a href="{{ route('stats', ['type' => 'batting']) }}" class="rankings-list-item">
-                                                <div class="rankings-rank-num">{{ $bat->rank_num }}</div>
-                                                <div class="rankings-avatar-badge" style="{{ $bat->rank_num == 1 ? 'border-color:#a855f7; color:#c084fc;' : ($bat->rank_num == 2 ? 'border-color:#f59e0b; color:#fbbf24;' : ($bat->rank_num == 3 ? 'border-color:#22c55e; color:#4ade80;' : ($bat->rank_num == 4 ? 'border-color:#38bdf8; color:#38bdf8;' : ''))) }}">
-                                                    {{ $bat->badge_text ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bat->player_name), 0, 3)) }}
-                                                </div>
-                                                <div class="rankings-player-name">{{ $bat->player_name }}</div>
-                                                <div class="rankings-stat-val">{{ number_format($bat->stat_value) }}</div>
-                                            </a>
-                                        @empty
-                                            <p style="color:var(--text-dim);font-size:0.85rem;padding:12px 0;">No batting rankings recorded.</p>
-                                        @endforelse
-                                    </div>
-                                </div>
-
-                                <!-- Subcol 2: BOWLING — MOST WICKETS -->
-                                <div>
-                                    <div class="rankings-subcol-title">BOWLING &mdash; MOST WICKETS</div>
-                                    <div style="display: flex; flex-direction: column;">
-                                        @forelse($bowlingRankings->take(10) as $bowl)
-                                            <a href="{{ route('stats', ['type' => 'bowling']) }}" class="rankings-list-item">
-                                                <div class="rankings-rank-num">{{ $bowl->rank_num }}</div>
-                                                <div class="rankings-avatar-badge" style="{{ $bowl->rank_num == 1 ? 'border-color:#38bdf8; color:#38bdf8;' : ($bowl->rank_num == 2 ? 'border-color:#eab308; color:#fde047;' : ($bowl->rank_num == 3 ? 'border-color:#ec4899; color:#f472b6;' : ($bowl->rank_num == 4 ? 'border-color:#a855f7; color:#c084fc;' : ''))) }}">
-                                                    {{ $bowl->badge_text ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bowl->player_name), 0, 3)) }}
-                                                </div>
-                                                <div class="rankings-player-name">{{ $bowl->player_name }}</div>
-                                                <div class="rankings-stat-val">{{ number_format($bowl->stat_value) }}</div>
-                                            </a>
-                                        @empty
-                                            <p style="color:var(--text-dim);font-size:0.85rem;padding:12px 0;">No bowling rankings recorded.</p>
-                                        @endforelse
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 2. MOST POPULAR PLAYERS PANEL -->
-                    <div>
-                        <div class="section-header" style="margin-bottom: 12px;">
-                            <div class="section-title">
-                                <span class="section-title-icon">🔥</span>
-                                <span>MOST POPULAR PLAYERS</span>
-                            </div>
-                            <a href="{{ route('compare') }}" class="view-all-link">COMPARE PLAYERS &rarr;</a>
-                        </div>
-
-                        <div class="popular-players-bar-grid">
-                            @foreach($popularPlayers->take(3) as $pop)
-                                <a href="{{ route('player.profile', $pop->id) }}" class="popular-players-bar-card">
-                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); color: var(--primary-text); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; font-size: 0.8rem;">
-                                        {{ $pop->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pop->name), 0, 3)) }}
-                                    </div>
-                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;">{{ $pop->name }}</div>
-                                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">
-                                        {{ $pop->role ?: 'ALL-ROUNDER' }}
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- RIGHT COLUMN: POINTS TABLE & PLAYER BIRTHDAYS -->
-                <div style="display: flex; flex-direction: column; gap: 28px;">
-                    
-                    <!-- 1. POINTS TABLE PANEL -->
-                    <div>
-                        <div class="section-header" style="margin-bottom: 12px;">
-                            <div class="section-title">
-                                <span>POINTS TABLE</span>
-                            </div>
-                        </div>
-
-                        <div class="dashboard-panel-card">
-                            <div class="points-widget-header">{{ $pointsTable->first()->tournament_name ?? 'ICC World Cup 2026' }}</div>
-                            <table class="points-widget-table">
-                                <thead>
-                                    <tr>
-                                        <th>TEAM</th>
-                                        <th>P</th>
-                                        <th>W</th>
-                                        <th>PTS</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($pointsTable as $pt)
-                                        <tr>
-                                            <td>{{ $pt->team_code }}</td>
-                                            <td>{{ $pt->played }}</td>
-                                            <td>{{ $pt->won }}</td>
-                                            <td style="font-weight: 900; color: var(--text-main);">{{ $pt->points }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:14px;">No standings recorded.</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- 2. PLAYER BIRTHDAYS PANEL -->
-                    <div>
-                        <div class="section-header" style="margin-bottom: 12px;">
-                            <div class="section-title">
-                                <span class="section-title-icon">🎂</span>
-                                <span>PLAYER BIRTHDAYS</span>
-                            </div>
-                            <a href="{{ route('player.birthdays') }}" class="view-all-link">CALENDAR &rarr;</a>
-                        </div>
-
-                        <div class="dashboard-panel-card" style="padding: 12px 18px;">
-                            <div style="display: flex; flex-direction: column;">
-                                @forelse($playerBirthdays->take(4) as $pb)
-                                    <a href="{{ route('player.profile', $pb->id) }}" class="birthday-list-item" style="text-decoration: none;">
-                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--primary-text); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.68rem; flex-shrink: 0;">
-                                                {{ $pb->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pb->name), 0, 3)) }}
-                                            </div>
-                                            <div style="min-width: 0;">
-                                                <div style="font-weight: 800; font-size: 0.86rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                    {{ $pb->name }}
-                                                </div>
-                                                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 1px;">
-                                                    {{ $pb->birthday_date_text }} &bull; turns {{ $pb->turning_age }}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div style="flex-shrink: 0;">
-                                            @if($pb->is_today_birthday)
-                                                <span class="birthday-tag-today">TODAY</span>
-                                            @elseif($pb->days_until_birthday === 1)
-                                                <span class="birthday-tag-days" style="color: #f59e0b; border-color: rgba(245,158,11,0.3);">1D</span>
-                                            @else
-                                                <span class="birthday-tag-days">{{ $pb->days_until_birthday }}D</span>
-                                            @endif
-                                        </div>
-                                    </a>
-                                @empty
-                                    <p style="color:var(--text-dim);font-size:0.85rem;padding:12px 0;">No upcoming birthdays.</p>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    </section>
 
     @if($predictions->isNotEmpty() || $fantasyTips->isNotEmpty())
     <section class="split-content-section">
@@ -852,6 +673,186 @@
             </div>
         </section>
     @endif
+
+    <!-- ========================================================
+         UNIFIED DASHBOARD SECTION (MATCHING SCREENSHOT 2)
+         PLAYER RANKINGS, MOST POPULAR PLAYERS, POINTS TABLE & BIRTHDAYS
+         ======================================================== -->
+    <section id="rankings-dashboard" class="dashboard-rankings-section">
+        <div class="container">
+            <div class="dashboard-rankings-grid">
+                
+                <!-- LEFT COLUMN: PLAYER RANKINGS & MOST POPULAR PLAYERS -->
+                <div style="display: flex; flex-direction: column; gap: 28px;">
+                    
+                    <!-- 1. PLAYER RANKINGS PANEL -->
+                    <div>
+                        <div class="section-header" style="margin-bottom: 12px;">
+                            <div class="section-title">
+                                <span class="section-title-icon">📊</span>
+                                <span>PLAYER RANKINGS</span>
+                            </div>
+                            <a href="{{ route('stats') }}" class="view-all-link">FULL RANKINGS &rarr;</a>
+                        </div>
+
+                        <div class="dashboard-panel-card">
+                            <div class="rankings-subcolumns-grid">
+                                <!-- Subcol 1: BATTING — MOST RUNS -->
+                                <div>
+                                    <div class="rankings-subcol-title">BATTING &mdash; MOST RUNS</div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        @forelse($battingRankings->take(10) as $bat)
+                                            <a href="{{ route('stats', ['type' => 'batting']) }}" class="rankings-list-item">
+                                                <div class="rankings-rank-num">{{ $bat->rank_num }}</div>
+                                                <div class="rankings-avatar-badge" style="{{ $bat->rank_num == 1 ? 'border-color:#a855f7; color:#c084fc;' : ($bat->rank_num == 2 ? 'border-color:#f59e0b; color:#fbbf24;' : ($bat->rank_num == 3 ? 'border-color:#22c55e; color:#4ade80;' : ($bat->rank_num == 4 ? 'border-color:#38bdf8; color:#38bdf8;' : ''))) }}">
+                                                    {{ $bat->badge_text ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bat->player_name), 0, 3)) }}
+                                                </div>
+                                                <div class="rankings-player-name">{{ $bat->player_name }}</div>
+                                                <div class="rankings-stat-val">{{ number_format($bat->stat_value) }}</div>
+                                            </a>
+                                        @empty
+                                            <p style="color:var(--text-dim);font-size:0.85rem;padding:12px 0;">No batting rankings recorded.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+
+                                <!-- Subcol 2: BOWLING — MOST WICKETS -->
+                                <div>
+                                    <div class="rankings-subcol-title">BOWLING &mdash; MOST WICKETS</div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        @forelse($bowlingRankings->take(10) as $bowl)
+                                            <a href="{{ route('stats', ['type' => 'bowling']) }}" class="rankings-list-item">
+                                                <div class="rankings-rank-num">{{ $bowl->rank_num }}</div>
+                                                <div class="rankings-avatar-badge" style="{{ $bowl->rank_num == 1 ? 'border-color:#38bdf8; color:#38bdf8;' : ($bowl->rank_num == 2 ? 'border-color:#eab308; color:#fde047;' : ($bowl->rank_num == 3 ? 'border-color:#ec4899; color:#f472b6;' : ($bowl->rank_num == 4 ? 'border-color:#a855f7; color:#c084fc;' : ''))) }}">
+                                                    {{ $bowl->badge_text ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $bowl->player_name), 0, 3)) }}
+                                                </div>
+                                                <div class="rankings-player-name">{{ $bowl->player_name }}</div>
+                                                <div class="rankings-stat-val">{{ number_format($bowl->stat_value) }}</div>
+                                            </a>
+                                        @empty
+                                            <p style="color:var(--text-dim);font-size:0.85rem;padding:12px 0;">No bowling rankings recorded.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. MOST POPULAR PLAYERS PANEL -->
+                    <div>
+                        <div class="section-header" style="margin-bottom: 12px;">
+                            <div class="section-title">
+                                <span class="section-title-icon">🔥</span>
+                                <span>MOST POPULAR PLAYERS</span>
+                            </div>
+                            <a href="{{ route('compare') }}" class="view-all-link">COMPARE PLAYERS &rarr;</a>
+                        </div>
+
+                        <div class="popular-players-bar-grid">
+                            @foreach($popularPlayers->take(3) as $pop)
+                                <a href="{{ route('player.profile', $pop->id) }}" class="popular-players-bar-card">
+                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); color: var(--primary-text); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; font-size: 0.8rem;">
+                                        {{ $pop->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pop->name), 0, 3)) }}
+                                    </div>
+                                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;">{{ $pop->name }}</div>
+                                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">
+                                        {{ $pop->role ?: 'ALL-ROUNDER' }}
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT COLUMN: POINTS TABLE & PLAYER BIRTHDAYS -->
+                <div style="display: flex; flex-direction: column; gap: 28px;">
+                    
+                    <!-- 1. POINTS TABLE PANEL -->
+                    <div>
+                        <div class="section-header" style="margin-bottom: 12px;">
+                            <div class="section-title">
+                                <span>POINTS TABLE</span>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-panel-card">
+                            <div class="points-widget-header">{{ $pointsTable->first()->tournament_name ?? 'ICC World Cup 2026' }}</div>
+                            <table class="points-widget-table">
+                                <thead>
+                                    <tr>
+                                        <th>TEAM</th>
+                                        <th>P</th>
+                                        <th>W</th>
+                                        <th>PTS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($pointsTable as $pt)
+                                        <tr>
+                                            <td>{{ $pt->team_code }}</td>
+                                            <td>{{ $pt->played }}</td>
+                                            <td>{{ $pt->won }}</td>
+                                            <td style="font-weight: 900; color: var(--text-main);">{{ $pt->points }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:14px;">No standings recorded.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. PLAYER BIRTHDAYS PANEL -->
+                    <div>
+                        <div class="section-header" style="margin-bottom: 12px;">
+                            <div class="section-title">
+                                <span class="section-title-icon">🎂</span>
+                                <span>PLAYER BIRTHDAYS</span>
+                            </div>
+                            <a href="{{ route('player.birthdays') }}" class="view-all-link">CALENDAR &rarr;</a>
+                        </div>
+
+                        <div class="dashboard-panel-card" style="padding: 12px 18px;">
+                            <div style="display: flex; flex-direction: column;">
+                                @forelse($playerBirthdays->take(4) as $pb)
+                                    <a href="{{ route('player.profile', $pb->id) }}" class="birthday-list-item" style="text-decoration: none;">
+                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--primary-text); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.68rem; flex-shrink: 0;">
+                                                {{ $pb->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pb->name), 0, 3)) }}
+                                            </div>
+                                            <div style="min-width: 0;">
+                                                <div style="font-weight: 800; font-size: 0.86rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                    {{ $pb->name }}
+                                                </div>
+                                                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 1px;">
+                                                    {{ $pb->birthday_date_text }} &bull; turns {{ $pb->turning_age }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="flex-shrink: 0;">
+                                            @if($pb->is_today_birthday)
+                                                <span class="birthday-tag-today">TODAY</span>
+                                            @elseif($pb->days_until_birthday === 1)
+                                                <span class="birthday-tag-days" style="color: #f59e0b; border-color: rgba(245,158,11,0.3);">1D</span>
+                                            @else
+                                                <span class="birthday-tag-days">{{ $pb->days_until_birthday }}D</span>
+                                            @endif
+                                        </div>
+                                    </a>
+                                @empty
+                                    <p style="color:var(--text-dim);font-size:0.85rem;padding:12px 0;">No upcoming birthdays.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </section>
 
     <!-- ========================================================
          SECTION 8: GRASSROOTS CTA BANNER

@@ -1967,7 +1967,7 @@ class AdminController extends Controller
             $slug = \Illuminate\Support\Str::slug($name);
         }
 
-        $dob = $request->has('date_of_birth') ? ($request->input('date_of_birth') ?: null) : $player->date_of_birth;
+        $dob = $request->input('date_of_birth') ?: $player->date_of_birth;
         $birthdayText = $dob ? date('d M', strtotime($dob)) : null;
 
         $player->update([
