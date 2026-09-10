@@ -470,14 +470,6 @@
                 <a href="{{ route('admin.glossary') }}" class="admin-subnav-item {{ request()->routeIs('admin.glossary') ? 'active' : '' }}">
                     <span class="subnav-icon">📚</span> Glossary Terms
                 </a>
-            </div>
-
-            <!-- Cricket Data Sub-Navigation -->
-            <div class="admin-subnav-label expanded" onclick="toggleSubnav(this)" style="margin-top: 8px;">
-                <span>🏏 Cricket Data</span>
-                <span class="chevron">▶</span>
-            </div>
-            <div class="admin-subnav show" id="cricket-data-subnav">
                 <a href="{{ route('admin.players') }}" class="admin-subnav-item {{ request()->routeIs('admin.players*') ? 'active' : '' }}">
                     <span class="subnav-icon">👤</span> Players
                 </a>
