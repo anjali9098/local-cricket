@@ -113,6 +113,12 @@ if (!empty($_SERVER['HTTP_HOST'])) {
     $_SERVER['APP_URL'] = 'https://' . $_SERVER['HTTP_HOST'];
 }
 
+if (empty($_ENV['CRICKETDATA_API_KEY']) && empty($_SERVER['CRICKETDATA_API_KEY'])) {
+    putenv('CRICKETDATA_API_KEY=c7d0228c-6e2b-49f4-a27d-7fe329dc9d39');
+    $_ENV['CRICKETDATA_API_KEY'] = 'c7d0228c-6e2b-49f4-a27d-7fe329dc9d39';
+    $_SERVER['CRICKETDATA_API_KEY'] = 'c7d0228c-6e2b-49f4-a27d-7fe329dc9d39';
+}
+
 if (empty($_ENV['DB_CONNECTION']) && empty($_SERVER['DB_CONNECTION'])) {
     putenv('DB_CONNECTION=mysql');
     $_ENV['DB_CONNECTION'] = 'mysql';

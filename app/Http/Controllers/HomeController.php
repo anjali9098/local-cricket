@@ -25,7 +25,8 @@ class HomeController extends Controller
     {
         $todayDate = \Carbon\Carbon::today()->toDateString();
 
-        $allMatches = CricketMatch::has('team1')->has('team2')
+        $allMatches = CricketMatch::approved()
+            ->has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where(function($q) {
                 $q->whereNull('tournament_id')
@@ -46,7 +47,8 @@ class HomeController extends Controller
             ->get();
 
         if ($allMatches->isEmpty()) {
-            $allMatches = CricketMatch::has('team1')->has('team2')
+            $allMatches = CricketMatch::approved()
+                ->has('team1')->has('team2')
                 ->with(['team1', 'team2', 'venue', 'tournament'])
                 ->where(function($q) {
                     $q->whereNull('tournament_id')

@@ -178,6 +178,12 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/tournament/{id}/delete', [AdminController::class, 'deleteTournament'])->name('admin.delete-tournament');
     Route::post('/admin/tournament/{id}/reject-deletion', [AdminController::class, 'rejectDeletion'])->name('admin.reject-deletion');
 
+    // CricketData.org API Live & Upcoming Matches Management
+    Route::get('/admin/api-matches', [AdminController::class, 'showApiMatches'])->name('admin.api-matches');
+    Route::post('/admin/api-matches/fetch', [AdminController::class, 'fetchApiMatches'])->name('admin.api-matches.fetch');
+    Route::post('/admin/api-matches/toggle-approval/{id}', [AdminController::class, 'toggleApiMatchApproval'])->name('admin.api-matches.toggle-approval');
+    Route::post('/admin/api-matches/delete/{id}', [AdminController::class, 'deleteApiMatch'])->name('admin.api-matches.delete');
+
     // Player ranking and stats management routes
     Route::post('/admin/ranking/update/{id}', [AdminController::class, 'updateTeamRanking'])->name('admin.ranking.update');
     Route::post('/admin/player-ranking', [AdminController::class, 'addPlayerRanking'])->name('admin.player-ranking.post');

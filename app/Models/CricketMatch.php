@@ -12,7 +12,23 @@ class CricketMatch extends Model
     protected $table = 'matches';
     protected $guarded = [];
 
+    protected $casts = [
+        'is_approved' => 'boolean',
+        'is_api_match' => 'boolean',
+        'api_raw_data' => 'array',
+    ];
+
     protected $appends = ['winning_title', 'effective_status'];
+
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    public function scopePendingApproval($query)
+    {
+        return $query->where('is_approved', false);
+    }
 
     public function team1() {
         return $this->belongsTo(Team::class, 'team1_id');

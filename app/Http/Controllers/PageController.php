@@ -23,7 +23,8 @@ class PageController extends Controller
 {
     public function live()
     {
-        $liveMatches = CricketMatch::has('team1')->has('team2')
+        $liveMatches = CricketMatch::approved()
+            ->has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue'])
             ->where('status', 'live')
             ->where(function($q) {
@@ -41,7 +42,8 @@ class PageController extends Controller
     public function matches(Request $request)
     {
         $status = $request->query('status');
-        $query = CricketMatch::has('team1')->has('team2')
+        $query = CricketMatch::approved()
+            ->has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue'])
             ->where(function($q) {
                 $q->whereNull('tournament_id')

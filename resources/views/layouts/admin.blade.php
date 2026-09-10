@@ -683,6 +683,9 @@
                 <a href="{{ route('admin.match') }}" class="admin-subnav-item {{ request()->routeIs('admin.match') ? 'active' : '' }}">
                     <span class="subnav-icon">📺</span> Live & Upcoming Matches
                 </a>
+                <a href="{{ route('admin.api-matches') }}" class="admin-subnav-item {{ request()->routeIs('admin.api-matches*') ? 'active' : '' }}">
+                    <span class="subnav-icon">⚡</span> API Matches & Sync
+                </a>
                 <a href="{{ route('admin.series') }}" class="admin-subnav-item {{ request()->routeIs('admin.series') ? 'active' : '' }}">
                     <span class="subnav-icon">🏆</span> Series
                 </a>
