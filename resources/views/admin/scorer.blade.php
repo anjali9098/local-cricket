@@ -1,7 +1,10 @@
 @extends(isset($isLocal) && $isLocal ? 'layouts.local' : 'layouts.admin')
 
 @section('content')
-<main style="background: var(--local-bg, var(--bg-main, #000000)); color: var(--text-main, #f8fafc); min-height: 100vh; padding: 24px 14px 80px; font-family: var(--font-body, 'Inter', sans-serif);" class="sm:px-6 sm:py-8">
+@php
+    $isLocalMode = isset($isLocal) && $isLocal;
+@endphp
+<main style="{{ $isLocalMode ? 'background: var(--local-bg, var(--bg-main, #000000)); color: var(--text-main, #f8fafc);' : 'background: #f8fafc; color: #0f172a;' }} min-height: 100vh; padding: 24px 14px 80px; font-family: var(--font-body, 'Inter', sans-serif);" class="sm:px-6 sm:py-8">
     <div style="max-width: 860px; margin: 0 auto;">
         
         @php
@@ -107,18 +110,18 @@
                     @else
                         <span class="bg-red-500 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">&bull; LIVE SCORER</span>
                     @endif
-                    <span class="text-gray-400 font-bold text-xs sm:text-sm">{{ $match->tournament->name ?? 'Tournament Match' }} &bull; {{ $maxOvers }} Overs Match</span>
+                    <span class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} font-bold text-xs sm:text-sm">{{ $match->tournament->name ?? 'Tournament Match' }} &bull; {{ $maxOvers }} Overs Match</span>
                 </div>
-                <h1 class="text-lg sm:text-2xl font-black text-white uppercase tracking-tight m-0">
-                    {{ $match->team1->name ?? 'TEAM 1' }} <span class="text-gray-400 font-medium">vs</span> {{ $match->team2->name ?? 'TEAM 2' }}
+                <h1 class="text-lg sm:text-2xl font-black {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} uppercase tracking-tight m-0">
+                    {{ $match->team1->name ?? 'TEAM 1' }} <span class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-400' }} font-medium">vs</span> {{ $match->team2->name ?? 'TEAM 2' }}
                 </h1>
             </div>
             
             <div class="flex gap-2 items-center">
-                <a href="{{ isset($isLocal) && $isLocal ? route('local.match.detail', $match->id) : route('admin.match.detail', $match->id) }}" target="_blank" class="bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-white text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition-all shadow-sm">
+                <a href="{{ $isLocalMode ? route('local.match.detail', $match->id) : route('admin.match.detail', $match->id) }}" target="_blank" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm' }} border text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition-all">
                     <span>📊</span> <span class="hidden sm:inline">Full</span> Scorecard
                 </a>
-                <a href="{{ isset($isLocal) && $isLocal ? route('local.manage-tournament', $match->tournament_id ?? 1) : route('admin.dashboard') }}" class="bg-[#161b22] hover:bg-[#21262d] text-gray-300 hover:text-white border border-[#30363d] text-xs sm:text-sm font-bold px-3 py-2 rounded-xl transition-all">
+                <a href="{{ $isLocalMode ? route('local.manage-tournament', $match->tournament_id ?? 1) : route('admin.dashboard') }}" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] text-gray-300 hover:text-white border-[#30363d]' : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-300 shadow-sm' }} border text-xs sm:text-sm font-bold px-3 py-2 rounded-xl transition-all">
                     ← Back
                 </a>
             </div>
@@ -139,17 +142,17 @@
 
         <!-- Innings 2 Target Header Bar (If 2nd Innings) -->
         @if($innings == 2)
-            <div class="bg-[#0d1117] border border-[#30363d] text-white rounded-2xl p-3.5 sm:p-4 mb-4 flex justify-between items-center flex-wrap gap-2.5 shadow-md">
+            <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d] text-white' : 'bg-white border-slate-200 text-slate-800 shadow-sm' }} border rounded-2xl p-3.5 sm:p-4 mb-4 flex justify-between items-center flex-wrap gap-2.5">
                 <div class="text-xs sm:text-sm">
-                    <span class="text-gray-400">1st Innings: </span>
-                    <strong class="text-sky-400">{{ $bowlingTeam->short_name ?? $bowlingTeam->name }} {{ $match->team1_score }}/{{ $match->team1_wickets }} ({{ $match->team1_overs }} ov)</strong>
+                    <span class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }}">1st Innings: </span>
+                    <strong class="text-sky-500">{{ $bowlingTeam->short_name ?? $bowlingTeam->name }} {{ $match->team1_score }}/{{ $match->team1_wickets }} ({{ $match->team1_overs }} ov)</strong>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="bg-blue-600 text-white font-black text-xs px-3 py-1 rounded-lg">
                         Target: {{ $target }} runs
                     </span>
                     @if($match->status !== 'completed')
-                        <span class="text-xs sm:text-sm text-amber-300 font-bold">
+                        <span class="text-xs sm:text-sm text-amber-600 dark:text-amber-300 font-bold">
                             Need {{ $runsNeeded }} off {{ $ballsLeft }} balls (RRR: {{ $rrr }})
                         </span>
                     @endif
@@ -157,7 +160,7 @@
             </div>
         @endif
 
-        <!-- Main Live Scoreboard Card (Dark Emerald Green) -->
+        <!-- Main Live Scoreboard Card (Vibrant Stadium Emerald) -->
         <div class="bg-gradient-to-br from-[#02381f] to-[#064e3b] border border-white/10 rounded-2xl p-4 sm:p-6 text-white mb-6 relative overflow-hidden shadow-2xl">
             <!-- Background Glow -->
             <div class="absolute -top-16 -right-16 w-52 h-52 bg-white/5 rounded-full pointer-events-none blur-xl"></div>
@@ -292,7 +295,7 @@
 
                 <!-- Quick Change Players Trigger -->
                 <div class="mt-3.5 pt-3 border-t border-dashed border-white/15 flex justify-end">
-                    <button type="button" onclick="document.getElementById('changePlayersModal').style.display='flex';" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                    <button type="button" onclick="document.getElementById('changePlayersModal').style.display='flex';" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer">
                         <span>⚙️</span> Change Striker / Bowler
                     </button>
                 </div>
@@ -301,32 +304,32 @@
 
         <!-- Innings Switch Bar / Control -->
         @if($innings == 1 && $match->status !== 'completed')
-            <div class="bg-[#0d1117] border border-[#30363d] rounded-2xl p-4 mb-5 flex items-center justify-between flex-wrap gap-3 shadow-md">
+            <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d]' : 'bg-white border-slate-200 shadow-sm' }} border rounded-2xl p-4 mb-5 flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <strong class="text-white text-xs sm:text-sm">1st Innings Ongoing:</strong>
-                    <span class="text-gray-400 text-xs sm:text-sm ml-1">{{ $currentOvers }} of {{ $maxOvers }} overs bowled</span>
+                    <strong class="{{ $isLocalMode ? 'text-white' : 'text-slate-900' }} text-xs sm:text-sm">1st Innings Ongoing:</strong>
+                    <span class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} text-xs sm:text-sm ml-1">{{ $currentOvers }} of {{ $maxOvers }} overs bowled</span>
                 </div>
-                <button type="button" onclick="document.getElementById('switchInningsModal').style.display='flex';" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-md shadow-blue-500/20">
+                <button type="button" onclick="document.getElementById('switchInningsModal').style.display='flex';" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-md shadow-blue-500/20 cursor-pointer">
                     <span>🔄</span> End 1st Innings & Start 2nd Innings
                 </button>
             </div>
         @endif
 
         <!-- Ball Recording Control Pad -->
-        <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-4 sm:p-6 mb-6 shadow-md">
+        <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d]' : 'bg-white border-slate-200 shadow-md text-slate-900' }} rounded-2xl border p-4 sm:p-6 mb-6">
             <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <h3 class="text-sm sm:text-base font-black text-white m-0 uppercase tracking-tight flex items-center gap-2">
+                <h3 class="text-sm sm:text-base font-black {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} m-0 uppercase tracking-tight flex items-center gap-2">
                     <span>🏏</span> Record Ball Delivery
                 </h3>
-                <span class="text-xs text-gray-400 font-semibold">
-                    Striker: <strong class="text-white">{{ $strikerName }}</strong> | Bowler: <strong class="text-sky-400">{{ $bowlerName }}</strong>
+                <span class="text-xs {{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} font-semibold">
+                    Striker: <strong class="{{ $isLocalMode ? 'text-white' : 'text-slate-900' }}">{{ $strikerName }}</strong> | Bowler: <strong class="text-sky-500">{{ $bowlerName }}</strong>
                 </span>
             </div>
 
             <!-- Live Over Tracker Strip directly inside the Pad -->
-            <div class="mb-4 p-3 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center justify-between flex-wrap gap-2">
+            <div class="mb-4 p-3 {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d]' : 'bg-slate-50 border-slate-200' }} border rounded-xl flex items-center justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-2 overflow-x-auto pb-0.5">
-                    <span class="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1 flex-shrink-0">
+                    <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1 flex-shrink-0">
                         <span>⚡</span> Over {{ floor($currentOvers) + 1 }}:
                     </span>
                     <div class="flex items-center gap-1.5">
@@ -334,7 +337,7 @@
                             @foreach($thisOverBalls as $b)
                                 @php
                                     $out = $b->outcome;
-                                    $c = 'bg-slate-700 text-white';
+                                    $c = $isLocalMode ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-800';
                                     if ($out === '4') $c = 'bg-emerald-600 text-white font-black';
                                     elseif ($out === '6') $c = 'bg-emerald-800 text-white font-black';
                                     elseif ($out === 'W') $c = 'bg-red-600 text-white font-black';
@@ -345,22 +348,22 @@
                                 </span>
                             @endforeach
                             @for($i = $thisOverBalls->count(); $i < 6; $i++)
-                                <span class="w-6 h-6 rounded-full border border-dashed border-gray-600 flex items-center justify-center text-[10px] text-gray-500 font-bold">&bull;</span>
+                                <span class="w-6 h-6 rounded-full border border-dashed {{ $isLocalMode ? 'border-gray-600 text-gray-500' : 'border-slate-300 text-slate-400' }} flex items-center justify-center text-[10px] font-bold">&bull;</span>
                             @endfor
                         @else
                             @for($i = 0; $i < 6; $i++)
-                                <span class="w-6 h-6 rounded-full border border-dashed border-gray-600 flex items-center justify-center text-[10px] text-gray-500 font-bold">&bull;</span>
+                                <span class="w-6 h-6 rounded-full border border-dashed {{ $isLocalMode ? 'border-gray-600 text-gray-500' : 'border-slate-300 text-slate-400' }} flex items-center justify-center text-[10px] font-bold">&bull;</span>
                             @endfor
-                            <span class="text-[11px] text-gray-400 italic ml-1">Over starting</span>
+                            <span class="text-[11px] {{ $isLocalMode ? 'text-gray-400' : 'text-slate-400' }} italic ml-1">Over starting</span>
                         @endif
                     </div>
                 </div>
-                <div class="text-xs font-bold text-gray-300">
-                    Total in Over: <strong class="text-emerald-400">{{ $thisOverBalls->count() }} b</strong>
+                <div class="text-xs font-bold {{ $isLocalMode ? 'text-gray-300' : 'text-slate-600' }}">
+                    Total in Over: <strong class="text-emerald-600 dark:text-emerald-400">{{ $thisOverBalls->count() }} b</strong>
                 </div>
             </div>
             
-            <form id="ballDeliveryForm" method="POST" action="{{ isset($isLocal) && $isLocal ? route('local.score-update') : route('admin.score-update') }}">
+            <form id="ballDeliveryForm" method="POST" action="{{ $isLocalMode ? route('local.score-update') : route('admin.score-update') }}">
                 @csrf
                 <input type="hidden" name="match_id" value="{{ $match->id }}">
                 <input type="hidden" name="striker_name" value="{{ $strikerName }}">
@@ -378,22 +381,22 @@
                             </div>
                             <div>
                                 <div class="flex items-center gap-2 mb-0.5">
-                                    <span class="text-[10px] font-bold uppercase text-gray-400">Active Extra</span>
+                                    <span class="text-[10px] font-bold uppercase {{ $isLocalMode ? 'text-gray-400' : 'text-slate-400' }}">Active Extra</span>
                                     <span id="indicator_badge" class="bg-sky-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
                                         WIDE
                                     </span>
                                 </div>
-                                <div class="text-xs text-white font-medium">
-                                    Tap runs <span class="text-sky-400 font-bold">(0 to 6)</span> below to record (e.g. <span id="indicator_example" class="text-emerald-400 font-bold">Wide + 4</span>)
+                                <div class="text-xs {{ $isLocalMode ? 'text-white' : 'text-slate-800' }} font-medium">
+                                    Tap runs <span class="text-sky-500 font-bold">(0 to 6)</span> below to record (e.g. <span id="indicator_example" class="text-emerald-500 font-bold">Wide + 4</span>)
                                 </div>
                             </div>
                         </div>
 
                         <div class="flex items-center gap-2 flex-shrink-0">
-                            <button type="button" onclick="submitQuickExtraOnly()" id="quick_extra_btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-2 rounded-lg transition-all shadow-sm">
+                            <button type="button" onclick="submitQuickExtraOnly()" id="quick_extra_btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-2 rounded-lg transition-all shadow-sm cursor-pointer">
                                 <span>✓</span> <span id="quick_extra_label">Record Wide (+1)</span>
                             </button>
-                            <button type="button" onclick="clearExtraSelection()" title="Cancel Extra" class="bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 font-bold text-xs px-2.5 py-2 rounded-lg transition-all">
+                            <button type="button" onclick="clearExtraSelection()" title="Cancel Extra" class="bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-500 font-bold text-xs px-2.5 py-2 rounded-lg transition-all cursor-pointer">
                                 ✕
                             </button>
                         </div>
@@ -402,21 +405,21 @@
                 
                 <!-- Runs Grid (0 to 6) -->
                 <div class="grid grid-cols-7 gap-1.5 sm:gap-2.5 mb-4">
-                    <button type="button" onclick="handleRunClick(0)" id="btn_run_0" class="bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black text-white cursor-pointer transition-all active:scale-95 shadow-sm">0</button>
-                    <button type="button" onclick="handleRunClick(1)" id="btn_run_1" class="bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black text-white cursor-pointer transition-all active:scale-95 shadow-sm">1</button>
+                    <button type="button" onclick="handleRunClick(0)" id="btn_run_0" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800' }} border rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black cursor-pointer transition-all active:scale-95 shadow-sm">0</button>
+                    <button type="button" onclick="handleRunClick(1)" id="btn_run_1" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800' }} border rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black cursor-pointer transition-all active:scale-95 shadow-sm">1</button>
                     <button type="button" onclick="handleRunClick(2)" id="btn_run_2" class="bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black cursor-pointer transition-all active:scale-95 shadow-md shadow-orange-600/20">2</button>
                     <button type="button" onclick="handleRunClick(3)" id="btn_run_3" class="bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black cursor-pointer transition-all active:scale-95 shadow-md shadow-orange-600/20">3</button>
                     <button type="button" onclick="handleRunClick(4)" id="btn_run_4" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black cursor-pointer transition-all active:scale-95 shadow-md shadow-emerald-600/20">4</button>
-                    <button type="button" onclick="handleRunClick(5)" id="btn_run_5" class="bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black text-white cursor-pointer transition-all active:scale-95 shadow-sm">5</button>
+                    <button type="button" onclick="handleRunClick(5)" id="btn_run_5" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800' }} border rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black cursor-pointer transition-all active:scale-95 shadow-sm">5</button>
                     <button type="button" onclick="handleRunClick(6)" id="btn_run_6" class="bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl py-3.5 sm:py-4 text-base sm:text-xl font-black cursor-pointer transition-all active:scale-95 shadow-md shadow-emerald-800/20">6</button>
                 </div>
 
                 <!-- Extras Row (Click to toggle/combine with runs) -->
                 <div class="grid grid-cols-4 gap-1.5 sm:gap-2.5 mb-5">
-                    <button type="button" onclick="toggleExtra('wide')" id="btn_extra_wide" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-emerald-400 cursor-pointer transition-all">Wide</button>
-                    <button type="button" onclick="toggleExtra('no_ball')" id="btn_extra_no_ball" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-emerald-400 cursor-pointer transition-all">No Ball</button>
-                    <button type="button" onclick="toggleExtra('bye')" id="btn_extra_bye" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-emerald-400 cursor-pointer transition-all">Bye</button>
-                    <button type="button" onclick="toggleExtra('leg_bye')" id="btn_extra_leg_bye" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-emerald-400 cursor-pointer transition-all">Leg Bye</button>
+                    <button type="button" onclick="toggleExtra('wide')" id="btn_extra_wide" class="{{ $isLocalMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-700 font-bold' }} border rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm cursor-pointer transition-all">Wide</button>
+                    <button type="button" onclick="toggleExtra('no_ball')" id="btn_extra_no_ball" class="{{ $isLocalMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-700 font-bold' }} border rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm cursor-pointer transition-all">No Ball</button>
+                    <button type="button" onclick="toggleExtra('bye')" id="btn_extra_bye" class="{{ $isLocalMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-700 font-bold' }} border rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm cursor-pointer transition-all">Bye</button>
+                    <button type="button" onclick="toggleExtra('leg_bye')" id="btn_extra_leg_bye" class="{{ $isLocalMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-700 font-bold' }} border rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm cursor-pointer transition-all">Leg Bye</button>
                 </div>
 
                 <!-- Wicket & Undo Actions -->
@@ -424,7 +427,7 @@
                     <button type="button" onclick="openWicketModal()" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-black py-3.5 sm:py-4 rounded-xl text-xs sm:text-sm uppercase tracking-wider cursor-pointer transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2">
                         <span>⚡</span> WICKET FALLEN
                     </button>
-                    <button type="submit" formaction="{{ isset($isLocal) && $isLocal ? route('local.undo-score') : route('admin.undo-score') }}" class="bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-white font-bold py-3.5 sm:py-4 px-4 sm:px-6 rounded-xl text-xs sm:text-sm cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
+                    <button type="submit" formaction="{{ $isLocalMode ? route('local.undo-score') : route('admin.undo-score') }}" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800' }} border font-bold py-3.5 sm:py-4 px-4 sm:px-6 rounded-xl text-xs sm:text-sm cursor-pointer transition-all flex items-center gap-1.5 shadow-sm">
                         <span>↩</span> Undo
                     </button>
                 </div>
@@ -432,12 +435,12 @@
         </div>
 
         <!-- Complete Ball-By-Ball History (All Balls Bowled) -->
-        <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-4 sm:p-6 shadow-md mb-6">
+        <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d]' : 'bg-white border-slate-200 shadow-md text-slate-900' }} rounded-2xl border p-4 sm:p-6 shadow-md mb-6">
             <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <h3 class="text-sm sm:text-base font-black text-white m-0 uppercase tracking-tight flex items-center gap-2">
+                <h3 class="text-sm sm:text-base font-black {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} m-0 uppercase tracking-tight flex items-center gap-2">
                     <span>🏏</span> Match Balls Timeline ({{ isset($allBalls) ? count($allBalls) : 0 }} Total Deliveries)
                 </h3>
-                <span class="text-xs text-gray-400 font-semibold">Scroll horizontally to inspect balls &rarr;</span>
+                <span class="text-xs {{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} font-semibold">Scroll horizontally to inspect balls &rarr;</span>
             </div>
 
             <!-- Timeline Filter Pills -->
@@ -445,11 +448,11 @@
                 <button type="button" onclick="filterBallsTimeline('all', this)" class="timeline-tab-btn active px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold border border-blue-500">
                     All Deliveries ({{ count($allBalls) }})
                 </button>
-                <button type="button" onclick="filterBallsTimeline('inn1', this)" class="timeline-tab-btn px-3 py-1 bg-[#161b22] text-gray-300 rounded-lg text-xs font-bold border border-[#30363d]">
+                <button type="button" onclick="filterBallsTimeline('inn1', this)" class="timeline-tab-btn px-3 py-1 {{ $isLocalMode ? 'bg-[#161b22] text-gray-300 border-[#30363d]' : 'bg-slate-100 text-slate-700 border-slate-300' }} rounded-lg text-xs font-bold border">
                     Innings 1 ({{ $innings1Balls->count() }})
                 </button>
                 @if($innings2Balls->count() > 0 || $innings == 2)
-                <button type="button" onclick="filterBallsTimeline('inn2', this)" class="timeline-tab-btn px-3 py-1 bg-[#161b22] text-gray-300 rounded-lg text-xs font-bold border border-[#30363d]">
+                <button type="button" onclick="filterBallsTimeline('inn2', this)" class="timeline-tab-btn px-3 py-1 {{ $isLocalMode ? 'bg-[#161b22] text-gray-300 border-[#30363d]' : 'bg-slate-100 text-slate-700 border-slate-300' }} rounded-lg text-xs font-bold border">
                     Innings 2 ({{ $innings2Balls->count() }})
                 </button>
                 @endif
@@ -461,7 +464,7 @@
                     @foreach($allBalls as $index => $ball)
                         @php
                             $out = $ball->outcome;
-                            $bgClass = 'bg-[#161b22] text-white border-[#30363d]';
+                            $bgClass = $isLocalMode ? 'bg-[#161b22] text-white border-[#30363d]' : 'bg-slate-100 text-slate-800 border-slate-300';
                             if ($out === '4') {
                                 $bgClass = 'bg-emerald-600 text-white font-black border-emerald-500 shadow-sm';
                             } elseif ($out === '6') {
@@ -469,11 +472,11 @@
                             } elseif ($out === 'W') {
                                 $bgClass = 'bg-red-600 text-white font-black border-red-500 shadow-sm';
                             } elseif (in_array($out, ['2', '3'])) {
-                                $bgClass = 'bg-amber-600 text-white font-bold border-amber-500';
+                                $bgClass = 'bg-orange-600 text-white font-bold border-orange-500';
                             } elseif (in_array($out, ['1', '5'])) {
                                 $bgClass = 'bg-sky-600 text-white font-bold border-sky-500';
                             } elseif (str_contains($out, 'Wide') || str_contains($out, 'No ball') || str_contains($out, 'Bye')) {
-                                $bgClass = 'bg-amber-500/20 text-amber-300 font-bold border-amber-500/40';
+                                $bgClass = $isLocalMode ? 'bg-amber-500/20 text-amber-300 font-bold border-amber-500/40' : 'bg-amber-100 text-amber-800 font-bold border-amber-300';
                             }
                             $isInn2 = $innings2Balls->contains('id', $ball->id);
                         @endphp
@@ -482,14 +485,14 @@
                         </div>
                     @endforeach
                 @else
-                    <div class="text-gray-400 text-xs italic py-3">No deliveries recorded yet for this match.</div>
+                    <div class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-400' }} text-xs italic py-3">No deliveries recorded yet for this match.</div>
                 @endif
             </div>
 
             <!-- Over by Over Summary Breakdown -->
             @if(isset($allBalls) && count($allBalls) > 0)
-                <div class="mt-5 pt-4 border-t border-[#30363d]">
-                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-wider mb-3">Over-By-Over Breakdown</h4>
+                <div class="mt-5 pt-4 border-t {{ $isLocalMode ? 'border-[#30363d]' : 'border-slate-200' }}">
+                    <h4 class="text-xs font-black {{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} uppercase tracking-wider mb-3">Over-By-Over Breakdown</h4>
                     
                     @php
                         $oversGrouped = [];
@@ -517,19 +520,19 @@
                                 }
                                 $lastBowler = end($ballsInOver)->bowler_name ?? 'Bowler';
                             @endphp
-                            <div class="flex items-center justify-between bg-[#161b22] border border-[#30363d] p-3 rounded-xl flex-wrap gap-2">
+                            <div class="flex items-center justify-between {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d]' : 'bg-slate-50 border-slate-200' }} border p-3 rounded-xl flex-wrap gap-2">
                                 <div class="flex items-center gap-3">
-                                    <span class="font-black text-xs sm:text-sm text-white min-w-[65px]">Over {{ $ovIdx + 1 }}:</span>
+                                    <span class="font-black text-xs sm:text-sm {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} min-w-[65px]">Over {{ $ovIdx + 1 }}:</span>
                                     <div class="flex gap-1.5 items-center flex-wrap">
                                         @foreach($ballsInOver as $b)
-                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-black {{ $b->outcome === 'W' ? 'bg-red-500/20 text-red-400 border border-red-500/40' : ($b->outcome == '4' || $b->outcome == '6' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-[#0d1117] text-white border border-[#30363d]') }}">
+                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-black {{ $b->outcome === 'W' ? 'bg-red-500/20 text-red-500 border border-red-500/40' : ($b->outcome == '4' || $b->outcome == '6' ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : ($isLocalMode ? 'bg-[#0d1117] text-white border border-[#30363d]' : 'bg-white text-slate-800 border border-slate-300')) }}">
                                                 {{ $b->outcome }}
                                             </span>
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="text-xs text-gray-400 font-semibold">
-                                    <strong class="text-white">{{ $overRuns }} runs</strong> &bull; Bowler: <span class="text-sky-400">{{ $lastBowler }}</span>
+                                <div class="text-xs {{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} font-semibold">
+                                    <strong class="{{ $isLocalMode ? 'text-white' : 'text-slate-900' }}">{{ $overRuns }} runs</strong> &bull; Bowler: <span class="text-sky-500">{{ $lastBowler }}</span>
                                 </div>
                             </div>
                         @endforeach
@@ -542,13 +545,13 @@
 </main>
 
 <!-- Modal 1: Wicket Modal -->
-<div id="wicketModal" style="display:none;" class="fixed inset-0 bg-black/80 z-50 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-[#0d1117] border border-[#30363d] rounded-2xl max-w-md w-full p-6 shadow-2xl">
-        <h2 class="text-lg font-black text-red-400 mb-4 flex items-center gap-2">
+<div id="wicketModal" style="display:none;" class="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm items-center justify-center p-4">
+    <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d] text-white' : 'bg-white border-slate-200 text-slate-900' }} border rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <h2 class="text-lg font-black text-red-500 mb-4 flex items-center gap-2">
             <span>⚡</span> Wicket Fallen!
         </h2>
         
-        <form method="POST" action="{{ isset($isLocal) && $isLocal ? route('local.score-update') : route('admin.score-update') }}" class="flex flex-col gap-4">
+        <form method="POST" action="{{ $isLocalMode ? route('local.score-update') : route('admin.score-update') }}" class="flex flex-col gap-4">
             @csrf
             <input type="hidden" name="match_id" value="{{ $match->id }}">
             <input type="hidden" name="is_wicket" value="1">
@@ -556,16 +559,16 @@
             <input type="hidden" name="bowler_name" value="{{ $bowlerName }}">
 
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">Who got out? *</label>
-                <select name="striker_name" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">Who got out? *</label>
+                <select name="striker_name" class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
                     <option value="{{ $strikerName }}">Striker: {{ $strikerName }} ({{ $strikerRuns }} runs)</option>
                     <option value="{{ $nonStrikerName }}">Non-Striker: {{ $nonStrikerName }} ({{ $nonStrikerRuns }} runs)</option>
                 </select>
             </div>
 
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">Next Incoming Batsman</label>
-                <select name="new_batsman_name" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">Next Incoming Batsman</label>
+                <select name="new_batsman_name" class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
                     @foreach($battingTeam->players as $p)
                         @if($p->name !== $strikerName && $p->name !== $nonStrikerName)
                             <option value="{{ $p->name }}">{{ $p->name }} ({{ $p->role }})</option>
@@ -575,26 +578,26 @@
             </div>
 
             <div class="flex gap-2.5 justify-end pt-2">
-                <button type="button" onclick="document.getElementById('wicketModal').style.display='none';" class="bg-transparent hover:bg-white/5 border border-[#30363d] text-gray-400 font-bold px-4 py-2 rounded-xl text-xs">Cancel</button>
-                <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-black px-5 py-2 rounded-xl text-xs shadow-md">Confirm Wicket</button>
+                <button type="button" onclick="document.getElementById('wicketModal').style.display='none';" class="{{ $isLocalMode ? 'hover:bg-white/5 border-[#30363d] text-gray-400' : 'hover:bg-slate-100 border-slate-300 text-slate-600' }} border font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="bg-red-600 hover:bg-red-500 text-white font-black px-5 py-2 rounded-xl text-xs shadow-md cursor-pointer">Confirm Wicket</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Modal 2: Change / Swap Active Players -->
-<div id="changePlayersModal" style="display:none;" class="fixed inset-0 bg-black/80 z-50 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-[#0d1117] border border-[#30363d] rounded-2xl max-w-md w-full p-6 shadow-2xl">
-        <h2 class="text-base sm:text-lg font-black text-white mb-4 flex items-center gap-2">
+<div id="changePlayersModal" style="display:none;" class="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm items-center justify-center p-4">
+    <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d] text-white' : 'bg-white border-slate-200 text-slate-900' }} border rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <h2 class="text-base sm:text-lg font-black {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} mb-4 flex items-center gap-2">
             <span>⚙️</span> Change Active On-Crease Players
         </h2>
         
-        <form method="POST" action="{{ isset($isLocal) && $isLocal ? route('local.change-players', $match->id) : route('admin.change-players', $match->id) }}" class="flex flex-col gap-3.5">
+        <form method="POST" action="{{ $isLocalMode ? route('local.change-players', $match->id) : route('admin.change-players', $match->id) }}" class="flex flex-col gap-3.5">
             @csrf
             
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">Select Striker (*)</label>
-                <select name="striker_name" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">Select Striker (*)</label>
+                <select name="striker_name" class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
                     @foreach($battingTeam->players as $p)
                         <option value="{{ $p->name }}" {{ $p->name === $strikerName ? 'selected' : '' }}>{{ $p->name }} ({{ $p->role }})</option>
                     @endforeach
@@ -602,8 +605,8 @@
             </div>
 
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">Select Non-Striker</label>
-                <select name="non_striker_name" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">Select Non-Striker</label>
+                <select name="non_striker_name" class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
                     @foreach($battingTeam->players as $p)
                         <option value="{{ $p->name }}" {{ $p->name === $nonStrikerName ? 'selected' : '' }}>{{ $p->name }} ({{ $p->role }})</option>
                     @endforeach
@@ -611,8 +614,8 @@
             </div>
 
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">Select Current Bowler</label>
-                <select name="bowler_name" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">Select Current Bowler</label>
+                <select name="bowler_name" class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
                     @foreach($bowlingTeam->players as $p)
                         <option value="{{ $p->name }}" {{ $p->name === $bowlerName ? 'selected' : '' }}>{{ $p->name }} ({{ $p->role }})</option>
                     @endforeach
@@ -620,30 +623,30 @@
             </div>
 
             <div class="flex gap-2.5 justify-end pt-2">
-                <button type="button" onclick="document.getElementById('changePlayersModal').style.display='none';" class="bg-transparent hover:bg-white/5 border border-[#30363d] text-gray-400 font-bold px-4 py-2 rounded-xl text-xs">Cancel</button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-5 py-2 rounded-xl text-xs shadow-md">Save Players</button>
+                <button type="button" onclick="document.getElementById('changePlayersModal').style.display='none';" class="{{ $isLocalMode ? 'hover:bg-white/5 border-[#30363d] text-gray-400' : 'hover:bg-slate-100 border-slate-300 text-slate-600' }} border font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-5 py-2 rounded-xl text-xs shadow-md cursor-pointer">Save Players</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Modal 3: Start / Switch to 2nd Innings -->
-<div id="switchInningsModal" style="display:none;" class="fixed inset-0 bg-black/80 z-50 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-[#0d1117] border border-[#30363d] rounded-2xl max-w-md w-full p-6 shadow-2xl">
-        <h2 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+<div id="switchInningsModal" style="display:none;" class="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm items-center justify-center p-4">
+    <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d] text-white' : 'bg-white border-slate-200 text-slate-900' }} border rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <h2 class="text-base sm:text-lg font-black {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} mb-2 flex items-center gap-2">
             <span>🔄</span> Start 2nd Innings
         </h2>
-        <p class="text-xs text-gray-400 mb-4">
-            1st Innings Score: <strong class="text-white">{{ $match->team1_score }}/{{ $match->team1_wickets }}</strong>. Target: <strong class="text-sky-400">{{ $match->team1_score + 1 }}</strong> runs.
+        <p class="text-xs {{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} mb-4">
+            1st Innings Score: <strong class="{{ $isLocalMode ? 'text-white' : 'text-slate-900' }}">{{ $match->team1_score }}/{{ $match->team1_wickets }}</strong>. Target: <strong class="text-sky-500">{{ $match->team1_score + 1 }}</strong> runs.
         </p>
         
-        <form method="POST" action="{{ isset($isLocal) && $isLocal ? route('local.switch-innings', $match->id) : route('admin.switch-innings', $match->id) }}" class="flex flex-col gap-3.5">
+        <form method="POST" action="{{ $isLocalMode ? route('local.switch-innings', $match->id) : route('admin.switch-innings', $match->id) }}" class="flex flex-col gap-3.5">
             @csrf
             <input type="hidden" name="innings" value="2">
             
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">2nd Innings Striker ({{ $bowlingTeam->name }})</label>
-                <select name="striker_id" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">2nd Innings Striker ({{ $bowlingTeam->name }})</label>
+                <select name="striker_id" required class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
                     @foreach($bowlingTeam->players as $p)
                         <option value="{{ $p->id }}">{{ $p->name }} ({{ $p->role }})</option>
                     @endforeach
@@ -651,17 +654,17 @@
             </div>
 
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">2nd Innings Non-Striker</label>
-                <select name="non_striker_id" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
-                    @foreach($bowlingTeam->players as $idx => $p)
-                        <option value="{{ $p->id }}" {{ $idx == 1 ? 'selected' : '' }}>{{ $p->name }} ({{ $p->role }})</option>
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">2nd Innings Non-Striker ({{ $bowlingTeam->name }})</label>
+                <select name="non_striker_id" required class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                    @foreach($bowlingTeam->players as $p)
+                        <option value="{{ $p->id }}">{{ $p->name }} ({{ $p->role }})</option>
                     @endforeach
                 </select>
             </div>
 
             <div>
-                <label class="block font-bold text-xs text-gray-300 uppercase tracking-wider mb-1">Opening Bowler ({{ $battingTeam->name }})</label>
-                <select name="bowler_id" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
+                <label class="block font-bold text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-700' }} uppercase tracking-wider mb-1">Opening Bowler ({{ $battingTeam->name }})</label>
+                <select name="bowler_id" required class="w-full {{ $isLocalMode ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white' }} border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-500 outline-none">
                     @foreach($battingTeam->players as $p)
                         <option value="{{ $p->id }}">{{ $p->name }} ({{ $p->role }})</option>
                     @endforeach
@@ -669,108 +672,103 @@
             </div>
 
             <div class="flex gap-2.5 justify-end pt-2">
-                <button type="button" onclick="document.getElementById('switchInningsModal').style.display='none';" class="bg-transparent hover:bg-white/5 border border-[#30363d] text-gray-400 font-bold px-4 py-2 rounded-xl text-xs">Cancel</button>
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2 rounded-xl text-xs shadow-md">Start 2nd Innings</button>
+                <button type="button" onclick="document.getElementById('switchInningsModal').style.display='none';" class="{{ $isLocalMode ? 'hover:bg-white/5 border-[#30363d] text-gray-400' : 'hover:bg-slate-100 border-slate-300 text-slate-600' }} border font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">Cancel</button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-5 py-2 rounded-xl text-xs shadow-md cursor-pointer">Confirm & Start 2nd Innings</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-let selectedExtra = null;
+    let activeExtra = '';
 
-function toggleExtra(extraType) {
-    const indicator = document.getElementById('combination_indicator');
-    const badge = document.getElementById('indicator_badge');
-    const example = document.getElementById('indicator_example');
-    const quickLabel = document.getElementById('quick_extra_label');
-    const allExtraBtns = ['wide', 'no_ball', 'bye', 'leg_bye'];
+    function toggleExtra(extraType) {
+        const indicator = document.getElementById('combination_indicator');
+        const badge = document.getElementById('indicator_badge');
+        const example = document.getElementById('indicator_example');
+        const quickBtnLabel = document.getElementById('quick_extra_label');
+        const inputExtras = document.getElementById('input_extras');
+        const allExtraBtns = ['wide', 'no_ball', 'bye', 'leg_bye'];
 
-    // Reset styles on all extra buttons
-    allExtraBtns.forEach(type => {
-        const btn = document.getElementById('btn_extra_' + type);
-        if (btn) {
-            btn.className = 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-emerald-400 cursor-pointer transition-all';
-        }
-    });
-
-    if (selectedExtra === extraType) {
-        // Toggle OFF if clicked again
-        selectedExtra = null;
-        document.getElementById('input_extras').value = '';
-        if (indicator) indicator.style.display = 'none';
-    } else {
-        // Toggle ON
-        selectedExtra = extraType;
-        document.getElementById('input_extras').value = extraType;
-        const btn = document.getElementById('btn_extra_' + extraType);
-        if (btn) {
-            btn.className = 'bg-emerald-600 border-2 border-emerald-300 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-emerald-500/40 cursor-pointer transition-all';
+        if (activeExtra === extraType) {
+            clearExtraSelection();
+            return;
         }
 
-        const label = extraType === 'wide' ? 'Wide' : (extraType === 'no_ball' ? 'No Ball' : (extraType === 'bye' ? 'Bye' : 'Leg Bye'));
-        if (indicator) indicator.style.display = 'block';
-        if (badge) badge.innerText = label;
-        if (example) example.innerText = label + ' + 4';
-        if (quickLabel) quickLabel.innerText = 'Record ' + label + (extraType === 'bye' || extraType === 'leg_bye' ? ' (1 Run)' : ' (+1 Run)');
-    }
-}
+        activeExtra = extraType;
+        inputExtras.value = extraType;
 
-function clearExtraSelection() {
-    selectedExtra = null;
-    document.getElementById('input_extras').value = '';
-    const indicator = document.getElementById('combination_indicator');
-    if (indicator) indicator.style.display = 'none';
-    const allExtraBtns = ['wide', 'no_ball', 'bye', 'leg_bye'];
-    allExtraBtns.forEach(type => {
-        const btn = document.getElementById('btn_extra_' + type);
-        if (btn) {
-            btn.className = 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-emerald-400 cursor-pointer transition-all';
-        }
-    });
-}
+        allExtraBtns.forEach(type => {
+            const btn = document.getElementById('btn_extra_' + type);
+            if (btn) {
+                if (type === extraType) {
+                    btn.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-500/30', 'font-black');
+                } else {
+                    btn.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-500/30', 'font-black');
+                }
+            }
+        });
 
-function handleRunClick(runVal) {
-    const form = document.getElementById('ballDeliveryForm');
-    document.getElementById('input_runs').value = runVal;
-    
-    if (selectedExtra) {
-        document.getElementById('input_extras').value = selectedExtra;
-    } else {
-        document.getElementById('input_extras').value = '';
+        const labels = {
+            'wide': 'WIDE',
+            'no_ball': 'NO BALL',
+            'bye': 'BYE',
+            'leg_bye': 'LEG BYE'
+        };
+
+        const displayLabel = labels[extraType] || extraType.toUpperCase();
+        badge.innerText = displayLabel;
+        example.innerText = displayLabel + ' + 4';
+        quickBtnLabel.innerText = 'Record ' + displayLabel + ' (+1)';
+        indicator.style.display = 'block';
     }
 
-    form.submit();
-}
+    function clearExtraSelection() {
+        activeExtra = '';
+        document.getElementById('input_extras').value = '';
+        document.getElementById('combination_indicator').style.display = 'none';
 
-function submitQuickExtraOnly() {
-    if (!selectedExtra) return;
-    const form = document.getElementById('ballDeliveryForm');
-    document.getElementById('input_runs').value = (selectedExtra === 'bye' || selectedExtra === 'leg_bye') ? 1 : 0;
-    document.getElementById('input_extras').value = selectedExtra;
-    form.submit();
-}
+        ['wide', 'no_ball', 'bye', 'leg_bye'].forEach(type => {
+            const btn = document.getElementById('btn_extra_' + type);
+            if (btn) {
+                btn.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-500/30', 'font-black');
+            }
+        });
+    }
 
-function openWicketModal() {
-    document.getElementById('wicketModal').style.display = 'flex';
-}
+    function handleRunClick(runs) {
+        document.getElementById('input_runs').value = runs;
+        document.getElementById('ballDeliveryForm').submit();
+    }
 
-function filterBallsTimeline(type, btn) {
-    document.querySelectorAll('.timeline-tab-btn').forEach(b => {
-        b.className = 'timeline-tab-btn px-3 py-1 bg-[#161b22] text-gray-300 rounded-lg text-xs font-bold border border-[#30363d]';
-    });
-    btn.className = 'timeline-tab-btn active px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold border border-blue-500';
+    function submitQuickExtraOnly() {
+        document.getElementById('input_runs').value = 0;
+        document.getElementById('ballDeliveryForm').submit();
+    }
 
-    const items = document.querySelectorAll('.timeline-ball-item');
-    items.forEach(item => {
-        if (type === 'all') {
-            item.style.display = 'flex';
-        } else if (item.getAttribute('data-inn') === type) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
+    function openWicketModal() {
+        document.getElementById('wicketModal').style.display = 'flex';
+    }
+
+    function filterBallsTimeline(filter, btn) {
+        document.querySelectorAll('.timeline-tab-btn').forEach(b => {
+            b.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-500');
+            b.classList.add('bg-[#161b22]', 'text-gray-300', 'border-[#30363d]');
+        });
+
+        btn.classList.add('active', 'bg-blue-600', 'text-white', 'border-blue-500');
+        btn.classList.remove('bg-[#161b22]', 'text-gray-300', 'border-[#30363d]');
+
+        const items = document.querySelectorAll('.timeline-ball-item');
+        items.forEach(item => {
+            if (filter === 'all') {
+                item.style.display = 'flex';
+            } else if (filter === 'inn1') {
+                item.style.display = (item.dataset.inn === 'inn1') ? 'flex' : 'none';
+            } else if (filter === 'inn2') {
+                item.style.display = (item.dataset.inn === 'inn2') ? 'flex' : 'none';
+            }
+        });
+    }
 </script>
 @endsection
