@@ -629,51 +629,6 @@
         </script>
     @endif
 
-    @if($glossaryTerms->isNotEmpty())
-        <!-- ========================================================
-             SECTION 6.2: GLOSSARY OF CRICKET TERMS
-             ======================================================== -->
-        <section class="glossary-section" style="padding: 32px 0 48px; background: var(--bg-main);">
-            <div class="container">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; margin-bottom: 24px;">
-                    <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
-                        <span style="color: #22c55e; font-size: 1.2rem;">📖</span>
-                        <span style="color: var(--text-main);">GLOSSARY OF CRICKET TERMS</span>
-                    </div>
-                    <a href="{{ route('glossary.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">FULL GLOSSARY</a>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px;">
-                    @foreach($glossaryTerms as $term)
-                        <a href="{{ route('glossary.show', $term->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
-                            <!-- Poster Image or Letter Badge -->
-                            @if(!empty($term->poster_image))
-                                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div style="display: none; width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
-                                    {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
-                                </div>
-                            @else
-                                <div style="width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
-                                    {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
-                                </div>
-                            @endif
-
-                            <!-- Details -->
-                            <div>
-                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">
-                                    {{ $term->term }}
-                                </h4>
-                                <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin: 0;">
-                                    {{ $term->definition }}
-                                </p>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
     <!-- ========================================================
          UNIFIED DASHBOARD SECTION (MATCHING SCREENSHOT 2)
          PLAYER RANKINGS, MOST POPULAR PLAYERS, POINTS TABLE & BIRTHDAYS
@@ -853,6 +808,51 @@
             </div>
         </div>
     </section>
+
+    @if($glossaryTerms->isNotEmpty())
+        <!-- ========================================================
+             SECTION 6.2: GLOSSARY OF CRICKET TERMS
+             ======================================================== -->
+        <section class="glossary-section" style="padding: 32px 0 48px; background: var(--bg-main);">
+            <div class="container">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; margin-bottom: 24px;">
+                    <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: #22c55e; font-size: 1.2rem;">📖</span>
+                        <span style="color: var(--text-main);">GLOSSARY OF CRICKET TERMS</span>
+                    </div>
+                    <a href="{{ route('glossary.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">FULL GLOSSARY</a>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px;">
+                    @foreach($glossaryTerms as $term)
+                        <a href="{{ route('glossary.show', $term->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
+                            <!-- Poster Image or Letter Badge -->
+                            @if(!empty($term->poster_image))
+                                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div style="display: none; width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
+                                    {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
+                                </div>
+                            @else
+                                <div style="width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
+                                    {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
+                                </div>
+                            @endif
+
+                            <!-- Details -->
+                            <div>
+                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">
+                                    {{ $term->term }}
+                                </h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin: 0;">
+                                    {{ $term->definition }}
+                                </p>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
 
     <!-- ========================================================
          SECTION 8: GRASSROOTS CTA BANNER
