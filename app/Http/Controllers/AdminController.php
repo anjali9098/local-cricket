@@ -22,54 +22,204 @@ use App\Models\PlayerBowlingStat;
 
 class AdminController extends Controller
 {
-    protected function handleUploadedImage(Request $request, string $fileKey, string $urlKey, ?string $fallback = null): ?string
+    protected function saveUploadedFile(\Illuminate\Http\UploadedFile $file, string $folder = 'uploads/images'): string
     {
-        if ($request->filled($urlKey)) {
-            $val = trim($request->input($urlKey));
-            if (!empty($val)) {
-                return $val;
+        try {
+            $destDir = public_path($folder);
+            if (!file_exists($destDir)) {
+                @mkdir($destDir, 0755, true);
+            }
+
+            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+            if ($ext === 'jpeg') {
+                $ext = 'jpg';
+            }
+
+            $filename = 'img_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $ext;
+            $file->move($destDir, $filename);
+
+            return trim($folder, '/') . '/' . $filename;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not save uploaded file to disk, falling back: " . $e->getMessage());
+            $mime = $file->getMimeType() ?: 'image/jpeg';
+            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+        }
+    }
+
+    protected function saveBase64Image(string $base64String, string $folder = 'uploads/images'): ?string
+    {
+        $b64 = trim($base64String);
+        if (!str_contains($b64, ';base64,')) {
+            return $b64;
+        }
+
+        try {
+            $parts = explode(';base64,', $b64);
+            $mimePart = $parts[0];
+            $dataPart = $parts[1] ?? '';
+
+            $data = base64_decode($dataPart);
+            if (!$data) {
+                return $b64;
+            }
+
+            $ext = 'jpg';
+            if (str_contains($mimePart, 'png')) {
+                $ext = 'png';
+            } elseif (str_contains($mimePart, 'webp')) {
+                $ext = 'webp';
+            } elseif (str_contains($mimePart, 'svg')) {
+                $ext = 'svg';
+            } elseif (str_contains($mimePart, 'gif')) {
+                $ext = 'gif';
+            }
+
+            $destDir = public_path($folder);
+            if (!file_exists($destDir)) {
+                @mkdir($destDir, 0755, true);
+            }
+
+            $filename = 'img_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $ext;
+            if (@file_put_contents($destDir . '/' . $filename, $data) !== false) {
+                return trim($folder, '/') . '/' . $filename;
+            }
+
+            return $b64;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not write base64 image to disk: " . $e->getMessage());
+            return $b64;
+        }
+    }
+
+    protected function handleUploadedImage(Request $request, string $fileKey, string $urlKey, ?string $fallback = null, string $folder = 'uploads/images'): ?string
+    {
+        // 1. Check all candidate file keys for actual file uploads
+        $fileKeys = array_unique([$fileKey, 'poster_file', 'poster_image_file', 'image_file', 'logo_file', 'image', 'file', 'poster_image']);
+        foreach ($fileKeys as $k) {
+            if ($request->hasFile($k) && $request->file($k)->isValid()) {
+                return $this->saveUploadedFile($request->file($k), $folder);
             }
         }
 
-        if ($request->hasFile($fileKey) && $request->file($fileKey)->isValid()) {
-            $file = $request->file($fileKey);
-            $mime = $file->getMimeType() ?: 'image/jpeg';
-            $data = base64_encode(file_get_contents($file->getRealPath()));
-            return 'data:' . $mime . ';base64,' . $data;
+        // 2. Check candidate URL/text keys
+        $urlKeys = array_unique([$urlKey, $fileKey, 'poster_image', 'image_url', 'banner_url', 'logo_url', 'profile_image', 'photo_url', 'logo']);
+        foreach ($urlKeys as $k) {
+            if ($request->filled($k)) {
+                $val = trim($request->input($k));
+                if (empty($val)) {
+                    continue;
+                }
+
+                // If it is a base64 string, decode and save to file
+                if (str_starts_with($val, 'data:image/') || str_contains($val, ';base64,')) {
+                    $saved = $this->saveBase64Image($val, $folder);
+                    if ($saved) {
+                        return $saved;
+                    }
+                }
+
+                // If it is corrupted with http://localhost/data:image/
+                if (preg_match('#^https?://[^/]+/(data:image/[^"\'\s]+)$#i', $val, $matches)) {
+                    $saved = $this->saveBase64Image($matches[1], $folder);
+                    if ($saved) {
+                        return $saved;
+                    }
+                }
+
+                // If it's a full external URL or already a path
+                if (str_starts_with($val, 'http://') || str_starts_with($val, 'https://')) {
+                    // If it is pointing to a local project asset path
+                    if (preg_match('#^https?://(localhost|127\.0\.0\.1)(:\d+)?/(.*)$#i', $val, $matches)) {
+                        $clean = preg_replace('#^score-tracker-laravel/public/#i', '', $matches[3]);
+                        return ltrim($clean, '/');
+                    }
+                    return $val;
+                }
+
+                return ltrim($val, '/');
+            }
         }
 
-        if ($request->filled($fileKey)) {
-            $val = trim($request->input($fileKey));
-            if (!empty($val)) {
-                return $val;
+        // 3. Fallback: if fallback contains base64, save it to disk
+        if (!empty($fallback)) {
+            $fallbackTrim = trim($fallback);
+            if (str_starts_with($fallbackTrim, 'data:image/') || str_contains($fallbackTrim, ';base64,')) {
+                $saved = $this->saveBase64Image($fallbackTrim, $folder);
+                if ($saved) {
+                    return $saved;
+                }
+            }
+            if (preg_match('#^https?://[^/]+/(data:image/[^"\'\s]+)$#i', $fallbackTrim, $matches)) {
+                $saved = $this->saveBase64Image($matches[1], $folder);
+                if ($saved) {
+                    return $saved;
+                }
             }
         }
 
         return $fallback;
     }
 
-    protected function handleUploadedImagesMultiple(Request $request, string $fileKey): array
+    protected function handleUploadedImagesMultiple(Request $request, string $fileKey, string $folder = 'uploads/web_stories'): array
     {
         $urls = [];
 
-        if ($request->has('slides_base64') && is_array($request->input('slides_base64'))) {
-            foreach ($request->input('slides_base64') as $b64) {
-                if (!empty($b64)) {
-                    $urls[] = trim($b64);
+        // Check if multiple files were uploaded
+        $fileKeys = array_unique([$fileKey, 'images', 'slides']);
+        foreach ($fileKeys as $k) {
+            if ($request->hasFile($k)) {
+                $files = $request->file($k);
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+                foreach ($files as $file) {
+                    if ($file && $file->isValid()) {
+                        $urls[] = $this->saveUploadedFile($file, $folder);
+                    }
+                }
+                if (!empty($urls)) {
+                    return $urls;
                 }
             }
         }
 
-        if (empty($urls) && $request->hasFile($fileKey)) {
-            $files = is_array($request->file($fileKey)) ? $request->file($fileKey) : [$request->file($fileKey)];
-            foreach ($files as $file) {
-                if ($file && $file->isValid()) {
-                    $mime = $file->getMimeType() ?: 'image/jpeg';
-                    $data = base64_encode(file_get_contents($file->getRealPath()));
-                    $urls[] = 'data:' . $mime . ';base64,' . $data;
+        // Check for base64 encoded slides from client-side compressor
+        if ($request->has('slides_base64') && is_array($request->input('slides_base64'))) {
+            foreach ($request->input('slides_base64') as $b64) {
+                $b64 = trim($b64);
+                if (!empty($b64)) {
+                    if (str_starts_with($b64, 'data:image/') || str_contains($b64, ';base64,')) {
+                        $saved = $this->saveBase64Image($b64, $folder);
+                        if ($saved) {
+                            $urls[] = $saved;
+                        }
+                    } else {
+                        $urls[] = $b64;
+                    }
+                }
+            }
+            if (!empty($urls)) {
+                return $urls;
+            }
+        }
+
+        // Check for array of slides in input
+        if ($request->has('slides') && is_array($request->input('slides'))) {
+            foreach ($request->input('slides') as $s) {
+                $s = trim($s);
+                if (!empty($s)) {
+                    if (str_starts_with($s, 'data:image/') || str_contains($s, ';base64,')) {
+                        $saved = $this->saveBase64Image($s, $folder);
+                        if ($saved) {
+                            $urls[] = $saved;
+                        }
+                    } else {
+                        $urls[] = $s;
+                    }
                 }
             }
         }
+
         return $urls;
     }
 
@@ -685,7 +835,7 @@ class AdminController extends Controller
             $formatsStr = is_array($formats) ? implode(',', $formats) : (string)$formats;
             $primaryFormat = !empty($formats) ? (is_array($formats) ? $formats[0] : $formats) : 'T20';
 
-            $posterUrl = $this->handleUploadedImage($request, 'poster_image', 'banner_url', $request->input('banner_url', ''));
+            $posterUrl = $this->handleUploadedImage($request, 'poster_image_file', 'poster_image', $request->input('banner_url', ''), 'uploads/series');
 
             Tournament::create([
                 'user_id' => \Illuminate\Support\Facades\Auth::id() ?? 1,
@@ -744,7 +894,7 @@ class AdminController extends Controller
             $formatsStr = is_array($formats) ? implode(',', $formats) : (string)$formats;
             $primaryFormat = !empty($formats) ? (is_array($formats) ? $formats[0] : $formats) : ($tournament->format ?? 'T20');
 
-            $posterUrl = $this->handleUploadedImage($request, 'poster_image', 'banner_url', $tournament->poster_image ?? $tournament->banner_url);
+            $posterUrl = $this->handleUploadedImage($request, 'poster_image_file', 'poster_image', $tournament->poster_image ?? $tournament->banner_url, 'uploads/series');
 
             $tournament->update([
                 'name' => $name,
