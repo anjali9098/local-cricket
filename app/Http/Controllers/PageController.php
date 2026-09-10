@@ -87,7 +87,6 @@ class PageController extends Controller
         $today = \Carbon\Carbon::today();
         // Only fetch real players from DB who have a date_of_birth set (NO dummy/demo fallback data)
         $players = \App\Models\Player::whereNotNull('date_of_birth')
-            ->where('date_of_birth', '!=', '')
             ->with('team')
             ->get();
 

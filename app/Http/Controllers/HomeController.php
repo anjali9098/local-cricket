@@ -225,7 +225,6 @@ class HomeController extends Controller
         // Real Player Birthdays from DB (Only players with explicit Date of Birth set)
         $today = \Carbon\Carbon::today();
         $playerBirthdays = Player::whereNotNull('date_of_birth')
-            ->where('date_of_birth', '!=', '')
             ->with('team')
             ->get()
             ->map(function($player) use ($today) {

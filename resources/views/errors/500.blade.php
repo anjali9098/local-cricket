@@ -16,7 +16,7 @@
 </head>
 <body>
     <div class="box">
-        <h1>🚨 500 Server Error Details</h1>
+        <h1> 500 Server Error Details</h1>
         <div class="msg">
             {{ $exception->getMessage() ?: 'No exception message provided.' }}
         </div>
