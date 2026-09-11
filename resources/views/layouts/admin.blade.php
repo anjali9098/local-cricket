@@ -194,8 +194,202 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        // HTML Editor Toolbar Helpers (H1, H2, H3, P, B, I, U, Link, List, Quote, HR, BR, Preview)
+        function insertHtmlTag(textareaId, tag) {
+            const textarea = typeof textareaId === 'string' ? document.getElementById(textareaId) : textareaId;
+            if (!textarea) return;
+            
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+            
+            let replacement = '';
+            
+            if (tag === 'br') {
+                replacement = '<br>\n';
+            } else if (tag === 'hr') {
+                replacement = '\n<hr>\n';
+            } else if (tag === 'p') {
+                const inner = selectedText.length > 0 ? selectedText : 'Paragraph text here...';
+                replacement = `<p>${inner}</p>\n`;
+            } else if (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4') {
+                const inner = selectedText.length > 0 ? selectedText : `${tag.toUpperCase()} Heading Text`;
+                replacement = `<${tag}>${inner}</${tag}>\n`;
+            } else if (tag === 'blockquote') {
+                const inner = selectedText.length > 0 ? selectedText : 'Important match quote or pitch highlight...';
+                replacement = `<blockquote>${inner}</blockquote>\n`;
+            } else if (tag === 'b' || tag === 'strong') {
+                const inner = selectedText.length > 0 ? selectedText : 'bold text';
+                replacement = `<strong>${inner}</strong>`;
+            } else if (tag === 'i' || tag === 'em') {
+                const inner = selectedText.length > 0 ? selectedText : 'italic text';
+                replacement = `<em>${inner}</em>`;
+            } else if (tag === 'u') {
+                const inner = selectedText.length > 0 ? selectedText : 'underlined text';
+                replacement = `<u>${inner}</u>`;
+            } else if (tag === 'mark') {
+                const inner = selectedText.length > 0 ? selectedText : 'highlighted text';
+                replacement = `<mark>${inner}</mark>`;
+            } else {
+                const inner = selectedText.length > 0 ? selectedText : 'text';
+                replacement = `<${tag}>${inner}</${tag}>`;
+            }
+            
+            textarea.value = before + replacement + after;
+            textarea.focus();
+            const newCursorPos = start + replacement.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function insertHtmlLink(textareaId) {
+            const textarea = typeof textareaId === 'string' ? document.getElementById(textareaId) : textareaId;
+            if (!textarea) return;
+            
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            
+            const url = prompt('Enter Destination URL (e.g. https://cricketkascore.com):', 'https://');
+            if (!url) return;
+            
+            const linkText = selectedText.length > 0 ? selectedText : (prompt('Enter Link Anchor Text:', 'Click here') || url);
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+            
+            const replacement = `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+            
+            textarea.value = before + replacement + after;
+            textarea.focus();
+            textarea.setSelectionRange(start + replacement.length, start + replacement.length);
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function insertHtmlList(textareaId, listType = 'ul') {
+            const textarea = typeof textareaId === 'string' ? document.getElementById(textareaId) : textareaId;
+            if (!textarea) return;
+            
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+            
+            let listItems = '';
+            if (selectedText.length > 0) {
+                const lines = selectedText.split('\n');
+                listItems = lines.map(line => `  <li>${line.trim() || 'List item'}</li>`).join('\n');
+            } else {
+                listItems = '  <li>Key Point 1</li>\n  <li>Key Point 2</li>\n  <li>Key Point 3</li>';
+            }
+            
+            const replacement = `\n<${listType}>\n${listItems}\n</${listType}>\n`;
+            
+            textarea.value = before + replacement + after;
+            textarea.focus();
+            textarea.setSelectionRange(start + replacement.length, start + replacement.length);
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function toggleHtmlPreview(textareaId, previewId) {
+            const textarea = document.getElementById(textareaId);
+            const preview = document.getElementById(previewId);
+            if (!textarea || !preview) return;
+            
+            if (preview.style.display === 'none' || preview.style.display === '') {
+                preview.innerHTML = textarea.value.trim() 
+                    ? textarea.value 
+                    : '<p style="color:#94a3b8; font-style:italic; margin:0;">No content entered yet to preview.</p>';
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
     </script>
     <style>
+        /* HTML Editor Toolbar Styles */
+        .html-editor-wrapper {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            margin-top: 4px;
+        }
+        .html-editor-wrapper:focus-within {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+        }
+        .html-editor-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+            padding: 6px 8px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            user-select: none;
+        }
+        .html-editor-btn {
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            color: #1e293b;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            line-height: 1.2;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .html-editor-btn:hover {
+            background: #0284c7;
+            color: white;
+            border-color: #0284c7;
+        }
+        .html-editor-divider {
+            display: inline-block;
+            width: 1px;
+            height: 18px;
+            background: #cbd5e1;
+            margin: 0 4px;
+        }
+        .html-editor-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            outline: none;
+            font-size: 0.88rem;
+            color: #0f172a;
+            box-sizing: border-box;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+        .html-editor-preview {
+            display: none;
+            padding: 14px 16px;
+            background: #fafafa;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            color: #0f172a;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .html-editor-preview h1 { font-size: 1.6rem; font-weight: 900; margin: 0 0 10px 0; color: #0f172a; }
+        .html-editor-preview h2 { font-size: 1.35rem; font-weight: 800; margin: 0 0 8px 0; color: #0f172a; }
+        .html-editor-preview h3 { font-size: 1.15rem; font-weight: 800; margin: 0 0 6px 0; color: #0f172a; }
+        .html-editor-preview p { margin: 0 0 10px 0; }
+        .html-editor-preview blockquote { border-left: 3px solid #0284c7; padding-left: 12px; margin: 10px 0; color: #475569; font-style: italic; }
+        .html-editor-preview ul, .html-editor-preview ol { padding-left: 20px; margin: 8px 0; }
+
         :root {
             --admin-sidebar-bg: #0b0f17;
             --admin-sidebar-hover: #1e293b;

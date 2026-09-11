@@ -83,10 +83,36 @@
 
             <!-- ROW 3: Full Match Preview Description in HTML -->
             <div>
-                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                    Full Match Preview Description (Pitch Report, Playing 11, Match Prediction) <span style="color:#ef4444;">*</span>
-                </label>
-                <textarea name="summary" rows="6" required placeholder="" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">{{ old('summary', $editItem->summary ?? ($editItem->full_content ?? '')) }}</textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b; margin: 0;">
+                        Full Match Preview Description (Pitch Report, Playing 11, Match Prediction) <span style="color:#ef4444;">*</span>
+                    </label>
+                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Use formatting buttons to style content</span>
+                </div>
+                <div class="html-editor-wrapper">
+                    <div class="html-editor-toolbar">
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'h1')">H1</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'h2')">H2</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'h3')">H3</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'p')">P</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'b')"><b>B</b></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'i')"><i>I</i></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'u')"><u>U</u></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'mark')">Highlight</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlLink('preview_summary')">🔗 Link</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('preview_summary', 'ul')">• Bullet List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('preview_summary', 'ol')">1. Numbered List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'blockquote')">“ Quote</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'hr')">— Line</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'br')">↵ Break</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('preview_summary', 'preview_summary_preview')">👁️ Live Preview</button>
+                    </div>
+                    <textarea id="preview_summary" name="summary" class="html-editor-textarea" rows="7" required placeholder="Enter pitch analysis, probable playing 11, key battles, weather conditions, match prediction..." style="min-height: 140px;">{{ old('summary', $editItem->summary ?? ($editItem->full_content ?? '')) }}</textarea>
+                    <div id="preview_summary_preview" class="html-editor-preview"></div>
+                </div>
             </div>
 
             <!-- ROW 4: Poster Image | Enable | SUBMIT -->

@@ -90,10 +90,36 @@
 
             <!-- ROW 3: Definition -->
             <div>
-                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                    Term Definition &amp; Explanation <span style="color:#ef4444;">*</span>
-                </label>
-                <textarea name="definition" rows="5" required placeholder="" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">{{ old('definition', $editItem->definition ?? '') }}</textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b; margin: 0;">
+                        Term Definition &amp; Explanation <span style="color:#ef4444;">*</span>
+                    </label>
+                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Use formatting buttons to style content</span>
+                </div>
+                <div class="html-editor-wrapper">
+                    <div class="html-editor-toolbar">
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'h1')">H1</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'h2')">H2</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'h3')">H3</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'p')">P</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'b')"><b>B</b></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'i')"><i>I</i></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'u')"><u>U</u></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'mark')">Highlight</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlLink('glossary_definition')">🔗 Link</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('glossary_definition', 'ul')">• Bullet List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('glossary_definition', 'ol')">1. Numbered List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'blockquote')">“ Quote</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'hr')">— Line</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'br')">↵ Break</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('glossary_definition', 'glossary_definition_preview')">👁️ Live Preview</button>
+                    </div>
+                    <textarea id="glossary_definition" name="definition" class="html-editor-textarea" rows="6" required placeholder="Explain cricket term, rules, umpire signals, technical context..." style="min-height: 130px;">{{ old('definition', $editItem->definition ?? '') }}</textarea>
+                    <div id="glossary_definition_preview" class="html-editor-preview"></div>
+                </div>
             </div>
 
             <!-- ROW 4: Poster / Illustration Image | SUBMIT -->
