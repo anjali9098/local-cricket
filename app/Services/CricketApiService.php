@@ -164,14 +164,28 @@ class CricketApiService
 
         // 3. Resolve Venue
         $venueName = $m['venue'] ?? 'International Cricket Ground';
-        $venue = Venue::firstOrCreate(
-            ['name' => $venueName],
-            [
+        $venueDetails = \App\Services\VenueCatalog::resolveVenueDetails($venueName);
+        $venue = Venue::where('name', $venueName)->first();
+
+        if (!$venue) {
+            $venue = Venue::create([
+                'name' => $venueName,
                 'slug' => Str::slug($venueName) . '-' . substr(md5($venueName), 0, 4),
-                'city' => explode(',', $venueName)[1] ?? explode(',', $venueName)[0] ?? 'Stadium',
-                'country' => 'International',
-            ]
-        );
+                'city' => $venueDetails['city'],
+                'country' => $venueDetails['country'],
+                'capacity' => $venueDetails['capacity'],
+                'image_url' => $venueDetails['image_url'],
+                'description' => $venueDetails['description'],
+            ]);
+        } elseif (empty($venue->image_url) || empty($venue->capacity) || $venue->country === 'International') {
+            $venue->update([
+                'city' => $venue->city ?: $venueDetails['city'],
+                'country' => ($venue->country === 'International' || empty($venue->country)) ? $venueDetails['country'] : $venue->country,
+                'capacity' => $venue->capacity ?: $venueDetails['capacity'],
+                'image_url' => $venue->image_url ?: $venueDetails['image_url'],
+                'description' => $venue->description ?: $venueDetails['description'],
+            ]);
+        }
 
         // 4. Parse Scores
         $scores = $m['score'] ?? [];

@@ -200,9 +200,10 @@
                                 <!-- PAGE LINK / CITY -->
                                 <td style="padding: 12px 14px; vertical-align: middle;">
                                     <div style="margin-bottom: 2px;">
-                                        <span style="color: #0284c7; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 3px;">
+                                        <a href="{{ route('venues.show', $item->id) }}" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 3px;">
                                             {{ $item->slug ?: \Illuminate\Support\Str::slug($item->name) }}
-                                        </span>
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                        </a>
                                     </div>
                                     <div style="font-size: 0.75rem; color: #475569; font-weight: 600;">
                                         {{ $item->city ? $item->city . ', ' : '' }}{{ $item->country ?: 'India' }}
@@ -211,8 +212,8 @@
 
                                 <!-- CAPACITY -->
                                 <td style="padding: 12px 12px; vertical-align: middle; font-weight: 700; color: #1e293b;">
-                                    <span style="background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
-                                        {{ $item->capacity ? number_format((int)filter_var($item->capacity, FILTER_SANITIZE_NUMBER_INT)) . ' Seats' : 'N/A' }}
+                                    <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 4px; font-size: 0.78rem; font-weight: 800;">
+                                        {{ !empty($item->capacity) ? (str_contains($item->capacity, 'Seats') ? $item->capacity : $item->capacity . ' Seats') : 'N/A' }}
                                     </span>
                                 </td>
 

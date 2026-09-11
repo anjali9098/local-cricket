@@ -35,12 +35,16 @@
             </p>
         @endif
 
-        <!-- Poster Banner Image (if available) -->
-        @if(!empty($tip->poster_image) || !empty($tip->image_url))
-            <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary);">
-                <img src="{{ $tip->poster_image ?: $tip->image_url }}" alt="{{ $tip->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
-            </div>
-        @endif
+        <!-- Poster Banner Image -->
+        @php
+            $posterImg = $tip->poster_image ?: $tip->image_url;
+            if (empty($posterImg)) {
+                $posterImg = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1000&auto=format&fit=crop&q=80';
+            }
+        @endphp
+        <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary);">
+            <img src="{{ $posterImg }}" alt="{{ $tip->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
+        </div>
 
         <!-- Full Content Body -->
         <div style="color: var(--text-main); font-size: 1rem; line-height: 1.8; font-weight: 400;">

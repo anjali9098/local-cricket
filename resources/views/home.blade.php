@@ -392,13 +392,22 @@
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                 @foreach($matchPreviews->take(6) as $preview)
-                    <a href="{{ route('preview.show', $preview->id) }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 16px 18px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(56, 189, 248, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    @php
+                        $previewImg = $preview->poster_image ?: $preview->image_url;
+                        if (empty($previewImg)) {
+                            $previewImg = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';
+                        }
+                    @endphp
+                    <a href="{{ route('preview.show', $preview->id) }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(56, 189, 248, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                         <div>
+                            <div style="width: 100%; height: 140px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-card-secondary);">
+                                <img src="{{ $previewImg }}" alt="{{ $preview->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)';" onmouseout="this.style.transform='scale(1)';" loading="lazy">
+                            </div>
                             <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">MATCH PREVIEW</span>
                             <h4 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35; color: var(--text-main);">{{ $preview->title }}</h4>
                             <p class="article-desc" style="font-size: 0.83rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
-                                {{ Str::limit($preview->summary, 200) }}
+                                {{ Str::limit($preview->summary, 150) }}
                                 <span style="color: #38bdf8; font-weight: 700; font-size: 0.82rem; margin-left: 5px;">Read More &rarr;</span>
                             </p>
                         </div>

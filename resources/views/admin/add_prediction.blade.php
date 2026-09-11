@@ -219,7 +219,7 @@
                                 <!-- PAGE LINK -->
                                 <td style="padding: 12px 14px; vertical-align: middle;">
                                     <div style="margin-bottom: 2px;">
-                                        <a href="{{ route('home') }}#predictions" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 3px;">
+                                        <a href="{{ route('prediction.show', $item->id) }}" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 3px;">
                                             {{ $item->slug ?: \Illuminate\Support\Str::slug($item->title) }}
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                         </a>
@@ -303,7 +303,7 @@
                                 <!-- PAGE LINK -->
                                 <td style="padding: 12px 14px; vertical-align: middle;">
                                     <div style="margin-bottom: 2px;">
-                                        <a href="{{ route('home') }}#predictions" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 3px;">
+                                        <a href="{{ route('fantasy.show', $item->id) }}" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 3px;">
                                             {{ $item->slug ?: \Illuminate\Support\Str::slug($item->title) }}
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                         </a>

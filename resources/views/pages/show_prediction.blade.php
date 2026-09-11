@@ -35,12 +35,16 @@
             </p>
         @endif
 
-        <!-- Poster Banner Image (if available) -->
-        @if(!empty($prediction->poster_image) || !empty($prediction->image_url))
-            <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary);">
-                <img src="{{ $prediction->poster_image ?: $prediction->image_url }}" alt="{{ $prediction->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
-            </div>
-        @endif
+        <!-- Poster Banner Image -->
+        @php
+            $posterImg = $prediction->poster_image ?: $prediction->image_url;
+            if (empty($posterImg)) {
+                $posterImg = !empty($isPreview) ? 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1000&auto=format&fit=crop&q=80' : 'https://images.unsplash.com/photo-1531415074868-036b1c5c53ec?w=1000&auto=format&fit=crop&q=80';
+            }
+        @endphp
+        <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary);">
+            <img src="{{ $posterImg }}" alt="{{ $prediction->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
+        </div>
 
         <!-- Full Content Body -->
         <div style="color: var(--text-main); font-size: 1rem; line-height: 1.8; font-weight: 400;">
