@@ -293,7 +293,8 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                 @foreach($predictions->take($type === 'all' ? 2 : 10) as $pred)
-                    <a href="{{ route('news.show', $pred->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
+                    @php $predRoute = $pred->tag === 'MATCH PREVIEW' ? route('preview.show', $pred->id) : route('prediction.show', $pred->id); @endphp
+                    <a href="{{ $predRoute }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         <div>
                             <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #f59e0b; display: block; margin-bottom: 4px;">
@@ -306,7 +307,7 @@
                 @endforeach
 
                 @foreach($fantasyTips->take($type === 'all' ? 2 : 10) as $tip)
-                    <a href="{{ route('news.show', $tip->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ route('fantasy.show', $tip->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         <div>
                             <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #10b981; display: block; margin-bottom: 4px;">

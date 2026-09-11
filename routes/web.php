@@ -27,6 +27,9 @@ Route::get('/t/{id}', [PageController::class, 'tournamentDetail'])->name('tourna
 Route::get('/news', [PageController::class, 'news'])->name('news');
 Route::get('/news/{id}', [PageController::class, 'showNews'])->name('news.show');
 Route::get('/article/{id}', [PageController::class, 'showArticle'])->name('article.show');
+Route::get('/prediction/{id}', [PageController::class, 'showPrediction'])->name('prediction.show');
+Route::get('/fantasy/{id}', [PageController::class, 'showFantasyTip'])->name('fantasy.show');
+Route::get('/match-preview/{id}', [PageController::class, 'showMatchPreview'])->name('preview.show');
 Route::get('/compare', [PageController::class, 'compare'])->name('compare');
 Route::get('/teams', [PageController::class, 'teams'])->name('teams');
 Route::get('/players', [PageController::class, 'players'])->name('players');

@@ -68,6 +68,12 @@
                             $detailRoute = route('article.show', $item->id);
                         } elseif (($item->content_type ?? '') === 'news') {
                             $detailRoute = route('news.show', $item->id);
+                        } elseif (($item->content_type ?? '') === 'prediction') {
+                            $detailRoute = route('prediction.show', $item->id);
+                        } elseif (($item->content_type ?? '') === 'fantasy') {
+                            $detailRoute = route('fantasy.show', $item->id);
+                        } elseif (($item->content_type ?? '') === 'preview') {
+                            $detailRoute = route('preview.show', $item->id);
                         }
                     @endphp
 

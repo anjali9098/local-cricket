@@ -324,26 +324,21 @@
                         <a href="{{ route('news', ['type' => 'prediction']) }}" class="view-all-link">ALL PREDICTIONS &rarr;</a>
                     </div>
                     @forelse($predictions->take(6) as $p)
-                        <div class="prediction-card" style="padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #f97316; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s;"
-                            onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+                        <a href="{{ route('prediction.show', $p->id) }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #f97316; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(249, 115, 22, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                             <div>
                                 <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">{{ $p->tag && $p->tag !== 'PREDICTION' ? $p->tag : 'MATCH PREDICTION' }}</span>
-                                <h4 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800;">{{ $p->title }}</h4>
+                                <h4 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $p->title }}</h4>
                                 <p class="article-desc" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
-                                    @if(strlen($p->summary) > 180)
-                                        <span class="summary-short">{{ Str::limit($p->summary, 180) }}</span>
-                                        <span class="summary-full" style="display: none;">{{ $p->summary }}</span>
-                                        <button onclick="toggleSummary(this)" style="background: none; border: none; color: #38bdf8; font-weight: 700; padding: 0; margin-left: 4px; cursor: pointer; font-size: 0.8rem; outline: none;">Read More</button>
-                                    @else
-                                        {{ $p->summary }}
-                                    @endif
+                                    {{ Str::limit($p->summary, 180) }}
+                                    <span style="color: #38bdf8; font-weight: 700; font-size: 0.8rem; margin-left: 4px;">Read More &rarr;</span>
                                 </p>
                             </div>
                             <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 10px; font-size: 0.72rem; color: var(--text-dim); display: flex; justify-content: space-between;">
                                 <span>CricketKaScore Desk</span>
                                 <span>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('M d') : 'Today' }}</span>
                             </div>
-                        </div>
+                        </a>
                     @empty
                         <p style="color:var(--text-dim);font-size:0.85rem;">No match predictions published yet.</p>
                     @endforelse
@@ -359,26 +354,21 @@
                         <a href="{{ route('news', ['type' => 'fantasy']) }}" class="view-all-link">ALL FANTASY TIPS &rarr;</a>
                     </div>
                     @forelse($fantasyTips->take(6) as $f)
-                        <div class="fantasy-card" style="padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #22c55e; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s;"
-                            onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+                        <a href="{{ route('fantasy.show', $f->id) }}" class="fantasy-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #22c55e; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(34, 197, 94, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                             <div>
                                 <span class="card-tag fantasy" style="font-size: 0.68rem; padding: 2px 7px;">{{ $f->tag ?? 'FANTASY' }}</span>
-                                <h4 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800;">{{ $f->title }}</h4>
+                                <h4 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $f->title }}</h4>
                                 <p class="article-desc" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
-                                    @if(strlen($f->summary) > 180)
-                                        <span class="summary-short">{{ Str::limit($f->summary, 180) }}</span>
-                                        <span class="summary-full" style="display: none;">{{ $f->summary }}</span>
-                                        <button onclick="toggleSummary(this)" style="background: none; border: none; color: #22c55e; font-weight: 700; padding: 0; margin-left: 4px; cursor: pointer; font-size: 0.8rem; outline: none;">Read More</button>
-                                    @else
-                                        {{ $f->summary }}
-                                    @endif
+                                    {{ Str::limit($f->summary, 180) }}
+                                    <span style="color: #22c55e; font-weight: 700; font-size: 0.8rem; margin-left: 4px;">Read More &rarr;</span>
                                 </p>
                             </div>
                             <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 10px; font-size: 0.72rem; color: var(--text-dim); display: flex; justify-content: space-between;">
                                 <span>Fantasy Expert</span>
                                 <span>{{ $f->created_at ? \Carbon\Carbon::parse($f->created_at)->format('M d') : 'Today' }}</span>
                             </div>
-                        </div>
+                        </a>
                     @empty
                         <p style="color:var(--text-dim);font-size:0.85rem;">No fantasy tips published yet.</p>
                     @endforelse
@@ -402,26 +392,21 @@
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                 @foreach($matchPreviews->take(6) as $preview)
-                    <div class="prediction-card" style="padding: 16px 18px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s;"
-                        onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+                    <a href="{{ route('preview.show', $preview->id) }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 16px 18px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(56, 189, 248, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                         <div>
                             <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">MATCH PREVIEW</span>
-                            <h4 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35;">{{ $preview->title }}</h4>
-                            <p class="article-desc" style="font-size: 0.83rem; line-height: 1.5; color: var(--text-dim);">
-                                @if(strlen($preview->summary) > 200)
-                                    <span class="summary-short">{{ Str::limit($preview->summary, 200) }}</span>
-                                    <span class="summary-full" style="display: none;">{{ $preview->summary }}</span>
-                                    <button onclick="toggleSummary(this)" style="background: none; border: none; color: #38bdf8; font-weight: 700; padding: 0; margin-left: 5px; cursor: pointer; font-size: 0.82rem; outline: none;">Read More</button>
-                                @else
-                                    {{ $preview->summary }}
-                                @endif
+                            <h4 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35; color: var(--text-main);">{{ $preview->title }}</h4>
+                            <p class="article-desc" style="font-size: 0.83rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
+                                {{ Str::limit($preview->summary, 200) }}
+                                <span style="color: #38bdf8; font-weight: 700; font-size: 0.82rem; margin-left: 5px;">Read More &rarr;</span>
                             </p>
                         </div>
                         <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 12px; font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between;">
                             <span>CricketKaScore Desk</span>
                             <span>{{ $preview->created_at ? \Carbon\Carbon::parse($preview->created_at)->format('M d') : 'Today' }}</span>
                         </div>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         </div>

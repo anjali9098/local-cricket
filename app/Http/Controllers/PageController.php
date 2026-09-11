@@ -669,6 +669,45 @@ class PageController extends Controller
         return view('pages.show_article', compact('article', 'recentArticles'));
     }
 
+    public function showPrediction($id)
+    {
+        $prediction = is_numeric($id) ? Prediction::find($id) : Prediction::where('slug', $id)->first();
+        if (!$prediction) {
+            $prediction = Prediction::findOrFail($id);
+        }
+        $recentPredictions = Prediction::where('id', '!=', $prediction->id)
+            ->where('tag', '!=', 'MATCH PREVIEW')
+            ->orderBy('id', 'desc')
+            ->take(4)
+            ->get();
+        return view('pages.show_prediction', compact('prediction', 'recentPredictions'));
+    }
+
+    public function showMatchPreview($id)
+    {
+        $prediction = is_numeric($id) ? Prediction::find($id) : Prediction::where('slug', $id)->first();
+        if (!$prediction) {
+            $prediction = Prediction::findOrFail($id);
+        }
+        $recentPredictions = Prediction::where('id', '!=', $prediction->id)
+            ->where('tag', 'MATCH PREVIEW')
+            ->orderBy('id', 'desc')
+            ->take(4)
+            ->get();
+        $isPreview = true;
+        return view('pages.show_prediction', compact('prediction', 'recentPredictions', 'isPreview'));
+    }
+
+    public function showFantasyTip($id)
+    {
+        $tip = is_numeric($id) ? FantasyTip::find($id) : FantasyTip::where('slug', $id)->first();
+        if (!$tip) {
+            $tip = FantasyTip::findOrFail($id);
+        }
+        $recentTips = FantasyTip::where('id', '!=', $tip->id)->orderBy('id', 'desc')->take(4)->get();
+        return view('pages.show_fantasy', compact('tip', 'recentTips'));
+    }
+
     public function glossary(Request $request)
     {
         $letter = strtolower($request->query('letter', ''));
