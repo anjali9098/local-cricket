@@ -146,8 +146,13 @@
             
             <!-- Player 1 Card -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; text-align: center;">
-                <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: #38bdf8; margin: 0 auto 12px;">
-                    {{ strtoupper(substr($p1->name, 0, 2)) }}
+                <div style="position: relative; width: 64px; height: 64px; margin: 0 auto 12px;">
+                    @if(!empty($p1->profile_image))
+                        <img src="{{ $p1->profile_image }}" alt="{{ $p1->name }}" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    @endif
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: {{ !empty($p1->profile_image) ? 'none' : 'flex' }}; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: #38bdf8;">
+                        {{ strtoupper(substr($p1->name, 0, 2)) }}
+                    </div>
                 </div>
                 <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">{{ $p1->name }}</h2>
                 <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
@@ -191,8 +196,13 @@
 
             <!-- Player 2 Card -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px; text-align: center;">
-                <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: #f59e0b; margin: 0 auto 12px;">
-                    {{ strtoupper(substr($p2->name, 0, 2)) }}
+                <div style="position: relative; width: 64px; height: 64px; margin: 0 auto 12px;">
+                    @if(!empty($p2->profile_image))
+                        <img src="{{ $p2->profile_image }}" alt="{{ $p2->name }}" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #f59e0b;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    @endif
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: {{ !empty($p2->profile_image) ? 'none' : 'flex' }}; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: #f59e0b;">
+                        {{ strtoupper(substr($p2->name, 0, 2)) }}
+                    </div>
                 </div>
                 <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">{{ $p2->name }}</h2>
                 <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
@@ -212,8 +222,13 @@
             @foreach($playersList as $item)
                 @php $pl = $item['player']; @endphp
                 <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center;">
-                    <div style="width: 58px; height: 58px; border-radius: 50%; background: var(--bg-card-secondary); border: 2px solid {{ $item['color'] }}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: {{ $item['color'] }}; margin: 0 auto 10px;">
-                        {{ strtoupper(substr($pl->name, 0, 2)) }}
+                    <div style="position: relative; width: 58px; height: 58px; margin: 0 auto 10px;">
+                        @if(!empty($pl->profile_image))
+                            <img src="{{ $pl->profile_image }}" alt="{{ $pl->name }}" style="width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid {{ $item['color'] }};" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        @endif
+                        <div style="width: 58px; height: 58px; border-radius: 50%; background: var(--bg-card-secondary); border: 2px solid {{ $item['color'] }}; display: {{ !empty($pl->profile_image) ? 'none' : 'flex' }}; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: {{ $item['color'] }};">
+                            {{ strtoupper(substr($pl->name, 0, 2)) }}
+                        </div>
                     </div>
                     <span style="font-size: 0.72rem; font-weight: 800; color: {{ $item['color'] }}; text-transform: uppercase;">Player {{ $item['index'] }}</span>
                     <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin: 3px 0 6px 0;">{{ $pl->name }}</h3>

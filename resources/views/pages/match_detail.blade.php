@@ -203,23 +203,81 @@
     <!-- TAB 2: COMMENTARY -->
     <div id="tab-commentary" class="match-tab-content" style="display:none;">
         <div class="bg-[#0d1117] border border-[#30363d] rounded-2xl p-4 sm:p-6">
-            @forelse($balls as $ball)
-                <div class="flex gap-4 py-3.5 border-b border-white/5 items-start">
-                    <div class="font-heading font-extrabold text-sm sm:text-base text-blue-500 min-w-[36px]">
-                        {{ $ball->over_num }}
-                    </div>
-                    <div>
-                        <div class="text-sm sm:text-base font-bold text-white">
-                            {{ $ball->over_num }} &mdash; {{ $ball->outcome }}
+            <div class="flex flex-col gap-1">
+                @forelse($balls as $ball)
+                    <div class="flex gap-3 sm:gap-4 py-3.5 border-b border-white/5 items-start">
+                        <!-- Delivery Over Badge -->
+                        <div class="flex-shrink-0 pt-0.5">
+                            <span class="inline-flex items-center justify-center font-heading font-black text-xs sm:text-sm px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-sky-400 min-w-[42px] tracking-tight">
+                                {{ $ball->over_num }}
+                            </span>
                         </div>
-                        <div class="text-xs text-gray-400 mt-1">
-                            {{ $ball->bowler_name }} to {{ $ball->batsman_name }}
+
+                        <!-- Commentary Details -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between flex-wrap gap-2 mb-1.5">
+                                <div class="text-xs sm:text-sm font-bold text-white">
+                                    <span class="text-gray-400 font-semibold">{{ $ball->bowler_name ?? 'Bowler' }}</span> 
+                                    <span class="text-gray-500 font-medium mx-1">to</span> 
+                                    <span class="text-white font-bold">{{ $ball->batsman_name ?? 'Batsman' }}</span>
+                                </div>
+
+                                <!-- Outcome / Run / Wicket Badge -->
+                                <div>
+                                    @if(strtoupper($ball->outcome) === 'W')
+                                        <span class="inline-flex items-center gap-1 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/40 uppercase tracking-wide">
+                                            🔴 WICKET
+                                        </span>
+                                    @elseif($ball->outcome === '4')
+                                        <span class="inline-flex items-center gap-1 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 uppercase tracking-wide">
+                                            FOUR (4 Runs)
+                                        </span>
+                                    @elseif($ball->outcome === '6')
+                                        <span class="inline-flex items-center gap-1 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 border border-purple-500/40 uppercase tracking-wide">
+                                            SIX (6 Runs)
+                                        </span>
+                                    @elseif(str_contains(strtolower($ball->outcome), 'wide') || str_contains(strtolower($ball->outcome), 'no ball'))
+                                        <span class="inline-flex items-center gap-1 text-[11px] sm:text-xs font-black px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/40 uppercase tracking-wide">
+                                            {{ $ball->outcome }}
+                                        </span>
+                                    @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot' || strtolower($ball->outcome) === 'dot ball')
+                                        <span class="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-md bg-white/5 text-gray-400 border border-white/10">
+                                            • Dot Ball (0 Run)
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                                            {{ $ball->outcome }} {{ is_numeric($ball->outcome) ? ((int)$ball->outcome === 1 ? 'Run' : 'Runs') : '' }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Descriptive Commentary Line -->
+                            <p class="text-xs sm:text-sm text-gray-300/90 leading-relaxed font-normal m-0">
+                                @if(strtoupper($ball->outcome) === 'W')
+                                    <strong class="text-red-400 font-bold">OUT!</strong> {{ $ball->batsman_name }} is dismissed off the delivery from {{ $ball->bowler_name }}.
+                                @elseif($ball->outcome === '4')
+                                    <strong class="text-emerald-400 font-bold">FOUR!</strong> {{ $ball->batsman_name }} cracks a gorgeous boundary off {{ $ball->bowler_name }}.
+                                @elseif($ball->outcome === '6')
+                                    <strong class="text-purple-400 font-bold">SIX!</strong> {{ $ball->batsman_name }} lofts it high over the boundary ropes for a maximum off {{ $ball->bowler_name }}!
+                                @elseif(str_contains(strtolower($ball->outcome), 'wide'))
+                                    <strong class="text-amber-400 font-bold">WIDE!</strong> {{ $ball->bowler_name }} slips down the leg/off side, wide signalled by the umpire.
+                                @elseif(str_contains(strtolower($ball->outcome), 'no ball'))
+                                    <strong class="text-amber-400 font-bold">NO BALL!</strong> {{ $ball->bowler_name }} oversteps the crease, free hit upcoming.
+                                @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot')
+                                    {{ $ball->bowler_name }} bowls a disciplined delivery to {{ $ball->batsman_name }}, defended safely, no run.
+                                @elseif(is_numeric($ball->outcome))
+                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }} {{ (int)$ball->outcome === 1 ? 'run taken smartly' : 'runs scored' }}.
+                                @else
+                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }}.
+                                @endif
+                            </p>
                         </div>
                     </div>
-                </div>
-            @empty
-                <p class="text-gray-400 text-center py-8">No commentary entries added yet.</p>
-            @endforelse
+                @empty
+                    <p class="text-gray-400 text-center py-8">No commentary entries added yet.</p>
+                @endforelse
+            </div>
         </div>
     </div>
 

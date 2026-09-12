@@ -252,26 +252,81 @@
     <!-- TAB 2: COMMENTARY -->
     <div id="tab-commentary" class="match-tab-content" style="display:none;">
         <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d]' : 'bg-white border-slate-200 shadow-sm' }} border rounded-2xl p-4 sm:p-6">
-            @forelse($balls as $ball)
-                <div class="flex gap-3.5 py-3 border-b {{ $isLocalMode ? 'border-white/5' : 'border-slate-100' }} items-start">
-                    <div class="font-black text-xs sm:text-sm text-sky-600 dark:text-sky-400 min-w-[36px] pt-0.5">
-                        {{ $ball->over_num }}
-                    </div>
-                    <div>
-                        <div class="text-xs sm:text-sm font-bold {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} flex items-center gap-2">
-                            <span>{{ $ball->over_num }} &mdash;</span>
-                            <span class="px-2 py-0.5 rounded text-xs font-black {{ $ball->outcome === 'W' ? 'bg-red-500/20 text-red-500' : ($ball->outcome == '4' || $ball->outcome == '6' ? 'bg-emerald-500/20 text-emerald-600' : ($isLocalMode ? 'bg-[#161b22] text-white' : 'bg-slate-100 text-slate-800')) }}">
-                                {{ $ball->outcome }}
+            <div class="flex flex-col gap-1">
+                @forelse($balls as $ball)
+                    <div class="flex gap-3 sm:gap-4 py-3 border-b {{ $isLocalMode ? 'border-white/5' : 'border-slate-100' }} items-start">
+                        <!-- Delivery Over Badge -->
+                        <div class="flex-shrink-0 pt-0.5">
+                            <span class="inline-flex items-center justify-center font-black text-xs px-2.5 py-1 rounded-lg {{ $isLocalMode ? 'bg-white/5 border border-white/10 text-sky-400' : 'bg-slate-100 border border-slate-200 text-sky-600' }} min-w-[42px] tracking-tight">
+                                {{ $ball->over_num }}
                             </span>
                         </div>
-                        <div class="text-xs {{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} mt-1">
-                            {{ $ball->bowler_name }} to {{ $ball->batsman_name }}
+
+                        <!-- Commentary Details -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+                                <div class="text-xs sm:text-sm font-bold {{ $isLocalMode ? 'text-white' : 'text-slate-900' }}">
+                                    <span class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} font-semibold">{{ $ball->bowler_name ?? 'Bowler' }}</span> 
+                                    <span class="text-slate-400 font-medium mx-1">to</span> 
+                                    <span class="{{ $isLocalMode ? 'text-white' : 'text-slate-900' }} font-bold">{{ $ball->batsman_name ?? 'Batsman' }}</span>
+                                </div>
+
+                                <!-- Outcome / Run / Wicket Badge -->
+                                <div>
+                                    @if(strtoupper($ball->outcome) === 'W')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-md bg-red-500/20 text-red-500 border border-red-500/30 uppercase tracking-wide">
+                                            🔴 WICKET
+                                        </span>
+                                    @elseif($ball->outcome === '4')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wide">
+                                            FOUR (4 Runs)
+                                        </span>
+                                    @elseif($ball->outcome === '6')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 uppercase tracking-wide">
+                                            SIX (6 Runs)
+                                        </span>
+                                    @elseif(str_contains(strtolower($ball->outcome), 'wide') || str_contains(strtolower($ball->outcome), 'no ball'))
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 uppercase tracking-wide">
+                                            {{ $ball->outcome }}
+                                        </span>
+                                    @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot' || strtolower($ball->outcome) === 'dot ball')
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md {{ $isLocalMode ? 'bg-white/5 text-gray-400 border border-white/10' : 'bg-slate-100 text-slate-500 border border-slate-200' }}">
+                                            • Dot Ball (0 Run)
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                                            {{ $ball->outcome }} {{ is_numeric($ball->outcome) ? ((int)$ball->outcome === 1 ? 'Run' : 'Runs') : '' }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Commentary Line -->
+                            <p class="text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-600' }} leading-relaxed font-normal m-0">
+                                @if(strtoupper($ball->outcome) === 'W')
+                                    <strong class="text-red-500 font-bold">OUT!</strong> {{ $ball->batsman_name }} is dismissed off the delivery from {{ $ball->bowler_name }}.
+                                @elseif($ball->outcome === '4')
+                                    <strong class="text-emerald-600 font-bold">FOUR!</strong> {{ $ball->batsman_name }} hits a boundary off {{ $ball->bowler_name }}.
+                                @elseif($ball->outcome === '6')
+                                    <strong class="text-purple-600 font-bold">SIX!</strong> {{ $ball->batsman_name }} smashes a huge six off {{ $ball->bowler_name }}!
+                                @elseif(str_contains(strtolower($ball->outcome), 'wide'))
+                                    <strong class="text-amber-600 font-bold">WIDE!</strong> {{ $ball->bowler_name }} strays in line, extra run awarded.
+                                @elseif(str_contains(strtolower($ball->outcome), 'no ball'))
+                                    <strong class="text-amber-600 font-bold">NO BALL!</strong> {{ $ball->bowler_name }} oversteps, free hit next.
+                                @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot')
+                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, no run scored.
+                                @elseif(is_numeric($ball->outcome))
+                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }} {{ (int)$ball->outcome === 1 ? 'run taken' : 'runs scored' }}.
+                                @else
+                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }}.
+                                @endif
+                            </p>
                         </div>
                     </div>
-                </div>
-            @empty
-                <p class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-400' }} text-center py-8 text-xs sm:text-sm font-semibold">No commentary entries added yet.</p>
-            @endforelse
+                @empty
+                    <p class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-400' }} text-center py-8 text-xs sm:text-sm font-semibold">No commentary entries added yet.</p>
+                @endforelse
+            </div>
         </div>
     </div>
 

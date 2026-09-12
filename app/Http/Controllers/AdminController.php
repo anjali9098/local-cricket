@@ -24,80 +24,24 @@ class AdminController extends Controller
 {
     protected function saveUploadedFile(\Illuminate\Http\UploadedFile $file, string $folder = 'uploads/images'): string
     {
-        try {
-            $destDir = public_path($folder);
-            if (!file_exists($destDir)) {
-                @mkdir($destDir, 0755, true);
-            }
-
-            $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
-            if ($ext === 'jpeg') {
-                $ext = 'jpg';
-            }
-
-            $filename = 'img_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $ext;
-            $file->move($destDir, $filename);
-
-            return trim($folder, '/') . '/' . $filename;
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Could not save uploaded file to disk, falling back: " . $e->getMessage());
-            $mime = $file->getMimeType() ?: 'image/jpeg';
-            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
-        }
+        $mime = $file->getMimeType() ?: 'image/jpeg';
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
     }
 
     protected function saveBase64Image(string $base64String, string $folder = 'uploads/images'): ?string
     {
-        $b64 = trim($base64String);
-        if (!str_contains($b64, ';base64,')) {
-            return $b64;
-        }
-
-        try {
-            $parts = explode(';base64,', $b64);
-            $mimePart = $parts[0];
-            $dataPart = $parts[1] ?? '';
-
-            $data = base64_decode($dataPart);
-            if (!$data) {
-                return $b64;
-            }
-
-            $ext = 'jpg';
-            if (str_contains($mimePart, 'png')) {
-                $ext = 'png';
-            } elseif (str_contains($mimePart, 'webp')) {
-                $ext = 'webp';
-            } elseif (str_contains($mimePart, 'svg')) {
-                $ext = 'svg';
-            } elseif (str_contains($mimePart, 'gif')) {
-                $ext = 'gif';
-            }
-
-            $destDir = public_path($folder);
-            if (!file_exists($destDir)) {
-                @mkdir($destDir, 0755, true);
-            }
-
-            $filename = 'img_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $ext;
-            if (@file_put_contents($destDir . '/' . $filename, $data) !== false) {
-                return trim($folder, '/') . '/' . $filename;
-            }
-
-            return $b64;
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Could not write base64 image to disk: " . $e->getMessage());
-            return $b64;
-        }
+        return trim($base64String);
     }
 
     protected function handleUploadedImage(Request $request, string $fileKey, string $urlKey, ?string $fallback = null, string $folder = 'uploads/images'): ?string
     {
         // 1. Check all candidate file keys for actual file uploads
-        $fileKeys = array_unique([$fileKey, 'poster_file', 'poster_image_file', 'image_file', 'logo_file', 'image', 'file', 'poster_image']);
+        $fileKeys = array_unique([$fileKey, 'poster_file', 'poster_image_file', 'image_file', 'logo_file', 'image', 'file', 'poster_image', 'profile_image_file', 'photo_file']);
         foreach ($fileKeys as $k) {
             if ($request->hasFile($k) && $request->file($k)->isValid()) {
-                return $this->saveUploadedFile($request->file($k), $folder);
+                $file = $request->file($k);
+                $mime = $file->getMimeType() ?: 'image/jpeg';
+                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
             }
         }
 
@@ -106,53 +50,8 @@ class AdminController extends Controller
         foreach ($urlKeys as $k) {
             if ($request->filled($k)) {
                 $val = trim($request->input($k));
-                if (empty($val)) {
-                    continue;
-                }
-
-                // If it is a base64 string, decode and save to file
-                if (str_starts_with($val, 'data:image/') || str_contains($val, ';base64,')) {
-                    $saved = $this->saveBase64Image($val, $folder);
-                    if ($saved) {
-                        return $saved;
-                    }
-                }
-
-                // If it is corrupted with http://localhost/data:image/
-                if (preg_match('#^https?://[^/]+/(data:image/[^"\'\s]+)$#i', $val, $matches)) {
-                    $saved = $this->saveBase64Image($matches[1], $folder);
-                    if ($saved) {
-                        return $saved;
-                    }
-                }
-
-                // If it's a full external URL or already a path
-                if (str_starts_with($val, 'http://') || str_starts_with($val, 'https://')) {
-                    // If it is pointing to a local project asset path
-                    if (preg_match('#^https?://(localhost|127\.0\.0\.1)(:\d+)?/(.*)$#i', $val, $matches)) {
-                        $clean = preg_replace('#^score-tracker-laravel/public/#i', '', $matches[3]);
-                        return ltrim($clean, '/');
-                    }
+                if (!empty($val)) {
                     return $val;
-                }
-
-                return ltrim($val, '/');
-            }
-        }
-
-        // 3. Fallback: if fallback contains base64, save it to disk
-        if (!empty($fallback)) {
-            $fallbackTrim = trim($fallback);
-            if (str_starts_with($fallbackTrim, 'data:image/') || str_contains($fallbackTrim, ';base64,')) {
-                $saved = $this->saveBase64Image($fallbackTrim, $folder);
-                if ($saved) {
-                    return $saved;
-                }
-            }
-            if (preg_match('#^https?://[^/]+/(data:image/[^"\'\s]+)$#i', $fallbackTrim, $matches)) {
-                $saved = $this->saveBase64Image($matches[1], $folder);
-                if ($saved) {
-                    return $saved;
                 }
             }
         }
@@ -174,7 +73,8 @@ class AdminController extends Controller
                 }
                 foreach ($files as $file) {
                     if ($file && $file->isValid()) {
-                        $urls[] = $this->saveUploadedFile($file, $folder);
+                        $mime = $file->getMimeType() ?: 'image/jpeg';
+                        $urls[] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
                     }
                 }
                 if (!empty($urls)) {
@@ -188,14 +88,7 @@ class AdminController extends Controller
             foreach ($request->input('slides_base64') as $b64) {
                 $b64 = trim($b64);
                 if (!empty($b64)) {
-                    if (str_starts_with($b64, 'data:image/') || str_contains($b64, ';base64,')) {
-                        $saved = $this->saveBase64Image($b64, $folder);
-                        if ($saved) {
-                            $urls[] = $saved;
-                        }
-                    } else {
-                        $urls[] = $b64;
-                    }
+                    $urls[] = $b64;
                 }
             }
             if (!empty($urls)) {

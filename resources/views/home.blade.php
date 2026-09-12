@@ -700,8 +700,13 @@
                         <div class="popular-players-bar-grid">
                             @foreach($popularPlayers->take(3) as $pop)
                                 <a href="{{ route('player.profile', $pop->id) }}" class="popular-players-bar-card">
-                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); color: var(--primary-text); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; font-size: 0.8rem;">
-                                        {{ $pop->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pop->name), 0, 3)) }}
+                                    <div style="position: relative; width: 48px; height: 48px; margin: 0 auto 10px;">
+                                        @if(!empty($pop->profile_image))
+                                            <img src="{{ $pop->profile_image }}" alt="{{ $pop->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        @endif
+                                        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); color: var(--primary-text); display: {{ !empty($pop->profile_image) ? 'none' : 'flex' }}; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
+                                            {{ $pop->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pop->name), 0, 3)) }}
+                                        </div>
                                     </div>
                                     <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;">{{ $pop->name }}</div>
                                     <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">
@@ -767,8 +772,13 @@
                                 @forelse($playerBirthdays->take(4) as $pb)
                                     <a href="{{ route('player.profile', $pb->id) }}" class="birthday-list-item" style="text-decoration: none;">
                                         <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--primary-text); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.68rem; flex-shrink: 0;">
-                                                {{ $pb->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pb->name), 0, 3)) }}
+                                            <div style="position: relative; width: 34px; height: 34px; flex-shrink: 0;">
+                                                @if(!empty($pb->profile_image))
+                                                    <img src="{{ $pb->profile_image }}" alt="{{ $pb->name }}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                @endif
+                                                <div style="width: 34px; height: 34px; border-radius: 50%; background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--primary-text); display: {{ !empty($pb->profile_image) ? 'none' : 'flex' }}; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem;">
+                                                    {{ $pb->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pb->name), 0, 2)) }}
+                                                </div>
                                             </div>
                                             <div style="min-width: 0;">
                                                 <div style="font-weight: 800; font-size: 0.86rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">

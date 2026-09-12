@@ -126,7 +126,7 @@ class PageController extends Controller
 
     public function tournamentDetail($id)
     {
-        $tournament = Tournament::with(['teams', 'matches.team1', 'matches.team2'])->findOrFail($id);
+        $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->findOrFail($id);
         
         if ($tournament->status === 'draft') {
             abort(404, 'Tournament is not published yet.');
@@ -139,7 +139,7 @@ class PageController extends Controller
         // Increment the views count whenever the public page is opened
         $tournament->increment('views_count');
 
-        // Calculate points table
+        // 1. Calculate Points Table dynamically from matches
         $pointsTable = [];
         foreach ($tournament->teams as $team) {
             $pointsTable[$team->id] = [
@@ -149,23 +149,27 @@ class PageController extends Controller
         }
 
         foreach ($tournament->matches as $match) {
-            if ($match->status === 'completed') {
+            $isCompleted = ($match->status === 'completed' || $match->effective_status === 'completed');
+            if ($isCompleted) {
+                $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($match->team1_score ?? '0'))[0] ?? '0');
+                $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($match->team2_score ?? '0'))[0] ?? '0');
+
                 if (isset($pointsTable[$match->team1_id])) {
                     $pointsTable[$match->team1_id]['p']++;
-                    if ($match->team1_score > $match->team2_score) {
+                    if ($s1 > $s2) {
                         $pointsTable[$match->team1_id]['w']++;
                         $pointsTable[$match->team1_id]['pts'] += 2;
-                    } else {
+                    } elseif ($s2 > $s1) {
                         $pointsTable[$match->team1_id]['l']++;
                     }
                 }
                 
                 if (isset($pointsTable[$match->team2_id])) {
                     $pointsTable[$match->team2_id]['p']++;
-                    if ($match->team2_score > $match->team1_score) {
+                    if ($s2 > $s1) {
                         $pointsTable[$match->team2_id]['w']++;
                         $pointsTable[$match->team2_id]['pts'] += 2;
-                    } else {
+                    } elseif ($s1 > $s2) {
                         $pointsTable[$match->team2_id]['l']++;
                     }
                 }
@@ -175,7 +179,82 @@ class PageController extends Controller
         // Sort by points descending
         usort($pointsTable, fn($a, $b) => $b['pts'] <=> $a['pts']);
 
-        return view('pages.tournament_public', compact('tournament', 'pointsTable'));
+        // 2. Tournament Teams
+        $teams = $tournament->teams;
+
+        // 3. Tournament Players (All registered squad players)
+        $players = collect();
+        foreach ($tournament->teams as $team) {
+            foreach ($team->players as $player) {
+                $player->team_name = $team->name;
+                $player->team_logo = $team->logo;
+                $players->push($player);
+            }
+        }
+
+        // 4. Highest Score / Most Runs (Batting Stats)
+        $matchIds = $tournament->matches->pluck('id');
+        $rawBatting = \App\Models\PlayerBattingStat::whereIn('match_id', $matchIds)->get();
+        $topBatters = $rawBatting->groupBy('player_name')->map(function($records, $playerName) {
+            $totalRuns = (int)$records->sum('runs');
+            $totalBalls = (int)$records->sum('balls');
+            $totalFours = (int)$records->sum('fours');
+            $totalSixes = (int)$records->sum('sixes');
+            $highestScore = (int)$records->max('runs');
+            $innings = $records->count();
+            $strikeRate = $totalBalls > 0 ? round(($totalRuns / $totalBalls) * 100, 2) : 0.00;
+
+            return (object)[
+                'player_name' => $playerName,
+                'innings' => $innings,
+                'runs' => $totalRuns,
+                'balls' => $totalBalls,
+                'fours' => $totalFours,
+                'sixes' => $totalSixes,
+                'highest_score' => $highestScore,
+                'strike_rate' => $strikeRate,
+            ];
+        })->sortByDesc('runs')->values();
+
+        // 5. Most Wickets (Bowling Stats)
+        $rawBowling = \App\Models\PlayerBowlingStat::whereIn('match_id', $matchIds)->get();
+        $topBowlers = $rawBowling->groupBy('player_name')->map(function($records, $playerName) {
+            $totalWickets = (int)$records->sum('wickets');
+            $totalRuns = (int)$records->sum('runs');
+            $innings = $records->count();
+            
+            $totalBalls = 0;
+            foreach ($records as $r) {
+                $parts = explode('.', (string)$r->overs);
+                $fullOvers = (int)($parts[0] ?? 0);
+                $balls = (int)($parts[1] ?? 0);
+                $totalBalls += ($fullOvers * 6) + $balls;
+            }
+            $totalOversFormatted = floor($totalBalls / 6) . '.' . ($totalBalls % 6);
+            $economy = $totalBalls > 0 ? round(($totalRuns / ($totalBalls / 6)), 2) : 0.00;
+
+            $bestRecord = $records->sortByDesc('wickets')->sortBy('runs')->first();
+            $bestFigure = $bestRecord ? "{$bestRecord->wickets}/{$bestRecord->runs}" : '0/0';
+
+            return (object)[
+                'player_name' => $playerName,
+                'innings' => $innings,
+                'overs' => $totalOversFormatted,
+                'runs' => $totalRuns,
+                'wickets' => $totalWickets,
+                'economy' => $economy,
+                'best_figure' => $bestFigure,
+            ];
+        })->sortByDesc('wickets')->sortBy('economy')->values();
+
+        return view('pages.tournament_public', compact(
+            'tournament',
+            'pointsTable',
+            'teams',
+            'players',
+            'topBatters',
+            'topBowlers'
+        ));
     }
 
     public function tournaments(Request $request)

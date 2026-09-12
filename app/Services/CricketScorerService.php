@@ -215,6 +215,7 @@ class CricketScorerService
 
         // Advance Match Team Score & Overs
         $isOverComplete = false;
+        $deliveryOverNum = '0.1';
         if ($match->current_innings == 1) {
             $match->team1_score += $runsToAdd;
             if ($isWicket) {
@@ -231,8 +232,17 @@ class CricketScorerService
                     $compOvers++;
                     $balls = 0;
                     $isOverComplete = true;
+                    $deliveryOverNum = ($compOvers - 1) . '.6';
+                } else {
+                    $deliveryOverNum = $compOvers . '.' . $balls;
                 }
                 $match->team1_overs = (float)($compOvers . '.' . $balls);
+            } else {
+                $oversStr = (string)$match->team1_overs;
+                $parts = explode('.', $oversStr);
+                $compOvers = (int)$parts[0];
+                $balls = isset($parts[1]) ? (int)$parts[1] : 0;
+                $deliveryOverNum = $compOvers . '.' . max(1, $balls) . ' (wd/nb)';
             }
         } else {
             $match->team2_score += $runsToAdd;
@@ -250,8 +260,17 @@ class CricketScorerService
                     $compOvers++;
                     $balls = 0;
                     $isOverComplete = true;
+                    $deliveryOverNum = ($compOvers - 1) . '.6';
+                } else {
+                    $deliveryOverNum = $compOvers . '.' . $balls;
                 }
                 $match->team2_overs = (float)($compOvers . '.' . $balls);
+            } else {
+                $oversStr = (string)$match->team2_overs;
+                $parts = explode('.', $oversStr);
+                $compOvers = (int)$parts[0];
+                $balls = isset($parts[1]) ? (int)$parts[1] : 0;
+                $deliveryOverNum = $compOvers . '.' . max(1, $balls) . ' (wd/nb)';
             }
         }
 
@@ -374,12 +393,10 @@ class CricketScorerService
             $outcome = $runs > 0 ? (string)$runs : '0';
         }
 
-        $currentOverNum = (string)($match->current_innings == 1 ? $match->team1_overs : $match->team2_overs);
-
-        // Save Ball By Ball
+        // Save Ball By Ball with exact delivery number
         BallByBall::create([
             'match_id' => $match->id,
-            'over_num' => $currentOverNum,
+            'over_num' => $deliveryOverNum,
             'outcome' => $outcome,
             'bowler_name' => $bowlerStat ? $bowlerStat->player_name : 'Bowler',
             'batsman_name' => $strikerStat ? $strikerStat->player_name : 'Batsman',

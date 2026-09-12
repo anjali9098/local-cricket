@@ -165,13 +165,17 @@ class HomeController extends Controller
         }
 
         // 100% Dynamic Real Points Table from active tournament & matches
-        $activeTournament = Tournament::whereHas('matches')
-            ->orderByRaw("CASE WHEN status = 'live' THEN 1 WHEN status = 'ongoing' THEN 2 ELSE 3 END")
-            ->orderBy('id', 'desc')
+        $activeTournament = Tournament::whereHas('teams')
+            ->whereHas('matches')
+            ->get()
+            ->sortByDesc(function($t) {
+                $completed = $t->matches->filter(fn($m) => in_array($m->status, ['completed', 'live']))->count();
+                return ($completed * 100) + $t->teams->count();
+            })
             ->first();
 
         if (!$activeTournament) {
-            $activeTournament = Tournament::orderBy('id', 'desc')->first();
+            $activeTournament = Tournament::whereHas('teams')->first() ?? Tournament::first();
         }
 
         $pointsTable = collect();
@@ -192,15 +196,28 @@ class HomeController extends Controller
 
                 foreach ($tournamentMatches as $tm) {
                     if ($tm->team1_id == $team->id || $tm->team2_id == $team->id) {
-                        if (in_array($tm->status, ['completed', 'live'])) {
+                        $status = strtolower($tm->effective_status ?? $tm->status ?? '');
+                        if (in_array($status, ['completed', 'live'])) {
                             $played++;
                         }
-                        if ($tm->status === 'completed') {
-                            if ($tm->winner_team_id == $team->id) {
+                        if ($status === 'completed') {
+                            $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($tm->team1_score ?? '0'))[0] ?? '0');
+                            $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($tm->team2_score ?? '0'))[0] ?? '0');
+
+                            $winnerId = null;
+                            if ($s1 > $s2) {
+                                $winnerId = $tm->team1_id;
+                            } elseif ($s2 > $s1) {
+                                $winnerId = $tm->team2_id;
+                            }
+
+                            if ($winnerId && $winnerId == $team->id) {
                                 $won++;
                                 $points += 2;
-                            } elseif ($tm->winner_team_id && $tm->winner_team_id != $team->id) {
+                            } elseif ($winnerId && $winnerId != $team->id) {
                                 $lost++;
+                            } elseif ($s1 > 0 && $s1 === $s2) {
+                                $points += 1;
                             }
                         }
                     }
@@ -212,6 +229,7 @@ class HomeController extends Controller
                     'team_name' => $team->name,
                     'played' => $played,
                     'won' => $won,
+                    'lost' => $lost,
                     'points' => $points,
                     'tournament_name' => $activeTournament->name
                 ]);

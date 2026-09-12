@@ -124,6 +124,26 @@ if (empty($_ENV['DB_CONNECTION']) && empty($_SERVER['DB_CONNECTION'])) {
     $_ENV['DB_CONNECTION'] = 'mysql';
     $_SERVER['DB_CONNECTION'] = 'mysql';
 }
+if (empty($_ENV['DB_HOST']) && empty($_SERVER['DB_HOST']) && getenv('DB_HOST')) {
+    $_ENV['DB_HOST'] = getenv('DB_HOST');
+    $_SERVER['DB_HOST'] = getenv('DB_HOST');
+}
+if (empty($_ENV['DB_PORT']) && empty($_SERVER['DB_PORT']) && getenv('DB_PORT')) {
+    $_ENV['DB_PORT'] = getenv('DB_PORT');
+    $_SERVER['DB_PORT'] = getenv('DB_PORT');
+}
+if (empty($_ENV['DB_DATABASE']) && empty($_SERVER['DB_DATABASE']) && getenv('DB_DATABASE')) {
+    $_ENV['DB_DATABASE'] = getenv('DB_DATABASE');
+    $_SERVER['DB_DATABASE'] = getenv('DB_DATABASE');
+}
+if (empty($_ENV['DB_USERNAME']) && empty($_SERVER['DB_USERNAME']) && getenv('DB_USERNAME')) {
+    $_ENV['DB_USERNAME'] = getenv('DB_USERNAME');
+    $_SERVER['DB_USERNAME'] = getenv('DB_USERNAME');
+}
+if (empty($_ENV['DB_PASSWORD']) && empty($_SERVER['DB_PASSWORD']) && getenv('DB_PASSWORD')) {
+    $_ENV['DB_PASSWORD'] = getenv('DB_PASSWORD');
+    $_SERVER['DB_PASSWORD'] = getenv('DB_PASSWORD');
+}
 if (empty($_ENV['CACHE_STORE']) && empty($_SERVER['CACHE_STORE'])) {
     putenv('CACHE_STORE=array');
     $_ENV['CACHE_STORE'] = 'array';
