@@ -100,17 +100,82 @@
     <!-- TEAMS TAB -->
     <div id="tab-teams" class="tab-content active">
         <div class="bg-[#0d1117] border border-[#30363d] rounded-2xl p-4 sm:p-6 shadow-md">
-            <h3 class="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-4 flex items-center gap-2">
-                <span>🛡️</span> Manage Teams
-            </h3>
+            <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                <h3 class="text-base sm:text-lg font-black text-white uppercase tracking-tight m-0 flex items-center gap-2">
+                    <span>🛡️</span> Manage Teams
+                </h3>
+                <!-- Team Mode Toggle -->
+                <div class="flex items-center p-1 bg-[#161b22] border border-[#30363d] rounded-xl text-xs font-bold">
+                    <button type="button" id="btn-team-existing" onclick="toggleTeamMode('existing')" class="px-3 py-1.5 rounded-lg transition-all text-white bg-blue-600 shadow-sm">
+                        ⚡ Select Existing Team
+                    </button>
+                    <button type="button" id="btn-team-new" onclick="toggleTeamMode('new')" class="px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white">
+                        + Create New Team
+                    </button>
+                </div>
+            </div>
             
-            <form method="POST" action="{{ route('local.add-team', $tournament->id) }}" class="flex flex-col sm:flex-row gap-2.5 sm:gap-3 mb-6">
+            <!-- FORM A: SELECT EXISTING TEAM -->
+            <form id="form-existing-team" method="POST" action="{{ route('local.add-team', $tournament->id) }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3 mb-6 bg-[#161b22]/70 p-3.5 sm:p-4 rounded-xl border border-[#30363d]">
                 @csrf
-                <input type="text" name="name" placeholder="Enter new team name..." required class="flex-1 bg-[#161b22] border border-[#30363d] text-white rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-500">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-md">
-                    <span class="text-base">+</span> Add Team
-                </button>
+                <div class="sm:col-span-9">
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                        Choose From Existing Teams 
+                        <span class="text-[10px] text-gray-500 font-normal lowercase">(from other series/system)</span>
+                    </label>
+                    <select name="existing_team_id" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 outline-none">
+                        <option value="" class="bg-[#161b22] text-gray-400">-- Select Existing Team --</option>
+                        @foreach($existingTeams as $et)
+                            @php
+                                $alreadyInCurrent = $teams->contains('name', $et->name);
+                            @endphp
+                            <option value="{{ $et->id }}" {{ $alreadyInCurrent ? 'disabled class=text-gray-500' : 'class=text-white' }}>
+                                {{ $et->name }} ({{ $et->short_name ?? 'TEAM' }}) {{ $alreadyInCurrent ? '— [Already in Tournament]' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="sm:col-span-3 flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl py-2.5 px-4 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md">
+                        <span>+</span> Add to Tournament
+                    </button>
+                </div>
             </form>
+
+            <!-- FORM B: CREATE NEW TEAM -->
+            <form id="form-new-team" method="POST" action="{{ route('local.add-team', $tournament->id) }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3 mb-6 bg-[#161b22]/70 p-3.5 sm:p-4 rounded-xl border border-[#30363d]" style="display: none;">
+                @csrf
+                <div class="sm:col-span-9">
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Brand New Team Name *</label>
+                    <input type="text" name="name" placeholder="Enter new team name (e.g. Indore Strikers)..." class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 outline-none placeholder-gray-500">
+                </div>
+                <div class="sm:col-span-3 flex items-end">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl py-2.5 px-4 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md">
+                        <span>+</span> Create Team
+                    </button>
+                </div>
+            </form>
+
+            <script>
+                function toggleTeamMode(mode) {
+                    const formExisting = document.getElementById('form-existing-team');
+                    const formNew = document.getElementById('form-new-team');
+                    const btnExisting = document.getElementById('btn-team-existing');
+                    const btnNew = document.getElementById('btn-team-new');
+
+                    if (mode === 'existing') {
+                        formExisting.style.display = 'grid';
+                        formNew.style.display = 'none';
+                        btnExisting.className = 'px-3 py-1.5 rounded-lg transition-all text-white bg-blue-600 shadow-sm';
+                        btnNew.className = 'px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white';
+                    } else {
+                        formExisting.style.display = 'none';
+                        formNew.style.display = 'grid';
+                        btnNew.className = 'px-3 py-1.5 rounded-lg transition-all text-white bg-emerald-600 shadow-sm';
+                        btnExisting.className = 'px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white';
+                    }
+                }
+            </script>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 @forelse($teams as $team)
@@ -143,7 +208,7 @@
                 </div>
                 @empty
                 <div class="col-span-full text-center py-8 text-gray-400 font-semibold text-sm">
-                    No teams added yet. Type a team name above to create your first team!
+                    No teams added yet. Select an existing team or create a new team above!
                 </div>
                 @endforelse
             </div>
@@ -153,14 +218,64 @@
     <!-- PLAYERS TAB -->
     <div id="tab-players" class="tab-content">
         <div class="bg-[#0d1117] border border-[#30363d] rounded-2xl p-4 sm:p-6 shadow-md">
-            <h3 class="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-4 flex items-center gap-2">
-                <span>👥</span> Manage Players
-            </h3>
-            
-            <form method="POST" action="{{ route('local.add-player', $tournament->id) }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3 mb-6 bg-[#161b22]/70 p-3.5 sm:p-4 rounded-xl border border-[#30363d]">
+            <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                <h3 class="text-base sm:text-lg font-black text-white uppercase tracking-tight m-0 flex items-center gap-2">
+                    <span>👥</span> Manage Squad & Players
+                </h3>
+                <!-- Mode Toggle -->
+                <div class="flex items-center p-1 bg-[#161b22] border border-[#30363d] rounded-xl text-xs font-bold">
+                    <button type="button" id="btn-mode-existing" onclick="togglePlayerMode('existing')" class="px-3 py-1.5 rounded-lg transition-all text-white bg-blue-600 shadow-sm">
+                        ⚡ Select Existing Player
+                    </button>
+                    <button type="button" id="btn-mode-new" onclick="togglePlayerMode('new')" class="px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white">
+                        + Create New Player
+                    </button>
+                </div>
+            </div>
+
+            <!-- FORM 1: SELECT EXISTING PLAYER -->
+            <form id="form-existing-player" method="POST" action="{{ route('local.add-player', $tournament->id) }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3 mb-6 bg-[#161b22]/70 p-3.5 sm:p-4 rounded-xl border border-[#30363d]">
                 @csrf
                 <div class="sm:col-span-4">
-                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Team</label>
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Target Team *</label>
+                    <select name="team_id" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                        <option value="" class="bg-[#161b22] text-gray-400">Select Team...</option>
+                        @foreach($teams as $t)
+                            <option value="{{ $t->id }}" class="bg-[#161b22] text-white">{{ $t->name }} ({{ $t->players->count() }} players)</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="sm:col-span-6">
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                        Choose From Existing Players * 
+                        <span class="text-[10px] text-gray-500 font-normal lowercase">(plays in other teams/tournaments)</span>
+                    </label>
+                    <select name="existing_player_id" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                        <option value="" class="bg-[#161b22] text-gray-400">-- Select Existing Player --</option>
+                        @foreach($existingPlayers as $ep)
+                            @php
+                                $epKey = strtolower(trim($ep->name));
+                                $isLive = isset($livePlayerMap[$epKey]);
+                                $liveBadge = $isLive ? '🔴 In Live Match: ' . ($livePlayerMap[$epKey]['tournament_name'] ?? 'Live Match') : '🟢 Available';
+                            @endphp
+                            <option value="{{ $ep->id }}" class="bg-[#161b22] text-white">
+                                {{ $ep->name }} ({{ $ep->role ?? 'Player' }}) &mdash; {{ $liveBadge }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="sm:col-span-2 flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl py-2.5 px-3 flex items-center justify-center gap-1.5 text-xs sm:text-sm transition-all shadow-md">
+                        <span>+</span> Add to Squad
+                    </button>
+                </div>
+            </form>
+
+            <!-- FORM 2: CREATE NEW PLAYER -->
+            <form id="form-new-player" method="POST" action="{{ route('local.add-player', $tournament->id) }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3 mb-6 bg-[#161b22]/70 p-3.5 sm:p-4 rounded-xl border border-[#30363d]" style="display: none;">
+                @csrf
+                <div class="sm:col-span-4">
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Target Team *</label>
                     <select name="team_id" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                         <option value="" class="bg-[#161b22] text-gray-400">Select Team...</option>
                         @foreach($teams as $t)
@@ -169,12 +284,12 @@
                     </select>
                 </div>
                 <div class="sm:col-span-4">
-                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Player Name</label>
-                    <input type="text" name="name" placeholder="Enter player name..." required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-500">
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Player Full Name *</label>
+                    <input type="text" name="name" placeholder="e.g. Rahul Sharma" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-500">
                 </div>
                 <div class="sm:col-span-3">
-                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Playing Role</label>
-                    <select name="role" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Playing Role *</label>
+                    <select name="role" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                         <option value="Batsman" class="bg-[#161b22] text-white">Batsman</option>
                         <option value="Bowler" class="bg-[#161b22] text-white">Bowler</option>
                         <option value="All-Rounder" class="bg-[#161b22] text-white">All-Rounder</option>
@@ -182,11 +297,32 @@
                     </select>
                 </div>
                 <div class="sm:col-span-1 flex items-end">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl py-2.5 px-3 flex items-center justify-center text-lg transition-all shadow-md" title="Add Player">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl py-2.5 px-3 flex items-center justify-center text-lg transition-all shadow-md" title="Create and Add Player">
                         +
                     </button>
                 </div>
             </form>
+
+            <script>
+                function togglePlayerMode(mode) {
+                    const formExisting = document.getElementById('form-existing-player');
+                    const formNew = document.getElementById('form-new-player');
+                    const btnExisting = document.getElementById('btn-mode-existing');
+                    const btnNew = document.getElementById('btn-mode-new');
+
+                    if (mode === 'existing') {
+                        formExisting.style.display = 'grid';
+                        formNew.style.display = 'none';
+                        btnExisting.className = 'px-3 py-1.5 rounded-lg transition-all text-white bg-blue-600 shadow-sm';
+                        btnNew.className = 'px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white';
+                    } else {
+                        formExisting.style.display = 'none';
+                        formNew.style.display = 'grid';
+                        btnNew.className = 'px-3 py-1.5 rounded-lg transition-all text-white bg-blue-600 shadow-sm';
+                        btnExisting.className = 'px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white';
+                    }
+                }
+            </script>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @forelse($teams as $team)
@@ -203,10 +339,24 @@
                     @if($team->players->count() > 0)
                         <div class="flex flex-col gap-2">
                             @foreach($team->players as $player)
-                                <div class="flex items-center justify-between p-2.5 bg-[#0d1117] border border-[#30363d]/60 rounded-lg hover:border-blue-500/40 transition-all">
-                                    <div class="flex items-center gap-2.5 min-w-0">
+                                @php
+                                    $pKey = strtolower(trim($player->name));
+                                    $liveInfo = $livePlayerMap[$pKey] ?? null;
+                                @endphp
+                                <div class="flex items-center justify-between p-2.5 bg-[#0d1117] border border-[#30363d]/60 rounded-lg hover:border-blue-500/40 transition-all gap-2">
+                                    <div class="flex items-center gap-2 min-w-0 flex-wrap">
                                         <span class="font-bold text-sm text-white truncate">{{ $player->name }}</span>
                                         <span class="bg-[#161b22] border border-[#30363d] px-2 py-0.5 rounded-full text-[10px] font-bold text-sky-400 flex-shrink-0">{{ $player->role }}</span>
+                                        @if($liveInfo)
+                                            <span class="bg-red-500/15 border border-red-500/40 text-red-400 px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 flex-shrink-0" title="Currently playing in: {{ $liveInfo['match_title'] }} ({{ $liveInfo['tournament_name'] }})">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping"></span>
+                                                🔴 Live in {{ Str::limit($liveInfo['tournament_name'], 15) }}
+                                            </span>
+                                        @else
+                                            <span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 flex-shrink-0">
+                                                🟢 Available
+                                            </span>
+                                        @endif
                                     </div>
                                     <form method="POST" action="{{ route('local.delete-player', $player->id) }}" class="m-0" onsubmit="return confirm('Delete player {{ addslashes($player->name) }}?')">
                                         @csrf
@@ -218,7 +368,7 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-xs text-gray-500 italic text-center py-4">No players added to this team yet.</div>
+                        <div class="text-xs text-gray-500 italic text-center py-4">No players added to this team yet. Use the selection above to add players!</div>
                     @endif
                 </div>
                 @empty
@@ -279,8 +429,30 @@
                         <input type="datetime-local" name="scheduled_at" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Venue / Ground</label>
-                        <input type="text" name="venue" placeholder="e.g. Ground A, Indore" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 outline-none placeholder-gray-500">
+                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            Venue / Ground
+                        </label>
+                        <select name="existing_venue_id" id="venue-select" onchange="toggleCustomVenueField(this)" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 outline-none cursor-pointer">
+                            <option value="" class="bg-[#161b22] text-gray-400">Select Venue / Ground...</option>
+                            @if(!empty($tournament->venue))
+                                <option value="tournament_default" class="bg-[#161b22] text-sky-400 font-bold" selected>
+                                    📍 {{ $tournament->venue }}{{ $tournament->city ? ', ' . $tournament->city : '' }} (Tournament Ground)
+                                </option>
+                            @endif
+                            @foreach($existingVenues as $ev)
+                                @if(empty($tournament->venue) || strtolower($tournament->venue) !== strtolower($ev->name))
+                                    <option value="{{ $ev->id }}" class="bg-[#161b22] text-white">
+                                        {{ $ev->name }}{{ $ev->city ? ', ' . $ev->city : '' }}
+                                    </option>
+                                @endif
+                            @endforeach
+                            <option value="custom" class="bg-[#161b22] text-emerald-400 font-bold">
+                                ➕ Other (Type Custom Ground Name...)
+                            </option>
+                        </select>
+                        <div id="custom-venue-container" style="display: none;" class="mt-2">
+                            <input type="text" name="venue" id="custom-venue-input" placeholder="Type custom ground name..." class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2 text-xs focus:border-blue-500 outline-none placeholder-gray-500">
+                        </div>
                     </div>
                     <div class="flex items-end">
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl py-2.5 px-4 text-sm flex items-center justify-center gap-2 transition-all shadow-md">
@@ -303,13 +475,17 @@
                         </div>
                         <div class="text-xs font-semibold text-gray-400 flex items-center gap-2 flex-wrap">
                             <span>📅 {{ $match->match_date ? \Carbon\Carbon::parse($match->match_date)->format('n/j/Y, g:i A') : 'TBD' }}</span>
-                            @if($match->venue)
+                            @php
+                                $vName = $match->venue?->name ?? (is_string($match->venue) ? $match->venue : null);
+                                if (!$vName && !empty($match->custom_note) && !in_array($match->custom_note, ['Match Scheduled', 'Match in progress'])) {
+                                    $vName = $match->custom_note;
+                                }
+                            @endphp
+                            @if($vName)
                                 <span>&bull;</span>
-                                <span>📍 {{ $match->venue }}</span>
-                            @endif
-                            @if($match->custom_note)
-                                <span>&bull;</span>
-                                <span class="text-gray-300">{{ $match->custom_note }}</span>
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($vName) }}" target="_blank" class="text-sky-400 hover:underline inline-flex items-center gap-1" title="Click to view location on Google Maps">
+                                    <span>📍</span> {{ $vName }}
+                                </a>
                             @endif
                         </div>
                     </div>
@@ -383,6 +559,24 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         if (event && event.currentTarget) {
             event.currentTarget.classList.add('active');
+        }
+    }
+
+    function toggleCustomVenueField(select) {
+        const customContainer = document.getElementById('custom-venue-container');
+        const customInput = document.getElementById('custom-venue-input');
+        if (select && select.value === 'custom') {
+            if (customContainer) customContainer.style.display = 'block';
+            if (customInput) {
+                customInput.focus();
+                customInput.required = true;
+            }
+        } else {
+            if (customContainer) customContainer.style.display = 'none';
+            if (customInput) {
+                customInput.required = false;
+                customInput.value = '';
+            }
         }
     }
 </script>

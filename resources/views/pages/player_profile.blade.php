@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<main class="container" style="margin: 0 auto; padding: 40px 24px 80px; font-family: var(--font-body, 'Inter', sans-serif);">
+<main class="container mx-auto px-3 sm:px-6 py-6 sm:py-10 pb-24" style="font-family: var(--font-body, 'Inter', sans-serif);">
 
     <!-- Breadcrumb & Back -->
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
@@ -14,9 +14,6 @@
         </div>
         
         <div style="display: flex; gap: 10px;">
-            <a href="{{ route('compare', ['p1' => $player->id]) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #0284c7, #38bdf8); color: white; border-radius: 8px; font-weight: 800; font-size: 0.85rem; text-decoration: none; box-shadow: 0 4px 12px rgba(2,132,199,0.3);">
-                ⚡ Compare with Other Players
-            </a>
             <a href="{{ route('players') }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
                 &larr; All Players
             </a>
@@ -24,7 +21,7 @@
     </div>
 
     <!-- Player Hero Profile Card -->
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px 28px; margin-bottom: 30px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+    <div class="rounded-2xl p-4 sm:p-8 mb-7 relative overflow-hidden shadow-xl" style="background: var(--bg-card); border: 1px solid var(--border-color);">
         <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; pointer-events: none;"></div>
 
         <div style="display: flex; gap: 28px; align-items: center; flex-wrap: wrap;">
@@ -113,10 +110,10 @@
             <span>📊</span> Career Statistics &amp; Metrics
         </h2>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             
             <!-- BATTING STATS CARD -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 22px;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
                     <div style="font-weight: 800; font-size: 1rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
                         <span>🏏</span> Batting Record
@@ -124,36 +121,44 @@
                     <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">All Formats</span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; text-align: center;">
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">TOTAL RUNS</span>
-                        <strong style="font-size: 1.4rem; color: var(--text-main); font-weight: 900;">{{ number_format($stats['runs'] ?? 0) }}</strong>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-center">
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">TOTAL RUNS</span>
+                        <strong style="font-size: 1.3rem; color: var(--text-main); font-weight: 900;">{{ number_format($stats['runs'] ?? 0) }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">HIGHEST SCORE</span>
-                        <strong style="font-size: 1.4rem; color: #38bdf8; font-weight: 900;">{{ $stats['highestScore'] ?? 0 }}</strong>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BALLS FACED</span>
+                        <strong style="font-size: 1.3rem; color: #38bdf8; font-weight: 900;">{{ number_format($stats['balls'] ?? 0) }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">AVERAGE</span>
-                        <strong style="font-size: 1.4rem; color: var(--text-main); font-weight: 900;">{{ $stats['average'] ?? '0.00' }}</strong>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">HIGHEST SCORE</span>
+                        <strong style="font-size: 1.3rem; color: #f59e0b; font-weight: 900;">{{ $stats['highest'] ?? $stats['highestScore'] ?? 0 }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">STRIKE RATE</span>
-                        <strong style="font-size: 1.2rem; color: #22c55e; font-weight: 800;">{{ $stats['strikeRate'] ?? '0.00' }}</strong>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">STRIKE RATE</span>
+                        <strong style="font-size: 1.2rem; color: #22c55e; font-weight: 800;">{{ $stats['strike_rate'] ?? $stats['strikeRate'] ?? '0.00' }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">50s / 100s</span>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">AVERAGE</span>
+                        <strong style="font-size: 1.2rem; color: var(--text-main); font-weight: 800;">{{ $stats['average'] ?? '0.00' }}</strong>
+                    </div>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">FOURS (4s)</span>
+                        <strong style="font-size: 1.2rem; color: #10b981; font-weight: 800;">{{ number_format($stats['fours'] ?? 0) }}</strong>
+                    </div>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">SIXES (6s)</span>
+                        <strong style="font-size: 1.2rem; color: #8b5cf6; font-weight: 800;">{{ number_format($stats['sixes'] ?? 0) }}</strong>
+                    </div>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">50s / 100s</span>
                         <strong style="font-size: 1.2rem; color: var(--text-main); font-weight: 800;">{{ $stats['fifties'] ?? 0 }} / {{ $stats['hundreds'] ?? 0 }}</strong>
-                    </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">4s / 6s</span>
-                        <strong style="font-size: 1.2rem; color: var(--text-main); font-weight: 800;">{{ $stats['fours'] ?? 0 }} / {{ $stats['sixes'] ?? 0 }}</strong>
                     </div>
                 </div>
             </div>
 
             <!-- BOWLING STATS CARD -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 22px;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
                     <div style="font-weight: 800; font-size: 1rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
                         <span>🎯</span> Bowling Record
@@ -161,29 +166,29 @@
                     <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">All Formats</span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; text-align: center;">
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">WICKETS</span>
-                        <strong style="font-size: 1.4rem; color: var(--text-main); font-weight: 900;">{{ number_format($stats['wickets'] ?? 0) }}</strong>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5 text-center">
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">WICKETS</span>
+                        <strong style="font-size: 1.35rem; color: var(--text-main); font-weight: 900;">{{ number_format($stats['wickets'] ?? 0) }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BEST BOWLING</span>
-                        <strong style="font-size: 1.4rem; color: #f59e0b; font-weight: 900;">{{ $stats['bestBowling'] ?? '-' }}</strong>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BEST BOWLING</span>
+                        <strong style="font-size: 1.35rem; color: #f59e0b; font-weight: 900;">{{ $stats['best_bowling'] ?? $stats['bestBowling'] ?? '-' }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">ECONOMY</span>
-                        <strong style="font-size: 1.4rem; color: var(--text-main); font-weight: 900;">{{ $stats['economy'] ?? '0.00' }}</strong>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">ECONOMY</span>
+                        <strong style="font-size: 1.35rem; color: var(--text-main); font-weight: 900;">{{ $stats['economy'] ?? '0.00' }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">OVERS BOWLED</span>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">OVERS BOWLED</span>
                         <strong style="font-size: 1.2rem; color: var(--text-main); font-weight: 800;">{{ $stats['overs'] ?? '0.0' }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BOWLING AVG</span>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BOWLING AVG</span>
                         <strong style="font-size: 1.2rem; color: var(--text-main); font-weight: 800;">{{ $stats['bowlingAvg'] ?? '-' }}</strong>
                     </div>
-                    <div style="background: var(--bg-card-secondary); padding: 12px; border-radius: 8px;">
-                        <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">MAIDENS</span>
+                    <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
+                        <span style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">MAIDENS</span>
                         <strong style="font-size: 1.2rem; color: var(--text-main); font-weight: 800;">{{ $stats['maidens'] ?? 0 }}</strong>
                     </div>
                 </div>

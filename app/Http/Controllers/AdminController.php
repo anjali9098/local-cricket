@@ -1081,21 +1081,18 @@ class AdminController extends Controller
         $liveMatches = CricketMatch::has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where('status', 'live')
-            ->orderBy('match_date', 'desc')
             ->orderBy('id', 'desc')
             ->get();
 
         $upcomingMatches = CricketMatch::has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
             ->whereIn('status', ['upcoming', 'scheduled'])
-            ->orderBy('match_date', 'asc')
-            ->orderBy('id', 'asc')
+            ->orderBy('id', 'desc')
             ->get();
 
         $completedMatches = CricketMatch::has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where('status', 'completed')
-            ->orderBy('match_date', 'desc')
             ->orderBy('id', 'desc')
             ->get();
 
@@ -2041,44 +2038,85 @@ class AdminController extends Controller
      */
     public function showApiMatches(Request $request, \App\Services\CricketApiService $apiService)
     {
+        $tab = $request->query('tab', 'matches'); // 'matches' or 'series'
         $statusFilter = $request->query('status', 'all');
         $approvalFilter = $request->query('approval', 'all');
         $search = trim($request->query('search', ''));
 
-        $query = CricketMatch::where('is_api_match', true)->with(['team1', 'team2', 'venue', 'tournament']);
-
-        if ($statusFilter !== 'all') {
-            $query->where('status', $statusFilter);
-        }
-
-        if ($approvalFilter === 'approved') {
-            $query->where('is_approved', true);
-        } elseif ($approvalFilter === 'pending') {
-            $query->where('is_approved', false);
-        }
-
-        if (!empty($search)) {
-            $query->where(function($q) use ($search) {
-                $q->whereHas('team1', function($tq) use ($search) {
-                    $tq->where('name', 'LIKE', "%{$search}%");
-                })->orWhereHas('team2', function($tq) use ($search) {
-                    $tq->where('name', 'LIKE', "%{$search}%");
-                })->orWhereHas('venue', function($vq) use ($search) {
-                    $vq->where('name', 'LIKE', "%{$search}%");
-                });
-            });
-        }
-
-        $matches = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
-        $stats = $apiService->getApiUsageStats();
-
+        // Aggregate counts for API matches
         $totalApiMatches = CricketMatch::where('is_api_match', true)->count();
         $approvedCount = CricketMatch::where('is_api_match', true)->where('is_approved', true)->count();
         $pendingCount = CricketMatch::where('is_api_match', true)->where('is_approved', false)->count();
         $liveCount = CricketMatch::where('is_api_match', true)->where('status', 'live')->count();
+        $scheduledCount = CricketMatch::where('is_api_match', true)->whereIn('status', ['scheduled', 'upcoming'])->count();
+        $completedCount = CricketMatch::where('is_api_match', true)->where('status', 'completed')->count();
+
+        // Upcoming & active series count
+        $upcomingSeriesCount = Tournament::where(function($q) {
+            $q->where('status', 'upcoming')
+              ->orWhere('status', 'ongoing')
+              ->orWhereDate('start_date', '>=', now()->toDateString());
+        })->count();
+
+        if ($tab === 'series') {
+            $seriesQuery = Tournament::withCount(['matches', 'teams']);
+            if (!empty($search)) {
+                $seriesQuery->where(function($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('category', 'LIKE', "%{$search}%")
+                      ->orWhere('format', 'LIKE', "%{$search}%")
+                      ->orWhere('short_name', 'LIKE', "%{$search}%");
+                });
+            }
+            if ($statusFilter !== 'all') {
+                $seriesQuery->where('status', $statusFilter);
+            }
+            $series = $seriesQuery->orderByRaw("CASE WHEN status = 'upcoming' THEN 1 WHEN status = 'ongoing' THEN 2 ELSE 3 END")
+                ->orderBy('start_date', 'asc')
+                ->orderBy('id', 'desc')
+                ->paginate(15)->withQueryString();
+            $matches = collect();
+        } else {
+            $query = CricketMatch::where('is_api_match', true)->with(['team1', 'team2', 'venue', 'tournament']);
+
+            if ($statusFilter !== 'all') {
+                if ($statusFilter === 'scheduled' || $statusFilter === 'upcoming') {
+                    $query->whereIn('status', ['scheduled', 'upcoming']);
+                } else {
+                    $query->where('status', $statusFilter);
+                }
+            }
+
+            if ($approvalFilter === 'approved') {
+                $query->where('is_approved', true);
+            } elseif ($approvalFilter === 'pending') {
+                $query->where('is_approved', false);
+            }
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->whereHas('team1', function($tq) use ($search) {
+                        $tq->where('name', 'LIKE', "%{$search}%");
+                    })->orWhereHas('team2', function($tq) use ($search) {
+                        $tq->where('name', 'LIKE', "%{$search}%");
+                    })->orWhereHas('venue', function($vq) use ($search) {
+                        $vq->where('name', 'LIKE', "%{$search}%");
+                    })->orWhereHas('tournament', function($sq) use ($search) {
+                        $sq->where('name', 'LIKE', "%{$search}%");
+                    });
+                });
+            }
+
+            $matches = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
+            $series = collect();
+        }
+
+        $stats = $apiService->getApiUsageStats();
 
         return view('admin.api_matches', compact(
+            'tab',
             'matches',
+            'series',
             'stats',
             'statusFilter',
             'approvalFilter',
@@ -2086,7 +2124,10 @@ class AdminController extends Controller
             'totalApiMatches',
             'approvedCount',
             'pendingCount',
-            'liveCount'
+            'liveCount',
+            'scheduledCount',
+            'completedCount',
+            'upcomingSeriesCount'
         ));
     }
 

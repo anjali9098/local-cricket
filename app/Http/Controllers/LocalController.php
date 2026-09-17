@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Tournament;
 use App\Models\CricketMatch;
 use App\Models\FantasyTip;
+use App\Models\Venue;
+use App\Models\Team;
+use App\Models\Player;
 
 class LocalController extends Controller
 {
@@ -27,7 +30,7 @@ class LocalController extends Controller
         return $tournament;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please sign in or register to access your CrickArena Local Dashboard.');
@@ -35,22 +38,175 @@ class LocalController extends Controller
 
         $user = Auth::user();
         
-        // 1. My Tournaments (Created by the logged-in user - Full Management Permissions)
-        $myTournaments = Tournament::where('category', 'local')
-            ->where('user_id', $user->id)
-            ->with(['user', 'teams', 'matches'])
-            ->orderBy('id', 'desc')
-            ->get();
+        // Search & Filter parameters
+        $filterCity = trim($request->input('city', ''));
+        if ($filterCity === 'custom' || empty($filterCity)) {
+            $filterCity = trim($request->input('custom_city', ''));
+        }
 
-        // 2. Community & Other Tournaments (Created by other users - View Only Permissions)
-        $otherTournaments = Tournament::where('category', 'local')
+        $filterState = trim($request->input('state', ''));
+        if ($filterState === 'custom' || empty($filterState)) {
+            $filterState = trim($request->input('custom_state', ''));
+        }
+
+        $search = trim($request->input('search', ''));
+        if ($search === 'custom' || empty($search)) {
+            $search = trim($request->input('custom_search', ''));
+        }
+        $activeTab = trim($request->input('tab', 'matches'));
+
+        // Available tournaments for dropdown
+        $availableTournaments = Tournament::where('category', 'local')
+            ->whereNotNull('name')
+            ->where('name', '!=', '')
+            ->distinct()
+            ->pluck('name')
+            ->sort()
+            ->values();
+
+        // Available teams for dropdown
+        $availableTeams = Team::whereHas('tournament', function($q) {
+                $q->where('category', 'local');
+            })
+            ->whereNotNull('name')
+            ->where('name', '!=', '')
+            ->distinct()
+            ->pluck('name')
+            ->sort()
+            ->values();
+
+        if ($availableTeams->isEmpty()) {
+            $availableTeams = Team::whereNotNull('name')
+                ->where('name', '!=', '')
+                ->distinct()
+                ->pluck('name')
+                ->sort()
+                ->values();
+        }
+
+        // Available matches for dropdown (Titles or Team 1 vs Team 2)
+        $availableMatches = CricketMatch::where(function($q) {
+                $q->where('level_type', 'LOCAL')
+                  ->orWhereHas('tournament', fn($tq) => $tq->where('category', 'local'));
+            })
+            ->with(['team1', 'team2'])
+            ->get()
+            ->map(function($m) {
+                if (!empty($m->title)) {
+                    return trim($m->title);
+                }
+                if ($m->team1 && $m->team2) {
+                    return trim($m->team1->name . ' vs ' . $m->team2->name);
+                }
+                return null;
+            })
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        // Distinct available cities across local tournaments + common cricket cities
+        $dbCities = Tournament::where('category', 'local')
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->distinct()
+            ->pluck('city');
+        $popularCities = collect(['Indore', 'Bhopal', 'Bangalore', 'Mumbai', 'Delhi', 'Jaipur', 'Ahmedabad', 'Pune', 'Hyderabad', 'Chennai', 'Kolkata', 'Lucknow']);
+        $availableCities = $dbCities->concat($popularCities)->unique(fn($c) => strtolower($c))->values();
+
+        // Distinct available states across local tournaments + common states
+        $dbStates = Tournament::where('category', 'local')
+            ->whereNotNull('state')
+            ->where('state', '!=', '')
+            ->distinct()
+            ->pluck('state');
+        $popularStates = collect(['MP', 'Karnataka', 'Maharashtra', 'Gujarat', 'Delhi', 'Rajasthan', 'Uttar Pradesh', 'Tamil Nadu', 'Telangana', 'Punjab', 'Haryana', 'West Bengal']);
+        $availableStates = $dbStates->concat($popularStates)->unique(fn($s) => strtolower($s))->values();
+
+        // 1. Scheduled Local Matches Query
+        $scheduledQuery = CricketMatch::whereIn('status', ['scheduled', 'upcoming'])
+            ->where(function($q) {
+                $q->where('level_type', 'LOCAL')
+                  ->orWhereHas('tournament', function($tq) {
+                      $tq->where('category', 'local');
+                  });
+            })
+            ->with(['team1', 'team2', 'venue', 'tournament']);
+
+        if (!empty($filterCity)) {
+            $scheduledQuery->where(function($q) use ($filterCity) {
+                $q->whereHas('tournament', fn($tq) => $tq->where('city', 'like', "%{$filterCity}%"))
+                  ->orWhereHas('venue', fn($vq) => $vq->where('city', 'like', "%{$filterCity}%"))
+                  ->orWhere('custom_note', 'like', "%{$filterCity}%");
+            });
+        }
+        if (!empty($filterState)) {
+            $scheduledQuery->whereHas('tournament', fn($tq) => $tq->where('state', 'like', "%{$filterState}%"));
+        }
+        if (!empty($search)) {
+            $scheduledQuery->where(function($q) use ($search) {
+                $q->whereHas('tournament', fn($tq) => $tq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('team1', fn($t1) => $t1->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('team2', fn($t2) => $t2->where('name', 'like', "%{$search}%"))
+                  ->orWhere('title', 'like', "%{$search}%")
+                  ->orWhere('custom_note', 'like', "%{$search}%");
+
+                if (str_contains($search, ' vs ')) {
+                    $parts = explode(' vs ', $search);
+                    $p1 = trim($parts[0] ?? '');
+                    $p2 = trim($parts[1] ?? '');
+                    if ($p1 && $p2) {
+                        $q->orWhere(function($subQ) use ($p1, $p2) {
+                            $subQ->where(function($matchQ) use ($p1, $p2) {
+                                $matchQ->whereHas('team1', fn($t1) => $t1->where('name', 'like', "%{$p1}%"))
+                                       ->whereHas('team2', fn($t2) => $t2->where('name', 'like', "%{$p2}%"));
+                            })->orWhere(function($matchQ) use ($p1, $p2) {
+                                $matchQ->whereHas('team1', fn($t1) => $t1->where('name', 'like', "%{$p2}%"))
+                                       ->whereHas('team2', fn($t2) => $t2->where('name', 'like', "%{$p1}%"));
+                            });
+                        });
+                    }
+                }
+            });
+        }
+        $scheduledMatches = $scheduledQuery->orderBy('match_date', 'asc')->get();
+
+        // 2. My Tournaments (Created by the logged-in user - Full Management Permissions)
+        $myTournamentsQuery = Tournament::where('category', 'local')
+            ->where('user_id', $user->id)
+            ->with(['user', 'teams', 'matches']);
+
+        // 3. Community & Other Tournaments (Created by other users - View Only Permissions)
+        $otherTournamentsQuery = Tournament::where('category', 'local')
             ->where(function ($query) use ($user) {
                 $query->where('user_id', '!=', $user->id)
                       ->orWhereNull('user_id');
             })
-            ->with(['user', 'teams', 'matches'])
-            ->orderBy('id', 'desc')
-            ->get();
+            ->with(['user', 'teams', 'matches']);
+
+        if (!empty($filterCity)) {
+            $myTournamentsQuery->where('city', 'like', "%{$filterCity}%");
+            $otherTournamentsQuery->where('city', 'like', "%{$filterCity}%");
+        }
+        if (!empty($filterState)) {
+            $myTournamentsQuery->where('state', 'like', "%{$filterState}%");
+            $otherTournamentsQuery->where('state', 'like', "%{$filterState}%");
+        }
+        if (!empty($search)) {
+            $myTournamentsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('teams', fn($tq) => $tq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('matches', fn($mq) => $mq->where('title', 'like', "%{$search}%"));
+            });
+            $otherTournamentsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('teams', fn($tq) => $tq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('matches', fn($mq) => $mq->where('title', 'like', "%{$search}%"));
+            });
+        }
+
+        $myTournaments = $myTournamentsQuery->orderBy('id', 'desc')->get();
+        $otherTournaments = $otherTournamentsQuery->orderBy('id', 'desc')->get();
 
         // Counts for user's own local tournaments
         $upcomingCount = $myTournaments->whereIn('status', ['draft', 'published', 'scheduled'])->count();
@@ -59,27 +215,115 @@ class LocalController extends Controller
         $totalTournaments = $myTournaments->count();
         $totalViews = $myTournaments->sum('views_count');
 
+        // Existing venues pool for tournament creation datalist
+        $dbVenues = Venue::orderBy('name', 'asc')->get();
+        $tournamentVenues = Tournament::whereNotNull('venue')
+            ->where('venue', '!=', '')
+            ->distinct()
+            ->pluck('venue')
+            ->map(fn($v) => (object)['name' => $v, 'city' => null]);
+        $existingVenues = $dbVenues->concat($tournamentVenues)->unique('name')->values();
+
+        // Existing series templates (distinct past tournament names and formats)
+        $existingSeriesTemplates = Tournament::select('name', 'format', 'city', 'state', 'overs')
+            ->whereNotNull('name')
+            ->where('name', '!=', '')
+            ->orderBy('name', 'asc')
+            ->get()
+            ->unique('name')
+            ->values();
+
         return view('local.dashboard', compact(
             'myTournaments',
             'otherTournaments',
+            'scheduledMatches',
             'totalTournaments',
             'totalViews',
             'user',
             'upcomingCount',
             'ongoingCount',
-            'completedCount'
+            'completedCount',
+            'availableCities',
+            'availableStates',
+            'availableTournaments',
+            'availableTeams',
+            'availableMatches',
+            'filterCity',
+            'filterState',
+            'search',
+            'activeTab',
+            'existingVenues',
+            'existingSeriesTemplates'
         ));
     }
 
     public function manageTournament($id)
     {
         $tournament = $this->authorizeTournament($id);
-        $teams = \App\Models\Team::where('tournament_id', $id)->get();
+        $teams = \App\Models\Team::where('tournament_id', $id)->with('players')->get();
         $teamIds = $teams->pluck('id');
         $players = \App\Models\Player::whereIn('team_id', $teamIds)->get();
-        $matches = CricketMatch::where('tournament_id', $id)->with(['team1', 'team2'])->orderBy('id', 'desc')->get();
+        $matches = CricketMatch::where('tournament_id', $id)->with(['team1', 'team2', 'venue'])->orderBy('id', 'desc')->get();
 
-        return view('local.manage-tournament', compact('tournament', 'teams', 'players', 'matches'));
+        // 1. Detect all players currently playing in live matches across any tournament/series
+        $liveMatches = CricketMatch::where('status', 'live')
+            ->with(['team1.players', 'team2.players', 'tournament'])
+            ->get();
+
+        $livePlayerMap = [];
+        foreach ($liveMatches as $lm) {
+            $tName = $lm->tournament?->name ?? 'Live Tournament';
+            $mTitle = ($lm->team1?->name && $lm->team2?->name) ? "{$lm->team1->name} vs {$lm->team2->name}" : "Live Match";
+            
+            if ($lm->team1) {
+                foreach ($lm->team1->players as $lp) {
+                    $key = strtolower(trim($lp->name));
+                    if (!isset($livePlayerMap[$key])) {
+                        $livePlayerMap[$key] = [
+                            'match_id' => $lm->id,
+                            'match_title' => $mTitle,
+                            'tournament_name' => $tName,
+                            'playing_team' => $lm->team1->name
+                        ];
+                    }
+                }
+            }
+            if ($lm->team2) {
+                foreach ($lm->team2->players as $lp) {
+                    $key = strtolower(trim($lp->name));
+                    if (!isset($livePlayerMap[$key])) {
+                        $livePlayerMap[$key] = [
+                            'match_id' => $lm->id,
+                            'match_title' => $mTitle,
+                            'tournament_name' => $tName,
+                            'playing_team' => $lm->team2->name
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 2. Fetch existing pool of distinct local players
+        $existingPlayers = \App\Models\Player::with('team.tournament')
+            ->whereNotNull('name')
+            ->where('name', '!=', '')
+            ->orderBy('name', 'asc')
+            ->get()
+            ->unique(fn($p) => strtolower(trim($p->name)))
+            ->values();
+
+        // 3. Fetch existing pool of distinct teams across the database
+        $existingTeams = \App\Models\Team::whereNotNull('name')
+            ->where('name', '!=', '')
+            ->orderBy('name', 'asc')
+            ->get()
+            ->unique(fn($t) => strtolower(trim($t->name)))
+            ->values();
+
+        // 4. Fetch venues pool for match scheduling
+        $existingVenues = Venue::orderBy('name', 'asc')->get();
+
+        return view('local.manage-tournament', compact('tournament', 'teams', 'players', 'matches', 'existingPlayers', 'livePlayerMap', 'existingTeams', 'existingVenues'));
     }
 
     public function createTournament(Request $request)
@@ -90,8 +334,17 @@ class LocalController extends Controller
 
         $name = trim($request->input('name', ''));
         $city = trim($request->input('city', ''));
+        if ($city === 'custom' || empty($city)) {
+            $city = trim($request->input('custom_city', ''));
+        }
         $state = trim($request->input('state', ''));
+        if ($state === 'custom' || empty($state)) {
+            $state = trim($request->input('custom_state', ''));
+        }
         $venue = trim($request->input('venue', ''));
+        if ($venue === 'custom' || empty($venue)) {
+            $venue = trim($request->input('custom_venue', ''));
+        }
         $format = trim($request->input('format', 'T20'));
         $overs = (int)$request->input('overs', 20);
         $type = trim($request->input('type', 'Knockout'));
@@ -102,8 +355,12 @@ class LocalController extends Controller
         $userId = Auth::id();
 
         if (!empty($name)) {
-            $shortName = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 6));
-            Tournament::create([
+            $initialStatus = 'ongoing';
+            if (!empty($startDate) && \Carbon\Carbon::parse($startDate)->isFuture()) {
+                $initialStatus = 'upcoming';
+            }
+
+            $createdTournament = Tournament::create([
                 'user_id' => $userId,
                 'name' => $name,
                 'short_name' => $shortName,
@@ -120,14 +377,14 @@ class LocalController extends Controller
                 'end_date' => $endDate ?: null,
                 'description' => $description,
                 'year' => date('Y'),
-                'status' => 'draft',
-                'is_approved' => false,
+                'status' => $initialStatus,
+                'is_approved' => true,
                 'delete_requested' => false,
                 'views_count' => 0,
                 'reward_tier' => 'ROOKIE'
             ]);
 
-            return back()->with('success', 'Tournament created successfully in Draft! Sent to Super Admin for approval.');
+            return redirect()->route('local.manage-tournament', $createdTournament->id)->with('success', 'Tournament created successfully! You can now add teams and schedule matches.');
         }
 
         return redirect()->route('local.dashboard')->with('error', 'Tournament name is required.');
@@ -153,12 +410,35 @@ class LocalController extends Controller
             $status = 'scheduled';
         }
 
-        $venue = trim($request->input('venue', ''));
-        $customNote = $status === 'live' ? ($venue ? $venue . ' • In Progress' : 'Match in progress') : ($venue ?: 'Match Scheduled');
+        $venueId = null;
+        $venueName = trim($request->input('venue', ''));
+        $existingVenueId = $request->input('existing_venue_id');
+
+        if ($existingVenueId === 'tournament_default') {
+            $venueName = $tournament->venue ?: ($tournament->city ? $tournament->city . ' Cricket Ground' : 'Cricket Ground');
+            $matchedVenue = Venue::where('name', 'like', $venueName)->first();
+            if ($matchedVenue) {
+                $venueId = $matchedVenue->id;
+            }
+        } elseif (!empty($existingVenueId) && is_numeric($existingVenueId)) {
+            $v = Venue::find($existingVenueId);
+            if ($v) {
+                $venueId = $v->id;
+                $venueName = $v->name . ($v->city ? ', ' . $v->city : '');
+            }
+        } elseif (!empty($venueName)) {
+            $matchedVenue = Venue::where('name', 'like', $venueName)->first();
+            if ($matchedVenue) {
+                $venueId = $matchedVenue->id;
+            }
+        }
+
+        $customNote = $status === 'live' ? ($venueName ? $venueName . ' • In Progress' : 'Match in progress') : ($venueName ?: 'Match Scheduled');
         
         $tournament->matches()->create([
             'team1_id' => $team1Id,
             'team2_id' => $team2Id,
+            'venue_id' => $venueId,
             'match_type' => $tournament->format,
             'status' => $status,
             'custom_note' => $customNote,
@@ -413,28 +693,120 @@ class LocalController extends Controller
     public function addTeam(Request $request, $id)
     {
         $tournament = $this->authorizeTournament($id);
-        $name = trim($request->input('name'));
-        if ($name) {
-            \App\Models\Team::create([
-                'tournament_id' => $id,
-                'name' => $name,
-                'short_name' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3)),
-                'color_code' => '#2563eb'
-            ]);
+
+        $teamName = '';
+        $shortName = '';
+        $colorCode = '#2563eb';
+        $logo = null;
+        $logoUrl = null;
+
+        if ($request->filled('existing_team_id')) {
+            $existingTeam = Team::find($request->input('existing_team_id'));
+            if ($existingTeam) {
+                $teamName = trim($existingTeam->name);
+                $shortName = $existingTeam->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $teamName), 0, 3));
+                $colorCode = $existingTeam->color_code ?: '#2563eb';
+                $logo = $existingTeam->logo;
+                $logoUrl = $existingTeam->logo_url;
+            }
         }
-        return back()->with('success', 'Team added!');
+
+        if (empty($teamName)) {
+            $teamName = trim($request->input('name', ''));
+            $shortName = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $teamName), 0, 3));
+        }
+
+        if (empty($teamName)) {
+            return back()->with('error', 'Please select an existing team or enter a team name.');
+        }
+
+        // Duplicate Check: Check if team with same name is already in this tournament
+        $alreadyInTournament = Team::where('tournament_id', $id)
+            ->where('name', $teamName)
+            ->exists();
+
+        if ($alreadyInTournament) {
+            return back()->with('error', "Team '{$teamName}' is already participating in this tournament!");
+        }
+
+        Team::create([
+            'tournament_id' => $id,
+            'name' => $teamName,
+            'short_name' => $shortName,
+            'color_code' => $colorCode,
+            'logo' => $logo,
+            'logo_url' => $logoUrl
+        ]);
+
+        return back()->with('success', "Team '{$teamName}' added to tournament!");
     }
 
     public function addPlayer(Request $request, $id)
     {
         $tournament = $this->authorizeTournament($id);
         $team = \App\Models\Team::where('tournament_id', $id)->findOrFail($request->input('team_id'));
+
+        $playerName = '';
+        $role = 'Batsman';
+        $battingStyle = null;
+        $bowlingStyle = null;
+        $country = null;
+        $profileImage = null;
+
+        if ($request->filled('existing_player_id')) {
+            $existing = \App\Models\Player::find($request->input('existing_player_id'));
+            if ($existing) {
+                $playerName = trim($existing->name);
+                $role = $existing->role ?: 'Batsman';
+                $battingStyle = $existing->batting_style;
+                $bowlingStyle = $existing->bowling_style;
+                $country = $existing->country;
+                $profileImage = $existing->profile_image;
+            }
+        }
+
+        if (empty($playerName)) {
+            $playerName = trim($request->input('name', ''));
+            $role = $request->input('role', 'Batsman');
+        }
+
+        if (empty($playerName)) {
+            return back()->with('error', 'Please select an existing player or enter a player name.');
+        }
+
+        // Duplicate Check: Check if this player is already registered in this specific team's squad
+        $alreadyInTeam = \App\Models\Player::where('team_id', $team->id)
+            ->where('name', $playerName)
+            ->exists();
+
+        if ($alreadyInTeam) {
+            return back()->with('error', "Player '{$playerName}' is already registered in {$team->name}'s squad!");
+        }
+
+        // Reuse existing styles or photo if available
+        if (!$profileImage) {
+            $existingByName = \App\Models\Player::where('name', $playerName)->first();
+            if ($existingByName) {
+                $battingStyle = $battingStyle ?: $existingByName->batting_style;
+                $bowlingStyle = $bowlingStyle ?: $existingByName->bowling_style;
+                $country = $country ?: $existingByName->country;
+                $profileImage = $existingByName->profile_image;
+            }
+        }
+
+        // Create player in team roster
         \App\Models\Player::create([
             'team_id' => $team->id,
-            'name' => $request->input('name'),
-            'role' => $request->input('role', 'batsman')
+            'name' => $playerName,
+            'short_name' => substr($playerName, 0, 16),
+            'role' => $role,
+            'batting_style' => $battingStyle,
+            'bowling_style' => $bowlingStyle,
+            'country' => $country,
+            'profile_image' => $profileImage
         ]);
-        return back()->with('success', 'Player added!');
+
+        return back()->with('success', "Player '{$playerName}' successfully added to {$team->name}!");
     }
 
     public function toss($id)

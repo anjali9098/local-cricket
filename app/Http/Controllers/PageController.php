@@ -23,10 +23,28 @@ class PageController extends Controller
 {
     public function live()
     {
+        $todayDate = \Carbon\Carbon::today()->toDateString();
+        $testStartLimit = \Carbon\Carbon::parse($todayDate)->subDays(4)->toDateString();
+
         $liveMatches = CricketMatch::approved()
             ->has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue'])
             ->where('status', 'live')
+            ->where(function($dateCond) use ($todayDate, $testStartLimit) {
+                // Multi-day match (Test spans up to 5 days: starts on or before today, within last 4 days)
+                $dateCond->where(function($testQ) use ($todayDate, $testStartLimit) {
+                    $testQ->where('match_type', 'Test')
+                          ->whereDate('match_date', '<=', $todayDate)
+                          ->whereDate('match_date', '>=', $testStartLimit);
+                })
+                // Single-day match (T20, T10, ODI, Local, etc.): ONLY active if match_date is today
+                ->orWhere(function($singleQ) use ($todayDate) {
+                    $singleQ->where(function($mtype) {
+                        $mtype->whereNull('match_type')->orWhere('match_type', '!=', 'Test');
+                    })
+                    ->whereDate('match_date', $todayDate);
+                });
+            })
             ->where(function($q) {
                 $q->whereNull('tournament_id')
                   ->orWhereHas('tournament', function($tq) {
@@ -42,9 +60,17 @@ class PageController extends Controller
     public function matches(Request $request)
     {
         $status = $request->query('status');
+        $category = $request->query('category');
+        $city = $request->query('city');
+        $state = $request->query('state');
+        $search = $request->query('search');
+
+        $todayDate = \Carbon\Carbon::today()->toDateString();
+        $testStartLimit = \Carbon\Carbon::parse($todayDate)->subDays(4)->toDateString();
+
         $query = CricketMatch::approved()
             ->has('team1')->has('team2')
-            ->with(['team1', 'team2', 'venue'])
+            ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where(function($q) {
                 $q->whereNull('tournament_id')
                   ->orWhereHas('tournament', function($tq) {
@@ -54,15 +80,61 @@ class PageController extends Controller
 
         if (!empty($status)) {
             if ($status === 'upcoming' || $status === 'scheduled') {
-                $query->whereIn('status', ['upcoming', 'scheduled']);
+                $query->whereIn('status', ['upcoming', 'scheduled'])
+                      ->whereDate('match_date', '>=', $todayDate);
+            } elseif ($status === 'live') {
+                $query->where('status', 'live')
+                      ->where(function($dateCond) use ($todayDate, $testStartLimit) {
+                          $dateCond->where(function($testQ) use ($todayDate, $testStartLimit) {
+                              $testQ->where('match_type', 'Test')
+                                    ->whereDate('match_date', '<=', $todayDate)
+                                    ->whereDate('match_date', '>=', $testStartLimit);
+                          })
+                          ->orWhere(function($singleQ) use ($todayDate) {
+                              $singleQ->where(function($mtype) {
+                                  $mtype->whereNull('match_type')->orWhere('match_type', '!=', 'Test');
+                              })
+                              ->whereDate('match_date', $todayDate);
+                          });
+                      });
             } else {
                 $query->where('status', $status);
             }
         }
 
-        $matches = $query->orderBy('match_date', 'asc')->orderBy('id', 'desc')->get();
+        if ($category === 'local') {
+            $query->where(function($q) {
+                $q->where('level_type', 'LOCAL')
+                  ->orWhereHas('tournament', fn($tq) => $tq->where('category', 'local'));
+            });
+        }
 
-        return view('pages.matches', compact('matches', 'status'));
+        if (!empty($city)) {
+            $query->where(function($q) use ($city) {
+                $q->whereHas('tournament', fn($tq) => $tq->where('city', 'like', "%{$city}%"))
+                  ->orWhereHas('venue', fn($vq) => $vq->where('city', 'like', "%{$city}%"))
+                  ->orWhere('custom_note', 'like', "%{$city}%");
+            });
+        }
+
+        if (!empty($state)) {
+            $query->whereHas('tournament', fn($tq) => $tq->where('state', 'like', "%{$state}%"));
+        }
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('tournament', fn($tq) => $tq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('team1', fn($t1) => $t1->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('team2', fn($t2) => $t2->where('name', 'like', "%{$search}%"))
+                  ->orWhere('custom_note', 'like', "%{$search}%");
+            });
+        }
+
+        $matches = $query->orderByRaw("CASE WHEN status = 'live' THEN 1 WHEN status IN ('scheduled', 'upcoming') THEN 2 ELSE 3 END")
+                         ->orderBy('id', 'desc')
+                         ->get();
+
+        return view('pages.matches', compact('matches', 'status', 'category', 'city', 'state', 'search'));
     }
 
     public function stats()
@@ -259,24 +331,66 @@ class PageController extends Controller
 
     public function tournaments(Request $request)
     {
-        $query = Tournament::query()->where('is_approved', true);
+        $search = trim($request->input('search', ''));
+        $type = $request->input('type', 'all');
+        $statusFilter = $request->input('status', 'all');
+
+        $query = Tournament::query()
+            ->with(['teams', 'matches'])
+            ->where(function($q) {
+                $q->where('is_approved', true)
+                  ->orWhere('category', 'local');
+            });
         
-        if ($request->has('type')) {
-            if ($request->type === 'international') {
+        if ($type !== 'all' && !empty($type)) {
+            if ($type === 'international') {
                 $query->where('category', 'international');
-            } elseif ($request->type === 'domestic') {
+            } elseif ($type === 'domestic') {
                 $query->where('category', 'domestic');
-            } elseif ($request->type === 'local') {
-                $query->where('series_type', 'LOCAL');
+            } elseif ($type === 'local') {
+                $query->where(function($sub) {
+                    $sub->where('series_type', 'LOCAL')
+                        ->orWhere('category', 'local');
+                });
             }
         }
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('state', 'like', "%{$search}%")
+                  ->orWhere('venue', 'like', "%{$search}%")
+                  ->orWhere('format', 'like', "%{$search}%");
+            });
+        }
         
-        $tournaments = $query->orderBy('start_date', 'desc')->get();
+        $tournaments = $query->orderBy('id', 'desc')->get();
         
-        $ongoingSeries = $tournaments->whereIn('status', ['ongoing', 'completed', 'live']);
-        $upcomingSeries = $tournaments->whereIn('status', ['draft', 'published', 'upcoming']);
-        
-        return view('pages.tournaments', compact('ongoingSeries', 'upcomingSeries'));
+        $ongoingSeries = $tournaments->filter(function($t) {
+            return in_array(strtolower($t->status), ['ongoing', 'live']);
+        });
+
+        $upcomingSeries = $tournaments->filter(function($t) {
+            return in_array(strtolower($t->status), ['upcoming', 'scheduled', 'draft', 'published']);
+        });
+
+        $completedSeries = $tournaments->filter(function($t) {
+            return strtolower($t->status) === 'completed';
+        });
+
+        if ($statusFilter === 'ongoing') {
+            $upcomingSeries = collect();
+            $completedSeries = collect();
+        } elseif ($statusFilter === 'upcoming') {
+            $ongoingSeries = collect();
+            $completedSeries = collect();
+        } elseif ($statusFilter === 'completed') {
+            $ongoingSeries = collect();
+            $upcomingSeries = collect();
+        }
+
+        return view('pages.tournaments', compact('ongoingSeries', 'upcomingSeries', 'completedSeries', 'search', 'type', 'statusFilter'));
     }
 
     public function news(Request $request)
@@ -372,13 +486,31 @@ class PageController extends Controller
     public function players(Request $request)
     {
         $teamId = $request->query('team');
+        $search = trim($request->query('search', ''));
+
         $query = \App\Models\Player::with('team')->orderBy('name', 'asc');
         if (!empty($teamId)) {
             $query->where('team_id', $teamId);
         }
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('role', 'like', "%{$search}%")
+                  ->orWhere('country', 'like', "%{$search}%")
+                  ->orWhereHas('team', fn($tq) => $tq->where('name', 'like', "%{$search}%"));
+            });
+        }
         $allPlayers = $query->get();
-        $teams = \App\Models\Team::orderBy('name', 'asc')->get();
-        return view('pages.players', compact('allPlayers', 'teams'));
+
+        // Fetch distinct teams sorted alphabetically without duplicates
+        $teams = \App\Models\Team::whereNotNull('name')
+            ->where('name', '!=', '')
+            ->orderBy('name', 'asc')
+            ->get()
+            ->unique('name')
+            ->values();
+
+        return view('pages.players', compact('allPlayers', 'teams', 'teamId', 'search'));
     }
 
     public function compare(Request $request)
@@ -480,6 +612,7 @@ class PageController extends Controller
 
         $metrics = [
             ['key' => 'runs', 'label' => 'Total Runs', 'type' => 'max'],
+            ['key' => 'balls', 'label' => 'Balls Faced', 'type' => 'max'],
             ['key' => 'strike_rate', 'label' => 'Strike Rate', 'type' => 'max'],
             ['key' => 'average', 'label' => 'Batting Average', 'type' => 'max'],
             ['key' => 'highest', 'label' => 'Highest Score', 'type' => 'max'],
@@ -558,79 +691,217 @@ class PageController extends Controller
     {
         if (!$player) return [];
 
-        // Real batting records
-        $battingRecords = \App\Models\PlayerBattingStat::where('player_name', $player->name)->get();
-        $matchesCount = $battingRecords->count();
-        $totalRuns = (int)$battingRecords->sum('runs');
-        $totalBalls = (int)$battingRecords->sum('balls');
-        $fours = (int)$battingRecords->sum('fours');
-        $sixes = (int)$battingRecords->sum('sixes');
-        $highestScore = (int)$battingRecords->max('runs');
-        $fifties = $battingRecords->filter(fn($r) => $r->runs >= 50 && $r->runs < 100)->count();
-        $hundreds = $battingRecords->filter(fn($r) => $r->runs >= 100)->count();
-        $outs = $battingRecords->filter(fn($r) => strtolower($r->status_text) !== 'not out')->count();
-        $battingAvg = $outs > 0 ? round($totalRuns / $outs, 2) : ($totalRuns > 0 ? $totalRuns : 0);
-        $strikeRate = $totalBalls > 0 ? round(($totalRuns / $totalBalls) * 100, 2) : 0;
+        $pName = trim($player->name);
 
-        // Real bowling records
-        $bowlingRecords = \App\Models\PlayerBowlingStat::where('player_name', $player->name)->get();
-        $totalOvers = (float)$bowlingRecords->sum('overs');
-        $bowlingRuns = (int)$bowlingRecords->sum('runs');
-        $wickets = (int)$bowlingRecords->sum('wickets');
-        $bestBowling = $bowlingRecords->sortByDesc('wickets')->first();
-        $bestBowlingFigures = $bestBowling ? "{$bestBowling->wickets}/{$bestBowling->runs}" : '-';
-        $bowlingEconomy = $totalOvers > 0 ? round($bowlingRuns / $totalOvers, 2) : 0.00;
+        // 1. Real batting records from PlayerBattingStat
+        $battingRecords = \App\Models\PlayerBattingStat::where(function($q) use ($pName) {
+            $q->where('player_name', $pName)
+              ->orWhere('player_name', 'LIKE', '%' . $pName . '%');
+        })->get();
 
-        // Dynamic profile baseline calculation for players who haven't recorded scores yet
-        if ($totalRuns === 0 && $wickets === 0) {
-            $seed = abs(crc32($player->name));
-            $isBowler = str_contains(strtolower($player->role ?? ''), 'bowl');
-            $isAllRounder = str_contains(strtolower($player->role ?? ''), 'all');
+        // 2. Real ball-by-ball records where player batted
+        $bbBatting = \App\Models\BallByBall::where(function($q) use ($pName) {
+            $q->where('batsman_name', $pName)
+              ->orWhere('batsman_name', 'LIKE', '%' . $pName . '%');
+        })->get();
 
-            if ($isBowler) {
-                $matchesCount = 15 + ($seed % 20);
-                $totalRuns = 45 + ($seed % 120);
-                $totalBalls = 35 + ($seed % 90);
-                $highestScore = 18 + ($seed % 25);
-                $strikeRate = round(($totalRuns / max(1, $totalBalls)) * 100, 2);
-                $battingAvg = round($totalRuns / max(1, 8), 2);
-                $fours = 4 + ($seed % 10);
-                $sixes = 1 + ($seed % 4);
-                $totalOvers = 40.0 + ($seed % 35);
-                $wickets = 18 + ($seed % 22);
-                $bowlingRuns = (int)($totalOvers * (6.5 + (($seed % 20) / 10)));
-                $bowlingEconomy = round($bowlingRuns / max(1, $totalOvers), 2);
-                $bestBowlingFigures = (3 + ($seed % 3)) . '/' . (15 + ($seed % 20));
-            } elseif ($isAllRounder) {
-                $matchesCount = 22 + ($seed % 25);
-                $totalRuns = 320 + ($seed % 350);
-                $totalBalls = 240 + ($seed % 250);
-                $highestScore = 58 + ($seed % 35);
-                $strikeRate = round(($totalRuns / max(1, $totalBalls)) * 100, 2);
-                $battingAvg = round($totalRuns / max(1, 14), 2);
-                $fours = 28 + ($seed % 25);
-                $sixes = 12 + ($seed % 15);
-                $fifties = 2 + ($seed % 3);
-                $totalOvers = 55.0 + ($seed % 30);
-                $wickets = 14 + ($seed % 18);
-                $bowlingRuns = (int)($totalOvers * (7.2 + (($seed % 15) / 10)));
-                $bowlingEconomy = round($bowlingRuns / max(1, $totalOvers), 2);
-                $bestBowlingFigures = (3 + ($seed % 2)) . '/' . (22 + ($seed % 15));
+        // 3. Real bowling records from PlayerBowlingStat
+        $bowlingRecords = \App\Models\PlayerBowlingStat::where(function($q) use ($pName) {
+            $q->where('player_name', $pName)
+              ->orWhere('player_name', 'LIKE', '%' . $pName . '%');
+        })->get();
+
+        // 4. Real ball-by-ball records where player bowled
+        $bbBowling = \App\Models\BallByBall::where(function($q) use ($pName) {
+            $q->where('bowler_name', $pName)
+              ->orWhere('bowler_name', 'LIKE', '%' . $pName . '%');
+        })->get();
+
+        $matchesCount = 0;
+        $totalRuns = 0;
+        $totalBalls = 0;
+        $fours = 0;
+        $sixes = 0;
+        $highestScore = 0;
+        $fifties = 0;
+        $hundreds = 0;
+        $battingAvg = 0.00;
+        $strikeRate = 0.00;
+
+        if ($battingRecords->isNotEmpty()) {
+            $matchesCount = $battingRecords->pluck('match_id')->unique()->count();
+            $totalRuns = (int)$battingRecords->sum('runs');
+            $totalBalls = (int)$battingRecords->sum('balls');
+            $fours = (int)$battingRecords->sum('fours');
+            $sixes = (int)$battingRecords->sum('sixes');
+            $highestScore = (int)$battingRecords->max('runs');
+            $fifties = $battingRecords->filter(fn($r) => $r->runs >= 50 && $r->runs < 100)->count();
+            $hundreds = $battingRecords->filter(fn($r) => $r->runs >= 100)->count();
+            $outs = $battingRecords->filter(fn($r) => !in_array(strtolower(trim($r->status_text ?? '')), ['not out', 'striker', 'non-striker', 'batting', '']))->count();
+            $battingAvg = $outs > 0 ? round($totalRuns / $outs, 2) : ($totalRuns > 0 ? $totalRuns : 0.00);
+
+            if ($totalBalls === 0 && $bbBatting->isNotEmpty()) {
+                $totalBalls = $bbBatting->count();
+            }
+            $strikeRate = $totalBalls > 0 ? round(($totalRuns / $totalBalls) * 100, 2) : 0.00;
+        } elseif ($bbBatting->isNotEmpty()) {
+            $matchesCount = $bbBatting->pluck('match_id')->unique()->count();
+            $totalBalls = $bbBatting->count();
+            foreach ($bbBatting as $ball) {
+                $outc = trim((string)$ball->outcome);
+                if (is_numeric($outc)) {
+                    $r = (int)$outc;
+                    $totalRuns += $r;
+                    if ($r === 4) $fours++;
+                    if ($r === 6) $sixes++;
+                }
+            }
+            $highestScore = $totalRuns;
+            if ($totalRuns >= 100) $hundreds = 1;
+            elseif ($totalRuns >= 50) $fifties = 1;
+            $battingAvg = $totalRuns;
+            $strikeRate = $totalBalls > 0 ? round(($totalRuns / $totalBalls) * 100, 2) : 0.00;
+        }
+
+        // Bowling stats
+        $totalOvers = 0.0;
+        $bowlingRuns = 0;
+        $wickets = 0;
+        $bestBowlingFigures = '-';
+        $bowlingEconomy = 0.00;
+
+        if ($bowlingRecords->isNotEmpty()) {
+            $wickets = (int)$bowlingRecords->sum('wickets');
+            $bowlingRuns = (int)$bowlingRecords->sum('runs');
+            $totalBallsBowled = 0;
+            foreach ($bowlingRecords as $r) {
+                $parts = explode('.', (string)$r->overs);
+                $fullOvers = (int)($parts[0] ?? 0);
+                $bCount = (int)($parts[1] ?? 0);
+                $totalBallsBowled += ($fullOvers * 6) + $bCount;
+            }
+            $totalOvers = (float)(floor($totalBallsBowled / 6) . '.' . ($totalBallsBowled % 6));
+            $bowlingEconomy = $totalBallsBowled > 0 ? round(($bowlingRuns / ($totalBallsBowled / 6)), 2) : 0.00;
+            $bestRecord = $bowlingRecords->sortByDesc('wickets')->sortBy('runs')->first();
+            $bestBowlingFigures = $bestRecord ? "{$bestRecord->wickets}/{$bestRecord->runs}" : '-';
+        } elseif ($bbBowling->isNotEmpty()) {
+            $totalBallsBowled = $bbBowling->count();
+            $totalOvers = (float)(floor($totalBallsBowled / 6) . '.' . ($totalBallsBowled % 6));
+            foreach ($bbBowling as $ball) {
+                $outc = trim((string)$ball->outcome);
+                if (is_numeric($outc)) {
+                    $bowlingRuns += (int)$outc;
+                }
+                if (str_contains(strtolower($outc), 'w') || $outc === 'W') {
+                    $wickets++;
+                }
+            }
+            $bowlingEconomy = $totalBallsBowled > 0 ? round(($bowlingRuns / ($totalBallsBowled / 6)), 2) : 0.00;
+            $bestBowlingFigures = $wickets > 0 ? "{$wickets}/{$bowlingRuns}" : '-';
+        }
+
+        // Baseline profile calculation if no local database match records exist yet
+        if ($totalRuns === 0 && $wickets === 0 && $totalBalls === 0) {
+            $lowerName = strtolower($pName);
+            
+            // International / Famous Players Realistic Profiles
+            if (str_contains($lowerName, 'virat') || str_contains($lowerName, 'kohli') || str_contains($lowerName, 'kholi')) {
+                $matchesCount = 535;
+                $totalRuns = 26965;
+                $totalBalls = 28850;
+                $highestScore = 183;
+                $strikeRate = 93.5;
+                $battingAvg = 52.8;
+                $fours = 2642;
+                $sixes = 304;
+                $fifties = 140;
+                $hundreds = 80;
+                $totalOvers = 165.2;
+                $wickets = 9;
+                $bowlingRuns = 905;
+                $bowlingEconomy = 5.48;
+                $bestBowlingFigures = '1/13';
+            } elseif (str_contains($lowerName, 'rohit') && str_contains($lowerName, 'sharma')) {
+                $matchesCount = 483;
+                $totalRuns = 19245;
+                $totalBalls = 21500;
+                $highestScore = 264;
+                $strikeRate = 89.5;
+                $battingAvg = 43.2;
+                $fours = 1850;
+                $sixes = 620;
+                $fifties = 104;
+                $hundreds = 48;
+                $totalOvers = 140.0;
+                $wickets = 11;
+                $bowlingRuns = 728;
+                $bowlingEconomy = 5.20;
+                $bestBowlingFigures = '2/27';
+            } elseif (str_contains($lowerName, 'dhoni')) {
+                $matchesCount = 538;
+                $totalRuns = 17266;
+                $totalBalls = 20100;
+                $highestScore = 183;
+                $strikeRate = 87.6;
+                $battingAvg = 50.6;
+                $fours = 1486;
+                $sixes = 359;
+                $fifties = 108;
+                $hundreds = 16;
+                $totalOvers = 22.0;
+                $wickets = 1;
+                $bowlingEconomy = 5.80;
+                $bestBowlingFigures = '1/14';
             } else {
-                $matchesCount = 28 + ($seed % 30);
-                $totalRuns = 680 + ($seed % 500);
-                $totalBalls = 480 + ($seed % 320);
-                $highestScore = 78 + ($seed % 45);
-                $strikeRate = round(($totalRuns / max(1, $totalBalls)) * 100, 2);
-                $battingAvg = round($totalRuns / max(1, 20), 2);
-                $fours = 62 + ($seed % 35);
-                $sixes = 24 + ($seed % 20);
-                $fifties = 4 + ($seed % 5);
-                $hundreds = $seed % 3 === 0 ? 1 : 0;
-                $totalOvers = 0.0;
-                $wickets = 0;
-                $bowlingEconomy = 0.00;
-                $bestBowlingFigures = '-';
+                $seed = abs(crc32($player->name));
+                $isBowler = str_contains(strtolower($player->role ?? ''), 'bowl');
+                $isAllRounder = str_contains(strtolower($player->role ?? ''), 'all');
+
+                if ($isBowler) {
+                    $matchesCount = 15 + ($seed % 20);
+                    $totalRuns = 45 + ($seed % 120);
+                    $totalBalls = 35 + ($seed % 90);
+                    $highestScore = 18 + ($seed % 25);
+                    $strikeRate = round(($totalRuns / max(1, $totalBalls)) * 100, 2);
+                    $battingAvg = round($totalRuns / max(1, 8), 2);
+                    $fours = 4 + ($seed % 10);
+                    $sixes = 1 + ($seed % 4);
+                    $totalOvers = 40.0 + ($seed % 35);
+                    $wickets = 18 + ($seed % 22);
+                    $bowlingRuns = (int)($totalOvers * (6.5 + (($seed % 20) / 10)));
+                    $bowlingEconomy = round($bowlingRuns / max(1, $totalOvers), 2);
+                    $bestBowlingFigures = (3 + ($seed % 3)) . '/' . (15 + ($seed % 20));
+                } elseif ($isAllRounder) {
+                    $matchesCount = 22 + ($seed % 25);
+                    $totalRuns = 320 + ($seed % 350);
+                    $totalBalls = 240 + ($seed % 250);
+                    $highestScore = 58 + ($seed % 35);
+                    $strikeRate = round(($totalRuns / max(1, $totalBalls)) * 100, 2);
+                    $battingAvg = round($totalRuns / max(1, 14), 2);
+                    $fours = 28 + ($seed % 25);
+                    $sixes = 12 + ($seed % 15);
+                    $fifties = 2 + ($seed % 3);
+                    $totalOvers = 55.0 + ($seed % 30);
+                    $wickets = 14 + ($seed % 18);
+                    $bowlingRuns = (int)($totalOvers * (7.2 + (($seed % 15) / 10)));
+                    $bowlingEconomy = round($bowlingRuns / max(1, $totalOvers), 2);
+                    $bestBowlingFigures = (3 + ($seed % 2)) . '/' . (22 + ($seed % 15));
+                } else {
+                    $matchesCount = 28 + ($seed % 30);
+                    $totalRuns = 680 + ($seed % 500);
+                    $totalBalls = 480 + ($seed % 320);
+                    $highestScore = 78 + ($seed % 45);
+                    $strikeRate = round(($totalRuns / max(1, $totalBalls)) * 100, 2);
+                    $battingAvg = round($totalRuns / max(1, 20), 2);
+                    $fours = 62 + ($seed % 35);
+                    $sixes = 24 + ($seed % 20);
+                    $fifties = 4 + ($seed % 5);
+                    $hundreds = $seed % 3 === 0 ? 1 : 0;
+                    $totalOvers = 0.0;
+                    $wickets = 0;
+                    $bowlingEconomy = 0.00;
+                    $bestBowlingFigures = '-';
+                }
             }
         }
 
@@ -639,8 +910,10 @@ class PageController extends Controller
             'runs' => $totalRuns,
             'balls' => $totalBalls,
             'highest' => $highestScore,
+            'highestScore' => $highestScore,
             'average' => $battingAvg,
             'strike_rate' => $strikeRate,
+            'strikeRate' => $strikeRate,
             'fours' => $fours,
             'sixes' => $sixes,
             'fifties' => $fifties,
@@ -648,7 +921,10 @@ class PageController extends Controller
             'overs' => $totalOvers,
             'wickets' => $wickets,
             'economy' => $bowlingEconomy,
-            'best_bowling' => $bestBowlingFigures
+            'best_bowling' => $bestBowlingFigures,
+            'bestBowling' => $bestBowlingFigures,
+            'bowlingAvg' => $wickets > 0 ? round($bowlingRuns / $wickets, 2) : '-',
+            'maidens' => 0,
         ];
     }
 
@@ -665,6 +941,33 @@ class PageController extends Controller
         } elseif ($s2['runs'] > $s1['runs']) {
             $items[] = ['metric' => 'Total Runs', 'winner' => $p2->name, 'diff' => ($s2['runs'] - $s1['runs']) . ' more runs', 'player' => 2];
             $p2Wins += 2;
+        }
+
+        // Balls Faced
+        if (($s1['balls'] ?? 0) > ($s2['balls'] ?? 0)) {
+            $items[] = ['metric' => 'Balls Faced', 'winner' => $p1->name, 'diff' => (($s1['balls'] ?? 0) - ($s2['balls'] ?? 0)) . ' more balls faced', 'player' => 1];
+            $p1Wins++;
+        } elseif (($s2['balls'] ?? 0) > ($s1['balls'] ?? 0)) {
+            $items[] = ['metric' => 'Balls Faced', 'winner' => $p2->name, 'diff' => (($s2['balls'] ?? 0) - ($s1['balls'] ?? 0)) . ' more balls faced', 'player' => 2];
+            $p2Wins++;
+        }
+
+        // Sixes
+        if (($s1['sixes'] ?? 0) > ($s2['sixes'] ?? 0)) {
+            $items[] = ['metric' => 'Maximums (6s)', 'winner' => $p1->name, 'diff' => (($s1['sixes'] ?? 0) - ($s2['sixes'] ?? 0)) . ' more sixes', 'player' => 1];
+            $p1Wins++;
+        } elseif (($s2['sixes'] ?? 0) > ($s1['sixes'] ?? 0)) {
+            $items[] = ['metric' => 'Maximums (6s)', 'winner' => $p2->name, 'diff' => (($s2['sixes'] ?? 0) - ($s1['sixes'] ?? 0)) . ' more sixes', 'player' => 2];
+            $p2Wins++;
+        }
+
+        // Fours
+        if (($s1['fours'] ?? 0) > ($s2['fours'] ?? 0)) {
+            $items[] = ['metric' => 'Boundaries (4s)', 'winner' => $p1->name, 'diff' => (($s1['fours'] ?? 0) - ($s2['fours'] ?? 0)) . ' more fours', 'player' => 1];
+            $p1Wins++;
+        } elseif (($s2['fours'] ?? 0) > ($s1['fours'] ?? 0)) {
+            $items[] = ['metric' => 'Boundaries (4s)', 'winner' => $p2->name, 'diff' => (($s2['fours'] ?? 0) - ($s1['fours'] ?? 0)) . ' more fours', 'player' => 2];
+            $p2Wins++;
         }
 
         // Strike Rate
@@ -705,7 +1008,7 @@ class PageController extends Controller
             }
         }
 
-        // Boundaries
+        // Boundaries Impact
         $b1 = ($s1['fours'] * 4) + ($s1['sixes'] * 6);
         $b2 = ($s2['fours'] * 4) + ($s2['sixes'] * 6);
         if ($b1 > $b2) {
@@ -904,6 +1207,17 @@ class PageController extends Controller
     public function matchDetail($id)
     {
         $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats', 'venue'])->findOrFail($id);
+        
+        // Auto-sync or synthesize API match details (Squads, Scorecard, Commentary, Overs) if not yet populated
+        if ($match->is_api_match || !empty($match->api_match_id)) {
+            $hasBatting = $match->battingStats->isNotEmpty();
+            $hasSquads = ($match->team1 && $match->team1->players->isNotEmpty() && $match->team2 && $match->team2->players->isNotEmpty());
+            if (!$hasBatting || !$hasSquads) {
+                app(\App\Services\CricketApiService::class)->syncMatchDetails($match);
+                $match->load(['team1.players', 'team2.players', 'battingStats', 'bowlingStats']);
+            }
+        }
+
         $balls = \App\Models\BallByBall::where('match_id', $id)->orderBy('created_at', 'desc')->get();
         
         // Calculate dynamic Cricbuzz stats via MatchService

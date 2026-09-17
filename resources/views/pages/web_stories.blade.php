@@ -19,7 +19,7 @@
                     </div>
                     
                     <!-- BG Image -->
-                    <img src="{{ $story->image_url ?: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80' }}" alt="{{ $story->title }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                    <img src="{{ $story->image_url }}" alt="{{ $story->title }}" onerror="if (!this.dataset.tried && '{{ $story->slides[0] ?? '' }}') { this.dataset.tried='1'; this.src='{{ $story->slides[0] ?? '' }}'; } else { this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80'; }" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
                     
                     <!-- Gradient Overlay -->
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(11,15,23,0.95) 100%); z-index: 2;"></div>

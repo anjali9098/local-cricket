@@ -371,7 +371,7 @@
                     <a href="{{ route('webstories.show', $story->id) }}" style="text-decoration: none; position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 9/16; max-height: 280px; display: block; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.15s;"
                        onmouseover="this.style.transform='scale(1.02)';" onmouseout="this.style.transform='scale(1)';">
                         @if($story->image_url)
-                            <img src="{{ $story->image_url }}" alt="{{ $story->title }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85;">
+                            <img src="{{ $story->image_url }}" alt="{{ $story->title }}" onerror="if (!this.dataset.tried && '{{ $story->slides[0] ?? '' }}') { this.dataset.tried='1'; this.src='{{ $story->slides[0] ?? '' }}'; } else { this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80'; }" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85;">
                         @endif
                         <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); padding: 12px; display: flex; flex-direction: column; justify-content: flex-end;">
                             <span style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; background: #e11d48; color: white; padding: 2px 6px; border-radius: 4px; align-self: flex-start; margin-bottom: 4px;">
