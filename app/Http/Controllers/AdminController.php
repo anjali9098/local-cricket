@@ -1798,9 +1798,49 @@ class AdminController extends Controller
         if ($request->query('edit')) {
             $editItem = \App\Models\Player::find($request->query('edit'));
         }
-        $players = \App\Models\Player::with('team')->orderBy('id', 'desc')->get();
+
+        $query = \App\Models\Player::with('team');
+
+        $search = trim($request->query('search', ''));
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('country', 'LIKE', "%{$search}%")
+                  ->orWhere('nationality', 'LIKE', "%{$search}%")
+                  ->orWhere('role', 'LIKE', "%{$search}%")
+                  ->orWhere('jersey_number', 'LIKE', "%{$search}%")
+                  ->orWhere('slug', 'LIKE', "%{$search}%")
+                  ->orWhereHas('team', function ($tq) use ($search) {
+                      $tq->where('name', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        $roleFilter = trim($request->query('role', ''));
+        if (!empty($roleFilter)) {
+            $norm = strtolower($roleFilter);
+            $query->where(function ($q) use ($roleFilter, $norm) {
+                $q->where('role', 'LIKE', "%{$roleFilter}%");
+                if (in_array($norm, ['batsman', 'batter'])) {
+                    $q->orWhere('role', 'LIKE', '%batter%')
+                      ->orWhere('role', 'LIKE', '%batting%');
+                } elseif (in_array($norm, ['bowler', 'bowling'])) {
+                    $q->orWhere('role', 'LIKE', '%bowl%');
+                } elseif (str_contains($norm, 'all-rounder') || str_contains($norm, 'allrounder')) {
+                    $q->orWhere('role', 'LIKE', '%allrounder%')
+                      ->orWhere('role', 'LIKE', '%all-rounder%');
+                } elseif (str_contains($norm, 'wk') || str_contains($norm, 'keeper')) {
+                    $q->orWhere('role', 'LIKE', '%wicket%')
+                      ->orWhere('role', 'LIKE', '%wk%');
+                }
+            });
+        }
+
+        $players = $query->orderBy('id', 'desc')
+            ->paginate(10, ['*'], 'page', (int) $request->query('page', 1))
+            ->withQueryString();
         $teams = Team::orderBy('name', 'asc')->get();
-        return view('admin.admin_players', compact('players', 'editItem', 'teams'));
+        return view('admin.admin_players', compact('players', 'editItem', 'teams', 'search', 'roleFilter'));
     }
 
     public function createPlayer(\Illuminate\Http\Request $request)
@@ -1823,6 +1863,8 @@ class AdminController extends Controller
 
         \App\Models\Player::create([
             'name' => $name,
+            'local_name' => trim($request->input('local_name', '')),
+            'nickname' => trim($request->input('nickname', '')),
             'slug' => $slug,
             'short_name' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3)),
             'initials' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 2)),
@@ -1830,6 +1872,14 @@ class AdminController extends Controller
             'role' => $request->input('role', 'Batsman'),
             'batting_style' => $request->input('batting_style', ''),
             'bowling_style' => $request->input('bowling_style', ''),
+            'birthplace' => trim($request->input('birthplace', '')),
+            'height' => trim($request->input('height', '')),
+            'played_teams' => trim($request->input('played_teams', '')),
+            'father_name' => trim($request->input('father_name', '')),
+            'mother_name' => trim($request->input('mother_name', '')),
+            'spouse_name' => trim($request->input('spouse_name', '')),
+            'children' => trim($request->input('children', '')),
+            'siblings' => trim($request->input('siblings', '')),
             'country' => $country,
             'nationality' => $country,
             'jersey_number' => $request->input('jersey_number', ''),
@@ -1839,6 +1889,7 @@ class AdminController extends Controller
             'is_popular' => $request->has('is_popular') ? 1 : 0,
             'display_order' => (int)$request->input('display_order', 1),
             'description' => $request->input('description', ''),
+            'bio' => $request->input('bio', ''),
             'keywords' => $request->input('keywords', ''),
         ]);
         return redirect()->route('admin.players')->with('success', "Player '{$name}' created successfully!");
@@ -1862,6 +1913,8 @@ class AdminController extends Controller
 
         $player->update([
             'name' => $name,
+            'local_name' => trim($request->input('local_name', $player->local_name ?? '')),
+            'nickname' => trim($request->input('nickname', $player->nickname ?? '')),
             'slug' => $slug,
             'short_name' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3)),
             'initials' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 2)),
@@ -1869,6 +1922,14 @@ class AdminController extends Controller
             'role' => $request->input('role', $player->role ?? 'Batsman'),
             'batting_style' => $request->input('batting_style', $player->batting_style ?? ''),
             'bowling_style' => $request->input('bowling_style', $player->bowling_style ?? ''),
+            'birthplace' => trim($request->input('birthplace', $player->birthplace ?? '')),
+            'height' => trim($request->input('height', $player->height ?? '')),
+            'played_teams' => trim($request->input('played_teams', $player->played_teams ?? '')),
+            'father_name' => trim($request->input('father_name', $player->father_name ?? '')),
+            'mother_name' => trim($request->input('mother_name', $player->mother_name ?? '')),
+            'spouse_name' => trim($request->input('spouse_name', $player->spouse_name ?? '')),
+            'children' => trim($request->input('children', $player->children ?? '')),
+            'siblings' => trim($request->input('siblings', $player->siblings ?? '')),
             'country' => $country,
             'nationality' => $country,
             'jersey_number' => $request->input('jersey_number', $player->jersey_number ?? ''),
@@ -1878,6 +1939,7 @@ class AdminController extends Controller
             'is_popular' => $request->has('is_popular') ? 1 : 0,
             'display_order' => (int)$request->input('display_order', $player->display_order ?? 1),
             'description' => $request->input('description', $player->description ?? ''),
+            'bio' => $request->input('bio', $player->bio ?? ''),
             'keywords' => $request->input('keywords', $player->keywords ?? ''),
         ]);
         return redirect()->route('admin.players')->with('success', 'Player updated successfully!');

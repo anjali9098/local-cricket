@@ -13,26 +13,36 @@
                 Home
             </a>
 
-            <!-- Role Filter -->
-            <select id="filter-player-role" onchange="filterPlayerTable()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px;">
-                <option value="">All Roles</option>
-                <option value="batsman">Batsman</option>
-                <option value="bowler">Bowler</option>
-                <option value="all-rounder">All-Rounder</option>
-                <option value="wk-batsman">WK-Batsman</option>
-                <option value="wicket-keeper">Wicketkeeper</option>
-            </select>
+            <!-- Server Search & Filter Form -->
+            <form id="player-filter-form" method="GET" action="{{ route('admin.players') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
+                @if(request('edit'))
+                    <input type="hidden" name="edit" value="{{ request('edit') }}">
+                @endif
 
-            <!-- Search input & buttons -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <input type="text" id="player-search-input" oninput="filterPlayerTable()" onkeyup="filterPlayerTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterPlayerTable();}" placeholder="Search players..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px;">
-                <button type="button" onclick="filterPlayerTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Search
-                </button>
-                <button type="button" onclick="resetPlayerSearch()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Refresh
-                </button>
-            </div>
+                <!-- Role Filter -->
+                <select name="role" id="filter-player-role" onchange="this.form.submit()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px; cursor: pointer;">
+                    <option value="">All Roles</option>
+                    <option value="batsman" {{ strtolower($roleFilter ?? '') === 'batsman' ? 'selected' : '' }}>Batsman</option>
+                    <option value="bowler" {{ strtolower($roleFilter ?? '') === 'bowler' ? 'selected' : '' }}>Bowler</option>
+                    <option value="all-rounder" {{ strtolower($roleFilter ?? '') === 'all-rounder' ? 'selected' : '' }}>All-Rounder</option>
+                    <option value="wk-batsman" {{ strtolower($roleFilter ?? '') === 'wk-batsman' ? 'selected' : '' }}>WK-Batsman</option>
+                    <option value="wicket-keeper" {{ strtolower($roleFilter ?? '') === 'wicket-keeper' ? 'selected' : '' }}>Wicketkeeper</option>
+                </select>
+
+                <!-- Search input & buttons -->
+                <div style="display: flex; align-items: center; gap: 6px; position: relative;">
+                    <input type="text" name="search" id="player-search-input" value="{{ $search ?? '' }}" placeholder="Search by name, team, country..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 240px;">
+                    @if(!empty($search))
+                        <button type="button" onclick="clearPlayerSearch()" style="position: absolute; right: 140px; background: none; border: none; font-size: 1.1rem; color: #94a3b8; cursor: pointer; padding: 0 4px; line-height: 1;" title="Clear search">&times;</button>
+                    @endif
+                    <button type="submit" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.15s;">
+                        Search
+                    </button>
+                    <a href="{{ route('admin.players') }}" style="display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; text-decoration: none; cursor: pointer;">
+                        Reset
+                    </a>
+                </div>
+            </form>
         </div>
 
         <!-- Right: + Add New Button -->
@@ -56,20 +66,35 @@
         <form method="POST" action="{{ $editItem ? route('admin.players.update', $editItem->id) : route('admin.players.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Player Name & Slug | Team | Role | Display Order -->
-            <div style="display: grid; grid-template-columns: 2.2fr 1.3fr 1.2fr 0.8fr; gap: 16px; align-items: flex-start;">
+            <!-- ROW 1: Player Name, Hindi Name, Nickname & Slug | Team | Role | Display Order -->
+            <div style="display: grid; grid-template-columns: 2fr 1.3fr 1.2fr 0.8fr; gap: 16px; align-items: flex-start;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Player Full Name <span style="color:#ef4444;">*</span>
+                        Player Full Name (English) <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="player_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="text" id="player_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="e.g. Virat Kohli" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                     
-                    <input type="text" id="player_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.78rem; color: #475569;">
+                                Hindi / Alternate Name
+                            </label>
+                            <input type="text" name="local_name" value="{{ old('local_name', $editItem->local_name ?? '') }}" placeholder="e.g. विराट कोहली" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.78rem; color: #475569;">
+                                Nickname
+                            </label>
+                            <input type="text" name="nickname" value="{{ old('nickname', $editItem->nickname ?? '') }}" placeholder="e.g. Cheeku, King Kohli" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <input type="text" id="player_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="URL Slug (auto-generated)" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
                 </div>
 
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Team
+                        Current Team
                     </label>
                     <select name="team_id" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                         <option value="">-- No Team / Free Agent --</option>
@@ -99,8 +124,42 @@
                 </div>
             </div>
 
-            <!-- ROW 2: Batting Style | Bowling Style | Jersey Number | Date of Birth | Country -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 0.8fr 1.2fr 1fr; gap: 14px;">
+            <!-- ROW 2: Physical & Personal Specs: Birthplace | Height | DOB | Nationality | Jersey # -->
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr 1.2fr 1fr 0.8fr; gap: 14px;">
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                        📍 Birthplace
+                    </label>
+                    <input type="text" name="birthplace" value="{{ old('birthplace', $editItem->birthplace ?? '') }}" placeholder="e.g. Delhi" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                        📏 Height
+                    </label>
+                    <input type="text" name="height" value="{{ old('height', $editItem->height ?? '') }}" placeholder="e.g. 5 Ft 8.9 Inch (175 cm)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                        🎂 Date of Birth / DOB
+                    </label>
+                    <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $editItem->date_of_birth ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                        Country / Nationality
+                    </label>
+                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? ($editItem->nationality ?? 'India')) }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                        Jersey #
+                    </label>
+                    <input type="text" name="jersey_number" value="{{ old('jersey_number', $editItem->jersey_number ?? '') }}" placeholder="18" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <!-- ROW 3: Batting & Bowling Style & Played Teams -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 14px;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Batting Style
@@ -115,41 +174,77 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Bowling Style
                     </label>
-                    <input type="text" name="bowling_style" value="{{ old('bowling_style', $editItem->bowling_style ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="bowling_style" value="{{ old('bowling_style', $editItem->bowling_style ?? '') }}" placeholder="e.g. Right-arm medium" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Jersey #
+                        🏏 Played for Teams (Comma-separated)
                     </label>
-                    <input type="text" name="jersey_number" value="{{ old('jersey_number', $editItem->jersey_number ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        🎂 Date of Birth / Birthday
-                    </label>
-                    <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $editItem->date_of_birth ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Country / Nationality
-                    </label>
-                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? ($editItem->nationality ?? 'India')) }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="played_teams" value="{{ old('played_teams', $editItem->played_teams ?? '') }}" placeholder="e.g. India, Royal Challengers Bengaluru, Delhi, North Zone" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
-            <!-- ROW 3: Bio / Keywords -->
+            <!-- ROW 4: Family Details Box -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                    <span>👨‍👩‍👧‍👦</span> Family Details
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
+                            Father's Name
+                        </label>
+                        <input type="text" name="father_name" value="{{ old('father_name', $editItem->father_name ?? '') }}" placeholder="e.g. Prem Kohli" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
+                            Mother's Name
+                        </label>
+                        <input type="text" name="mother_name" value="{{ old('mother_name', $editItem->mother_name ?? '') }}" placeholder="e.g. Saroj Kohli" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
+                            Spouse / Wife
+                        </label>
+                        <input type="text" name="spouse_name" value="{{ old('spouse_name', $editItem->spouse_name ?? '') }}" placeholder="e.g. Anushka Sharma" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
+                            Children
+                        </label>
+                        <input type="text" name="children" value="{{ old('children', $editItem->children ?? '') }}" placeholder="e.g. Vamika (Daughter), Akaay (Son)" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
+                            Siblings (Brother/Sister)
+                        </label>
+                        <input type="text" name="siblings" value="{{ old('siblings', $editItem->siblings ?? '') }}" placeholder="e.g. Vikas Kohli (Brother), Bhavna (Sister)" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 5: Full In-depth Biography -->
+            <div>
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                    📖 Profile / Detailed Biography Narrative
+                    <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(Full player overview, debut story, records and paragraphs)</span>
+                </label>
+                <textarea name="bio" rows="4" placeholder="Daring, tough, and fiercely talented, Virat Kohli is arguably one of the finest batsmen that the country has produced..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; font-family: inherit; line-height: 1.5;">{{ old('bio', $editItem->bio ?? '') }}</textarea>
+            </div>
+
+            <!-- ROW 6: Short Bio / Keywords -->
             <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Short Bio / Description
+                        Short Tagline / Catchphrase
                     </label>
-                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" placeholder="e.g. King of Chases and former Indian Captain" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Keywords
+                        Article Keywords &amp; Tags <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(for matching articles)</span>
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="virat kohli, rcb, india, king kohli" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -307,10 +402,28 @@
                 </table>
             </div>
             <!-- 10-item Pagination Container -->
-            <div id="player-table-pagination"></div>
+            <div id="player-table-pagination" style="padding: 14px 18px; background: white; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="font-size: 0.85rem; color: #475569;">
+                    Showing <strong>{{ $players->firstItem() ?? 0 }}</strong> to <strong>{{ $players->lastItem() ?? 0 }}</strong> of <strong>{{ $players->total() }}</strong> players
+                    @if(!empty($search) || !empty($roleFilter))
+                        <span style="color: #0284c7; font-weight: 700; margin-left: 4px;">(filtered)</span>
+                    @endif
+                </div>
+                <div class="player-pagination-links">
+                    {{ $players->links() }}
+                </div>
+            </div>
         @else
             <div style="text-align: center; padding: 48px; color: #94a3b8; font-weight: 600;">
-                No players available yet. Click <strong>+ Add New Player</strong> above to add one!
+                @if(!empty($search) || !empty($roleFilter))
+                    <div style="font-size: 1.1rem; color: #1e293b; font-weight: 700; margin-bottom: 6px;">No matching players found</div>
+                    <div style="font-size: 0.85rem; margin-bottom: 14px;">No players match your search criteria.</div>
+                    <a href="{{ route('admin.players') }}" style="display: inline-block; padding: 7px 18px; background: #0284c7; color: white; border-radius: 4px; font-weight: 700; text-decoration: none; font-size: 0.85rem;">
+                        Clear Search &amp; Filters
+                    </a>
+                @else
+                    No players available yet. Click <strong>+ Add New Player</strong> above to add one!
+                @endif
             </div>
         @endif
     </div>
@@ -321,6 +434,21 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
+}
+.player-pagination-links nav svg {
+    width: 16px !important;
+    height: 16px !important;
+    display: inline-block !important;
+}
+.player-pagination-links nav p {
+    margin: 0 !important;
+    font-size: 0.82rem !important;
+    color: #64748b !important;
+}
+.player-pagination-links nav span[aria-current="page"] span {
+    background-color: #0284c7 !important;
+    border-color: #0284c7 !important;
+    color: white !important;
 }
 </style>
 
@@ -353,28 +481,11 @@ document.getElementById('player_slug')?.addEventListener('input', function() {
     this.dataset.manual = 'true';
 });
 
-// Initialize Table Manager for Players
-let playerTableManager;
-document.addEventListener('DOMContentLoaded', () => {
-    playerTableManager = new AdminTableManager({
-        tableId: 'player-table',
-        rowSelector: '.tbl-player-row',
-        searchInputId: 'player-search-input',
-        filterSelectId: 'filter-player-role',
-        filterDataAttr: 'role',
-        paginationContainerId: 'player-table-pagination',
-        perPage: 10,
-        colSpan: 8,
-        noResultsMsg: 'No matching players found.'
-    });
-});
-
-function filterPlayerTable() {
-    if (playerTableManager) playerTableManager.applyFilter(1);
-}
-
-function resetPlayerSearch() {
-    if (playerTableManager) playerTableManager.reset();
+function clearPlayerSearch() {
+    const input = document.getElementById('player-search-input');
+    if (input) input.value = '';
+    const form = document.getElementById('player-filter-form');
+    if (form) form.submit();
 }
 </script>
 @endsection

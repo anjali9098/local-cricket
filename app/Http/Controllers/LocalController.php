@@ -360,6 +360,25 @@ class LocalController extends Controller
                 $initialStatus = 'upcoming';
             }
 
+            $shortName = trim($request->input('short_name', ''));
+            if (empty($shortName)) {
+                $words = array_filter(preg_split('/\s+/', preg_replace('/[^A-Za-z0-9\s]/', '', $name)));
+                if (count($words) >= 2) {
+                    $acronym = '';
+                    foreach ($words as $w) {
+                        $acronym .= $w[0];
+                    }
+                    $shortName = strtoupper(substr($acronym, 0, 6));
+                }
+                if (empty($shortName) || strlen($shortName) < 2) {
+                    $clean = preg_replace('/[^A-Za-z0-9]/', '', $name);
+                    $shortName = strtoupper(substr($clean ?: $name, 0, 6));
+                }
+            }
+            if (empty($shortName)) {
+                $shortName = 'LOCAL';
+            }
+
             $createdTournament = Tournament::create([
                 'user_id' => $userId,
                 'name' => $name,
