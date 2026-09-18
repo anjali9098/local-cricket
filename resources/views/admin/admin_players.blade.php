@@ -66,30 +66,22 @@
         <form method="POST" action="{{ $editItem ? route('admin.players.update', $editItem->id) : route('admin.players.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Player Name, Hindi Name, Nickname & Slug | Team | Role | Display Order -->
+            <!-- ROW 1: Player Name, Nickname | Team | Role | Display Order -->
             <div style="display: grid; grid-template-columns: 2fr 1.3fr 1.2fr 0.8fr; gap: 16px; align-items: flex-start;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Player Full Name (English) <span style="color:#ef4444;">*</span>
+                        Player Full Name <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="player_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="e.g. Virat Kohli" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="text" id="player_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                        <div>
-                            <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.78rem; color: #475569;">
-                                Hindi / Alternate Name
-                            </label>
-                            <input type="text" name="local_name" value="{{ old('local_name', $editItem->local_name ?? '') }}" placeholder="e.g. विराट कोहली" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.78rem; color: #475569;">
-                                Nickname
-                            </label>
-                            <input type="text" name="nickname" value="{{ old('nickname', $editItem->nickname ?? '') }}" placeholder="e.g. Cheeku, King Kohli" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                        </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.78rem; color: #475569;">
+                            Nickname
+                        </label>
+                        <input type="text" name="nickname" value="{{ old('nickname', $editItem->nickname ?? '') }}" placeholder="" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
-                    <input type="text" id="player_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="URL Slug (auto-generated)" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                    <input type="hidden" id="player_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}">
                 </div>
 
                 <div>
@@ -130,13 +122,13 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         📍 Birthplace
                     </label>
-                    <input type="text" name="birthplace" value="{{ old('birthplace', $editItem->birthplace ?? '') }}" placeholder="e.g. Delhi" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="birthplace" value="{{ old('birthplace', $editItem->birthplace ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         📏 Height
                     </label>
-                    <input type="text" name="height" value="{{ old('height', $editItem->height ?? '') }}" placeholder="e.g. 5 Ft 8.9 Inch (175 cm)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="height" value="{{ old('height', $editItem->height ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
@@ -154,7 +146,7 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Jersey #
                     </label>
-                    <input type="text" name="jersey_number" value="{{ old('jersey_number', $editItem->jersey_number ?? '') }}" placeholder="18" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="jersey_number" value="{{ old('jersey_number', $editItem->jersey_number ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -174,13 +166,13 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Bowling Style
                     </label>
-                    <input type="text" name="bowling_style" value="{{ old('bowling_style', $editItem->bowling_style ?? '') }}" placeholder="e.g. Right-arm medium" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="bowling_style" value="{{ old('bowling_style', $editItem->bowling_style ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         🏏 Played for Teams (Comma-separated)
                     </label>
-                    <input type="text" name="played_teams" value="{{ old('played_teams', $editItem->played_teams ?? '') }}" placeholder="e.g. India, Royal Challengers Bengaluru, Delhi, North Zone" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="played_teams" value="{{ old('played_teams', $editItem->played_teams ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -194,31 +186,31 @@
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Father's Name
                         </label>
-                        <input type="text" name="father_name" value="{{ old('father_name', $editItem->father_name ?? '') }}" placeholder="e.g. Prem Kohli" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="father_name" value="{{ old('father_name', $editItem->father_name ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Mother's Name
                         </label>
-                        <input type="text" name="mother_name" value="{{ old('mother_name', $editItem->mother_name ?? '') }}" placeholder="e.g. Saroj Kohli" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="mother_name" value="{{ old('mother_name', $editItem->mother_name ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Spouse / Wife
                         </label>
-                        <input type="text" name="spouse_name" value="{{ old('spouse_name', $editItem->spouse_name ?? '') }}" placeholder="e.g. Anushka Sharma" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="spouse_name" value="{{ old('spouse_name', $editItem->spouse_name ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Children
                         </label>
-                        <input type="text" name="children" value="{{ old('children', $editItem->children ?? '') }}" placeholder="e.g. Vamika (Daughter), Akaay (Son)" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="children" value="{{ old('children', $editItem->children ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Siblings (Brother/Sister)
                         </label>
-                        <input type="text" name="siblings" value="{{ old('siblings', $editItem->siblings ?? '') }}" placeholder="e.g. Vikas Kohli (Brother), Bhavna (Sister)" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="siblings" value="{{ old('siblings', $editItem->siblings ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                 </div>
             </div>
@@ -229,7 +221,7 @@
                     📖 Profile / Detailed Biography Narrative
                     <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(Full player overview, debut story, records and paragraphs)</span>
                 </label>
-                <textarea name="bio" rows="4" placeholder="Daring, tough, and fiercely talented, Virat Kohli is arguably one of the finest batsmen that the country has produced..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; font-family: inherit; line-height: 1.5;">{{ old('bio', $editItem->bio ?? '') }}</textarea>
+                <textarea name="bio" rows="4" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; font-family: inherit; line-height: 1.5;">{{ old('bio', $editItem->bio ?? '') }}</textarea>
             </div>
 
             <!-- ROW 6: Short Bio / Keywords -->
@@ -238,13 +230,13 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Short Tagline / Catchphrase
                     </label>
-                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" placeholder="e.g. King of Chases and former Indian Captain" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Article Keywords &amp; Tags <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(for matching articles)</span>
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="virat kohli, rcb, india, king kohli" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 

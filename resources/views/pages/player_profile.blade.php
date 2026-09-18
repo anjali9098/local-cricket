@@ -53,13 +53,6 @@
                     </h1>
                 </div>
 
-                <!-- Local Script / Hindi Name -->
-                @if(!empty($player->local_name))
-                    <div style="font-size: 1.35rem; font-weight: 700; color: #38bdf8; margin-bottom: 10px; letter-spacing: 0.01em;">
-                        {{ $player->local_name }}
-                    </div>
-                @endif
-
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
                     @if(!empty($player->role))
                         <span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; font-weight: 800; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
