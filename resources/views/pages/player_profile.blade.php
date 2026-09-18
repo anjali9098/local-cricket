@@ -53,7 +53,7 @@
                     </h1>
                 </div>
 
-                <!-- Local Script / Hindi Name (matching reference screenshot) -->
+                <!-- Local Script / Hindi Name -->
                 @if(!empty($player->local_name))
                     <div style="font-size: 1.35rem; font-weight: 700; color: #38bdf8; margin-bottom: 10px; letter-spacing: 0.01em;">
                         {{ $player->local_name }}
@@ -61,17 +61,21 @@
                 @endif
 
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-                    <span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; font-weight: 800; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
-                        🏏 {{ strtoupper($player->role ?? 'CRICKETER') }}
-                    </span>
+                    @if(!empty($player->role))
+                        <span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; font-weight: 800; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                            🏏 {{ strtoupper($player->role) }}
+                        </span>
+                    @endif
                     @if($player->team)
                         <span style="background: var(--bg-card-secondary); color: var(--text-main); font-weight: 700; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
                             🛡️ {{ $player->team->name }} ({{ $player->team->short_name ?? '' }})
                         </span>
                     @endif
-                    <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 0.82rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
-                        📍 {{ $player->nationality ?: ($player->country ?: 'India') }}
-                    </span>
+                    @if(!empty($player->nationality) || !empty($player->country))
+                        <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 0.82rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                            📍 {{ $player->nationality ?: $player->country }}
+                        </span>
+                    @endif
                     @if($player->date_of_birth)
                         <span style="background: rgba(244, 63, 94, 0.12); color: #f43f5e; font-weight: 800; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(244, 63, 94, 0.25);">
                             🎂 {{ \Carbon\Carbon::parse($player->date_of_birth)->format('d M Y') }}
@@ -89,13 +93,13 @@
         </div>
     </div>
 
-    <!-- Main Content 2-Column Grid (Matches Reference Layout) -->
+    <!-- Main Content 2-Column Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start mb-12">
         
         <!-- ================= LEFT COLUMN: Personal Specs & Family Details ================= -->
         <div class="lg:col-span-4 space-y-6">
             
-            <!-- Personal Specifications Card (Exact details matching screenshot) -->
+            <!-- Personal Specifications Card -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
                 <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 8px;">
@@ -109,14 +113,14 @@
                     <!-- Nickname -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Nickname</span>
-                        <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">{{ $player->nickname ?: $player->name }}</span>
+                        <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">{{ $player->nickname ?: '-' }}</span>
                     </div>
 
                     <!-- Born (DOB) -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Born (DOB)</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">
-                            {{ $player->date_of_birth ? \Carbon\Carbon::parse($player->date_of_birth)->format('d M Y') : '05 Nov 1988' }}
+                            {{ $player->date_of_birth ? \Carbon\Carbon::parse($player->date_of_birth)->format('d M Y') : '-' }}
                         </span>
                     </div>
 
@@ -124,7 +128,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Age</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: #38bdf8; text-align: right;">
-                            {{ $player->age ?: ($player->date_of_birth ? \Carbon\Carbon::parse($player->date_of_birth)->age . ' Years' : '38 Years') }}
+                            {{ $player->age ?: '-' }}
                         </span>
                     </div>
 
@@ -132,7 +136,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Birthplace</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">
-                            {{ $player->birthplace ?: 'Delhi' }}
+                            {{ $player->birthplace ?: '-' }}
                         </span>
                     </div>
 
@@ -140,7 +144,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Height</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">
-                            {{ $player->height ?: '5 Ft 8.9 Inch (175 cm)' }}
+                            {{ $player->height ?: '-' }}
                         </span>
                     </div>
 
@@ -148,7 +152,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Role</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">
-                            {{ $player->role ? ucwords(str_replace('_', ' ', $player->role)) : 'Right Handed Batter Player' }}
+                            {{ $player->role ? ucwords(str_replace('_', ' ', $player->role)) : '-' }}
                         </span>
                     </div>
 
@@ -156,7 +160,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Batting Style</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">
-                            {{ $player->batting_style ?: 'Right Hand Bat' }}
+                            {{ $player->batting_style ?: '-' }}
                         </span>
                     </div>
 
@@ -164,7 +168,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Bowling Style</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">
-                            {{ $player->bowling_style ?: 'Right Arm Medium' }}
+                            {{ $player->bowling_style ?: '-' }}
                         </span>
                     </div>
 
@@ -172,7 +176,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); min-width: 100px;">Nationality</span>
                         <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-main); text-align: right;">
-                            {{ $player->nationality ?: ($player->country ?: 'India') }}
+                            {{ $player->nationality ?: ($player->country ?: '-') }}
                         </span>
                     </div>
 
@@ -180,14 +184,14 @@
                     <div style="padding-top: 10px; border-top: 1px dashed var(--border-color);">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 6px;">Played Teams</span>
                         <div style="font-size: 0.84rem; line-height: 1.5; color: var(--text-main); font-weight: 600;">
-                            {{ $player->played_teams ?: 'India, Royal Challengers Bengaluru, Delhi, Royal Challengers Bangalore, Indians' }}
+                            {{ $player->played_teams ?: ($player->team ? $player->team->name : '-') }}
                         </div>
                     </div>
 
                 </div>
             </div>
 
-            <!-- Family Details Card (User Explicit Requirement) -->
+            <!-- Family Details Card -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
                 <div style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 8px;">
@@ -267,26 +271,28 @@
         <!-- ================= RIGHT COLUMN: Teams Played, Profile Bio & Stats ================= -->
         <div class="lg:col-span-8 space-y-7">
             
-            <!-- Played for the Teams Section (Matches Screenshot Top Right) -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
-                <h2 style="font-size: 1.15rem; font-weight: 900; color: var(--text-main); margin-top: 0; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                    <span>🛡️</span> Played for the Teams:
-                </h2>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    @php
-                        $teamsList = !empty($player->played_teams) ? array_map('trim', explode(',', $player->played_teams)) : ($player->team ? [$player->team->name] : ['India', 'Royal Challengers Bengaluru', 'Delhi', 'Indians']);
-                    @endphp
-                    @foreach($teamsList as $tm)
-                        @if(!empty($tm))
-                            <span style="background: var(--bg-card-secondary); color: var(--text-main); font-weight: 700; font-size: 0.84rem; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                                <span style="color: #38bdf8;">•</span> {{ $tm }}
-                            </span>
-                        @endif
-                    @endforeach
+            <!-- Played for the Teams Section -->
+            @php
+                $teamsList = !empty($player->played_teams) ? array_values(array_filter(array_map('trim', explode(',', $player->played_teams)))) : ($player->team ? [$player->team->name] : []);
+            @endphp
+            @if(!empty($teamsList))
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+                    <h2 style="font-size: 1.15rem; font-weight: 900; color: var(--text-main); margin-top: 0; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                        <span>🛡️</span> Played for the Teams:
+                    </h2>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        @foreach($teamsList as $tm)
+                            @if(!empty($tm))
+                                <span style="background: var(--bg-card-secondary); color: var(--text-main); font-weight: 700; font-size: 0.84rem; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                    <span style="color: #38bdf8;">•</span> {{ $tm }}
+                                </span>
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
-            </div>
+            @endif
 
-            <!-- Profile Narrative / Biography (Matches Screenshot "Profile:") -->
+            <!-- Profile Narrative / Biography -->
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 26px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
                 <h2 style="font-size: 1.25rem; font-weight: 900; color: var(--text-main); margin-top: 0; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
                     <span>📖</span> Profile:
@@ -300,11 +306,8 @@
                             @endif
                         @endforeach
                     @else
-                        <p style="margin-bottom: 16px;">
-                            {{ $player->name }} is one of the most prolific cricketers in modern cricket. Renowned for supreme athleticism, masterful batting technique, and unmatched consistency across all formats, {{ $player->name }} continues to inspire cricket enthusiasts globally.
-                        </p>
-                        <p style="margin-bottom: 16px;">
-                            Having represented {{ $player->team ? $player->team->name : 'top teams' }} in high-stakes domestic and international fixtures, their career highlights include match-winning innings under pressure and remarkable tactical leadership on the field.
+                        <p style="color: var(--text-dim); font-style: italic; margin-bottom: 0;">
+                            No biography profile details recorded yet.
                         </p>
                     @endif
                 </div>
@@ -413,20 +416,16 @@
             <div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <h2 style="font-size: 1.45rem; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.01em;">
-                        📰 Latest Articles &amp; Stories on {{ $player->name }}
+                        📰 Articles &amp; Stories Tagging {{ $player->name }}
                     </h2>
-                    @if(!empty($hasPlayerSpecificArticles) && $hasPlayerSpecificArticles)
+                    @if(isset($articles) && $articles->isNotEmpty())
                         <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.74rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                            TAGGED
+                            {{ $articles->count() }} TAGGED
                         </span>
                     @endif
                 </div>
                 <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; margin-bottom: 0;">
-                    @if(!empty($hasPlayerSpecificArticles) && $hasPlayerSpecificArticles)
-                        All news coverage, analysis, and feature stories mentioning {{ $player->name }}.
-                    @else
-                        Recent featured articles, analysis, and stories from across the cricket arena.
-                    @endif
+                    Articles and stories published with tags or mentions of {{ $player->name }}.
                 </p>
             </div>
 
@@ -449,17 +448,19 @@
                                     🏏
                                 </div>
                             @endif
-                            <div style="position: absolute; top: 10px; left: 10px;">
-                                <span style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); color: #38bdf8; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; border: 1px solid rgba(56, 189, 248, 0.3);">
-                                    {{ $art->category ?: 'CRICKET' }}
-                                </span>
-                            </div>
+                            @if(!empty($art->category))
+                                <div style="position: absolute; top: 10px; left: 10px;">
+                                    <span style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); color: #38bdf8; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; border: 1px solid rgba(56, 189, 248, 0.3);">
+                                        {{ $art->category }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Article Content -->
                         <div style="padding: 18px; display: flex; flex-direction: column; flex: 1;">
                             <div style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600; margin-bottom: 8px;">
-                                ⏱️ {{ $art->read_time ?: '3 MIN READ' }} &bull; {{ $art->published_date ? \Carbon\Carbon::parse($art->published_date)->format('M d, Y') : ($art->created_at ? \Carbon\Carbon::parse($art->created_at)->format('M d, Y') : 'Recent') }}
+                                ⏱️ {{ $art->read_time ?: '3 MIN READ' }} &bull; {{ $art->published_date ? \Carbon\Carbon::parse($art->published_date)->format('M d, Y') : ($art->created_at ? \Carbon\Carbon::parse($art->created_at)->format('M d, Y') : '') }}
                             </div>
 
                             <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); line-height: 1.4; margin: 0 0 10px 0; flex: 1;">
@@ -490,7 +491,7 @@
                 @endforeach
             </div>
         @else
-            <!-- Empty State Fallback -->
+            <!-- Empty State Fallback: Strictly clean, no dummy articles shown -->
             <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: 14px; padding: 36px 20px; text-align: center;">
                 <div style="font-size: 2.2rem; margin-bottom: 8px;">📰</div>
                 <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">

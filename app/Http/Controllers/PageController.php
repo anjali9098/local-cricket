@@ -1177,31 +1177,26 @@ class PageController extends Controller
             ->take(4)
             ->get();
 
-        // Articles tagged or mentioning this player
+        // Articles tagged or mentioning this player (strictly tagged, no dummy fallback)
         $playerQueryTerms = array_filter([$player->name, $player->nickname, $player->local_name, $player->slug]);
-        $articles = \App\Models\Article::where('is_enabled', true)
-            ->where(function($q) use ($playerQueryTerms) {
-                foreach ($playerQueryTerms as $term) {
-                    $q->orWhere('keywords', 'LIKE', "%{$term}%")
-                      ->orWhere('title', 'LIKE', "%{$term}%")
-                      ->orWhere('summary', 'LIKE', "%{$term}%")
-                      ->orWhere('content', 'LIKE', "%{$term}%")
-                      ->orWhere('slug', 'LIKE', "%{$term}%");
-                }
-            })
-            ->orderBy('published_date', 'desc')
-            ->take(6)
-            ->get();
-
-        $hasPlayerSpecificArticles = $articles->isNotEmpty();
-        if ($articles->isEmpty()) {
+        $articles = collect();
+        if (!empty($playerQueryTerms)) {
             $articles = \App\Models\Article::where('is_enabled', true)
+                ->where(function($q) use ($playerQueryTerms) {
+                    foreach ($playerQueryTerms as $term) {
+                        $q->orWhere('keywords', 'LIKE', "%{$term}%")
+                          ->orWhere('title', 'LIKE', "%{$term}%")
+                          ->orWhere('summary', 'LIKE', "%{$term}%")
+                          ->orWhere('content', 'LIKE', "%{$term}%")
+                          ->orWhere('slug', 'LIKE', "%{$term}%");
+                    }
+                })
                 ->orderBy('published_date', 'desc')
                 ->take(6)
                 ->get();
         }
 
-        return view('pages.player_profile', compact('player', 'stats', 'battingScores', 'bowlingScores', 'teammates', 'articles', 'hasPlayerSpecificArticles'));
+        return view('pages.player_profile', compact('player', 'stats', 'battingScores', 'bowlingScores', 'teammates', 'articles'));
     }
 
     public function webStories()
