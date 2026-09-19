@@ -53,34 +53,60 @@
                     </h1>
                 </div>
 
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-                    @if(!empty($player->role))
-                        <span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; font-weight: 800; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
-                            🏏 {{ strtoupper($player->role) }}
-                        </span>
-                    @endif
-                    @if($player->team)
-                        <span style="background: var(--bg-card-secondary); color: var(--text-main); font-weight: 700; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-                            🛡️ {{ $player->team->name }} ({{ $player->team->short_name ?? '' }})
-                        </span>
-                    @endif
-                    @if(!empty($player->nationality) || !empty($player->country))
-                        <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 0.82rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
-                            📍 {{ $player->nationality ?: $player->country }}
-                        </span>
-                    @endif
-                    @if($player->date_of_birth)
-                        <span style="background: rgba(244, 63, 94, 0.12); color: #f43f5e; font-weight: 800; font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(244, 63, 94, 0.25);">
-                            🎂 {{ \Carbon\Carbon::parse($player->date_of_birth)->format('d M Y') }}
-                        </span>
-                    @endif
-                </div>
-
                 @if(!empty($player->nickname) && $player->nickname !== $player->name)
-                    <div style="font-size: 0.88rem; color: var(--text-dim); font-weight: 600;">
+                    <div style="font-size: 0.88rem; color: var(--text-dim); font-weight: 600; margin-bottom: 6px;">
                         Known as: <span style="color: var(--text-main); font-weight: 800;">"{{ $player->nickname }}"</span>
                     </div>
                 @endif
+
+                <!-- 4-Card Responsive Grid Covering the Full Width: Role | Team | Nationality | D.O.B. -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-3.5 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                    
+                    <!-- 1. Player Role -->
+                    <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.28); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <span style="font-size: 1.15rem; flex-shrink: 0;">🏏</span>
+                        <div style="min-width: 0; line-height: 1.2;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #86efac; text-transform: uppercase; letter-spacing: 0.06em; display: block;">ROLE</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: #22c55e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                                {{ strtoupper($player->role ?? 'Player') }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <!-- 2. Team -->
+                    <div style="background: rgba(56, 189, 248, 0.10); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <span style="font-size: 1.15rem; flex-shrink: 0;">🛡️</span>
+                        <div style="min-width: 0; line-height: 1.2;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #7dd3fc; text-transform: uppercase; letter-spacing: 0.06em; display: block;">TEAM</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="{{ $player->team ? $player->team->name : ($player->nationality ?: 'Free Agent') }}">
+                                {{ $player->team ? $player->team->name : ($player->nationality ?: 'Free Agent') }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <!-- 3. Nationality -->
+                    <div style="background: rgba(168, 85, 247, 0.10); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <span style="font-size: 1.15rem; flex-shrink: 0;">📍</span>
+                        <div style="min-width: 0; line-height: 1.2;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #d8b4fe; text-transform: uppercase; letter-spacing: 0.06em; display: block;">NATIONALITY</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: #c084fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                                {{ $player->nationality ?: ($player->country ?: 'India') }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <!-- 4. Date of Birth -->
+                    <div style="background: rgba(244, 63, 94, 0.10); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <span style="font-size: 1.15rem; flex-shrink: 0;">🎂</span>
+                        <div style="min-width: 0; line-height: 1.2;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #fda4af; text-transform: uppercase; letter-spacing: 0.06em; display: block;">BORN (DOB)</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: #fb7185; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                                {{ $player->date_of_birth ? \Carbon\Carbon::parse($player->date_of_birth)->format('d M Y') : '-' }}
+                            </strong>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
         </div>
@@ -399,27 +425,124 @@
                 </div>
             </div>
 
+            <!-- ICC RANKINGS CARD (Inside Right Column, directly under Career Statistics) -->
+            @php
+                $rankingTabs = [
+                    'batting' => 'Batting',
+                    'bowling' => 'Bowling',
+                    'all_rounder' => 'All-Rounder',
+                ];
+                $rankingFormats = [
+                    'test' => 'Test',
+                    'odi'  => 'ODI',
+                    't20i' => 'T20I',
+                ];
+                $iccData = $player->normalized_icc_rankings;
+            @endphp
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+                <!-- Card Header with subtle dashed divider line -->
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <h3 style="font-size: 1.05rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-main); margin: 0; white-space: nowrap;">
+                        ICC RANKINGS
+                    </h3>
+                    <div style="flex: 1; border-bottom: 1px dashed var(--border-color); opacity: 0.6;"></div>
+                </div>
+
+                <!-- Segmented Tab Pills: Batting | Bowling | All-Rounder (Loop Engineering) -->
+                <div style="display: flex; background: var(--bg-card-secondary, #f1f5f9); padding: 4px; border-radius: 12px; margin-bottom: 18px; gap: 4px; max-width: 380px;">
+                    @foreach($rankingTabs as $catKey => $catLabel)
+                        <button type="button"
+                            onclick="switchIccRankingTab('{{ $catKey }}')"
+                            id="icc-tab-btn-{{ $catKey }}"
+                            class="icc-ranking-tab-btn"
+                            data-tab="{{ $catKey }}"
+                            style="flex: 1; padding: 7px 10px; border-radius: 9px; font-size: 0.85rem; font-weight: {{ $loop->first ? '800' : '600' }}; border: none; cursor: pointer; transition: all 0.2s ease; {{ $loop->first ? 'background: var(--bg-card, #ffffff); color: var(--text-main); box-shadow: 0 2px 6px rgba(0,0,0,0.08);' : 'background: transparent; color: var(--text-dim);' }}">
+                            {{ $catLabel }}
+                        </button>
+                    @endforeach
+                </div>
+
+                <!-- Tab Content Panes (Loop Engineering) -->
+                @foreach($rankingTabs as $catKey => $catLabel)
+                    <div id="icc-pane-{{ $catKey }}" class="icc-ranking-pane" style="display: {{ $loop->first ? 'block' : 'none' }};">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <th style="text-align: left; padding: 8px 10px 12px 10px; font-weight: 600; color: var(--text-dim); font-size: 0.85rem;">
+                                        Format
+                                    </th>
+                                    <th style="text-align: center; padding: 8px 10px 12px 10px; font-weight: 600; color: var(--text-dim); font-size: 0.85rem;">
+                                        Current Rank
+                                    </th>
+                                    <th style="text-align: center; padding: 8px 10px 12px 10px; font-weight: 600; color: var(--text-dim); font-size: 0.85rem;">
+                                        Best Rank
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($rankingFormats as $fmtKey => $fmtLabel)
+                                    @php
+                                        $curr = $iccData[$catKey][$fmtKey]['current'] ?? '--';
+                                        $best = $iccData[$catKey][$fmtKey]['best'] ?? '--';
+                                        $isRankedCurr = ($curr !== '--' && trim($curr) !== '');
+                                        $isRankedBest = ($best !== '--' && trim($best) !== '');
+                                    @endphp
+                                    <tr style="border-bottom: 1px solid var(--border-color, #f1f5f9);">
+                                        <td style="padding: 13px 10px; font-weight: 700; color: var(--text-main);">
+                                            {{ $fmtLabel }}
+                                        </td>
+                                        <td style="padding: 13px 10px; text-align: center; {{ $isRankedCurr ? 'font-weight: 900; color: var(--text-main); font-size: 0.98rem;' : 'font-weight: 600; color: var(--text-dim);' }}">
+                                            {{ $curr }}
+                                        </td>
+                                        <td style="padding: 13px 10px; text-align: center; {{ $isRankedBest ? 'font-weight: 700; color: var(--text-main); font-size: 0.95rem;' : 'font-weight: 600; color: var(--text-dim);' }}">
+                                            {{ $best }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endforeach
+            </div>
+
         </div>
 
     </div>
 
-    <!-- ================= BOTTOM SECTION: Articles Tagged with this Cricketer ================= -->
-    <div style="margin-top: 48px; border-top: 2px solid var(--border-color); padding-top: 36px;">
+    <script>
+        function switchIccRankingTab(activeKey) {
+            document.querySelectorAll('.icc-ranking-tab-btn').forEach(btn => {
+                const isTarget = btn.getAttribute('data-tab') === activeKey;
+                if (isTarget) {
+                    btn.style.background = 'var(--bg-card, #ffffff)';
+                    btn.style.color = 'var(--text-main)';
+                    btn.style.fontWeight = '800';
+                    btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+                } else {
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-dim)';
+                    btn.style.fontWeight = '600';
+                    btn.style.boxShadow = 'none';
+                }
+            });
+
+            document.querySelectorAll('.icc-ranking-pane').forEach(pane => {
+                pane.style.display = 'none';
+            });
+            const targetPane = document.getElementById('icc-pane-' + activeKey);
+            if (targetPane) {
+                targetPane.style.display = 'block';
+            }
+        }
+    </script>
+
+    <!-- ================= BOTTOM SECTION: Articles (No top border line) ================= -->
+    <div style="margin-top: 36px; padding-top: 10px;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
             <div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <h2 style="font-size: 1.45rem; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.01em;">
-                        📰 Articles &amp; Stories Tagging {{ $player->name }}
-                    </h2>
-                    @if(isset($articles) && $articles->isNotEmpty())
-                        <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.74rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                            {{ $articles->count() }} TAGGED
-                        </span>
-                    @endif
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; margin-bottom: 0;">
-                    Articles and stories published with tags or mentions of {{ $player->name }}.
-                </p>
+                <h2 style="font-size: 1.45rem; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.01em;">
+                    Article
+                </h2>
             </div>
 
             <a href="{{ route('news', ['type' => 'article']) }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 800; color: #38bdf8; text-decoration: none;">
@@ -429,7 +552,7 @@
 
         @if(isset($articles) && $articles->isNotEmpty())
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($articles as $art)
+                @foreach($articles->take(6) as $art)
                     <article style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 24px rgba(0,0,0,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.02)';">
                         
                         <!-- Article Thumbnail -->
@@ -484,18 +607,12 @@
                 @endforeach
             </div>
         @else
-            <!-- Empty State Fallback: Strictly clean, no dummy articles shown -->
+            <!-- Empty State Fallback -->
             <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: 14px; padding: 36px 20px; text-align: center;">
                 <div style="font-size: 2.2rem; margin-bottom: 8px;">📰</div>
-                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">
-                    No Articles Tagged Yet
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                    No article found
                 </h3>
-                <p style="font-size: 0.85rem; color: var(--text-dim); max-width: 480px; margin: 0 auto 16px;">
-                    Articles mentioning {{ $player->name }} or tagged with this cricketer's keywords will automatically appear right here!
-                </p>
-                <a href="{{ route('news', ['type' => 'article']) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #0284c7; color: white; border-radius: 8px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
-                    Explore All Cricket Articles
-                </a>
             </div>
         @endif
     </div>

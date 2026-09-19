@@ -240,6 +240,81 @@
                 </div>
             </div>
 
+            <!-- ROW 7: ICC Rankings Management (Loop Engineering) -->
+            @php
+                $rankingCategories = [
+                    'batting' => ['title' => 'Batting', 'icon' => '🏏'],
+                    'bowling' => ['title' => 'Bowling', 'icon' => '🎯'],
+                    'all_rounder' => ['title' => 'All-Rounder', 'icon' => '⚡'],
+                ];
+                $rankingFormats = [
+                    'test' => 'Test',
+                    'odi' => 'ODI',
+                    't20i' => 'T20I',
+                ];
+                $existingRankings = old('icc_rankings', $editItem->icc_rankings ?? []);
+                if (is_string($existingRankings)) {
+                    $existingRankings = json_decode($existingRankings, true) ?: [];
+                }
+            @endphp
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 0.9rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                        <span>🏆</span> ICC Player Rankings (Current &amp; Best Rank)
+                    </div>
+                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
+                        Enter ranks dynamically (e.g. 1, 3, etc. or leave blank for --)
+                    </span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+                    @foreach($rankingCategories as $catKey => $catMeta)
+                        <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px;">
+                            <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0;">
+                                <span>{{ $catMeta['icon'] }}</span> {{ $catMeta['title'] }}
+                            </div>
+
+                            <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="color: #64748b; font-size: 0.72rem; text-transform: uppercase;">
+                                        <th style="text-align: left; padding: 4px 6px;">Format</th>
+                                        <th style="text-align: center; padding: 4px 6px;">Current</th>
+                                        <th style="text-align: center; padding: 4px 6px;">Best</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($rankingFormats as $fmtKey => $fmtLabel)
+                                        @php
+                                            $currVal = $existingRankings[$catKey][$fmtKey]['current'] ?? '';
+                                            $bestVal = $existingRankings[$catKey][$fmtKey]['best'] ?? '';
+                                            if ($currVal === '--') $currVal = '';
+                                            if ($bestVal === '--') $bestVal = '';
+                                        @endphp
+                                        <tr style="border-top: 1px solid #f1f5f9;">
+                                            <td style="font-weight: 700; color: #334155; padding: 6px 6px;">{{ $fmtLabel }}</td>
+                                            <td style="padding: 4px 6px;">
+                                                <input type="text" 
+                                                    name="icc_rankings[{{ $catKey }}][{{ $fmtKey }}][current]" 
+                                                    value="{{ $currVal }}" 
+                                                    placeholder="--" 
+                                                    style="width: 100%; text-align: center; padding: 5px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; font-weight: 700; color: #0f172a; outline: none; box-sizing: border-box; background: #fafafa;">
+                                            </td>
+                                            <td style="padding: 4px 6px;">
+                                                <input type="text" 
+                                                    name="icc_rankings[{{ $catKey }}][{{ $fmtKey }}][best]" 
+                                                    value="{{ $bestVal }}" 
+                                                    placeholder="--" 
+                                                    style="width: 100%; text-align: center; padding: 5px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; font-weight: 700; color: #0f172a; outline: none; box-sizing: border-box; background: #fafafa;">
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             <!-- ROW 4: Photo / Poster | Popular toggle | SUBMIT -->
             <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
                 

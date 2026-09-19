@@ -8,7 +8,11 @@ class Player extends Model {
     public $timestamps = false;
     protected $guarded = [];
 
-    protected $appends = ['initials'];
+    protected $casts = [
+        'icc_rankings' => 'array',
+    ];
+
+    protected $appends = ['initials', 'normalized_icc_rankings'];
 
     public function getProfileImageAttribute($value)
     {
@@ -51,6 +55,63 @@ class Player extends Model {
     public function hasFamilyDetails()
     {
         return !empty($this->father_name) || !empty($this->mother_name) || !empty($this->spouse_name) || !empty($this->children) || !empty($this->siblings);
+    }
+
+    public function getNormalizedIccRankingsAttribute()
+    {
+        $raw = $this->icc_rankings;
+        if (is_string($raw)) {
+            $raw = json_decode($raw, true) ?: [];
+        } elseif (!is_array($raw)) {
+            $raw = [];
+        }
+
+        $categories = ['batting', 'bowling', 'all_rounder'];
+        $formats = ['test', 'odi', 't20i'];
+        $matrix = [];
+
+        foreach ($categories as $cat) {
+            $matrix[$cat] = [];
+            foreach ($formats as $fmt) {
+                $curr = isset($raw[$cat][$fmt]['current']) && trim((string)$raw[$cat][$fmt]['current']) !== ''
+                    ? trim((string)$raw[$cat][$fmt]['current'])
+                    : '--';
+                $best = isset($raw[$cat][$fmt]['best']) && trim((string)$raw[$cat][$fmt]['best']) !== ''
+                    ? trim((string)$raw[$cat][$fmt]['best'])
+                    : '--';
+
+                $matrix[$cat][$fmt] = [
+                    'current' => $curr,
+                    'best' => $best,
+                ];
+            }
+        }
+
+        return $matrix;
+    }
+
+    public function hasIccRankings()
+    {
+        $raw = $this->icc_rankings;
+        if (is_string($raw)) {
+            $raw = json_decode($raw, true) ?: [];
+        }
+        if (!is_array($raw) || empty($raw)) {
+            return false;
+        }
+
+        foreach ($raw as $cat => $formats) {
+            if (is_array($formats)) {
+                foreach ($formats as $fmt => $ranks) {
+                    $curr = isset($ranks['current']) ? trim((string)$ranks['current']) : '';
+                    $best = isset($ranks['best']) ? trim((string)$ranks['best']) : '';
+                    if (($curr !== '' && $curr !== '--') || ($best !== '' && $best !== '--')) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public function team() {

@@ -1861,6 +1861,24 @@ class AdminController extends Controller
         $dob = $request->input('date_of_birth') ?: null;
         $birthdayText = $dob ? date('d M', strtotime($dob)) : null;
 
+        // Extract ICC rankings dynamically using loop engineering
+        $iccRankings = [];
+        $rawRankings = $request->input('icc_rankings', []);
+        if (is_array($rawRankings)) {
+            foreach (['batting', 'bowling', 'all_rounder'] as $cat) {
+                foreach (['test', 'odi', 't20i'] as $fmt) {
+                    $curr = isset($rawRankings[$cat][$fmt]['current']) ? trim((string)$rawRankings[$cat][$fmt]['current']) : '';
+                    $best = isset($rawRankings[$cat][$fmt]['best']) ? trim((string)$rawRankings[$cat][$fmt]['best']) : '';
+                    if ($curr !== '' || $best !== '') {
+                        $iccRankings[$cat][$fmt] = [
+                            'current' => $curr !== '' ? $curr : '--',
+                            'best' => $best !== '' ? $best : '--',
+                        ];
+                    }
+                }
+            }
+        }
+
         \App\Models\Player::create([
             'name' => $name,
             'local_name' => trim($request->input('local_name', '')),
@@ -1891,6 +1909,7 @@ class AdminController extends Controller
             'description' => $request->input('description', ''),
             'bio' => $request->input('bio', ''),
             'keywords' => $request->input('keywords', ''),
+            'icc_rankings' => !empty($iccRankings) ? $iccRankings : null,
         ]);
         return redirect()->route('admin.players')->with('success', "Player '{$name}' created successfully!");
     }
@@ -1910,6 +1929,24 @@ class AdminController extends Controller
 
         $dob = $request->input('date_of_birth') ?: $player->date_of_birth;
         $birthdayText = $dob ? date('d M', strtotime($dob)) : null;
+
+        // Extract ICC rankings dynamically using loop engineering
+        $iccRankings = [];
+        $rawRankings = $request->input('icc_rankings', []);
+        if (is_array($rawRankings)) {
+            foreach (['batting', 'bowling', 'all_rounder'] as $cat) {
+                foreach (['test', 'odi', 't20i'] as $fmt) {
+                    $curr = isset($rawRankings[$cat][$fmt]['current']) ? trim((string)$rawRankings[$cat][$fmt]['current']) : '';
+                    $best = isset($rawRankings[$cat][$fmt]['best']) ? trim((string)$rawRankings[$cat][$fmt]['best']) : '';
+                    if ($curr !== '' || $best !== '') {
+                        $iccRankings[$cat][$fmt] = [
+                            'current' => $curr !== '' ? $curr : '--',
+                            'best' => $best !== '' ? $best : '--',
+                        ];
+                    }
+                }
+            }
+        }
 
         $player->update([
             'name' => $name,
@@ -1941,6 +1978,7 @@ class AdminController extends Controller
             'description' => $request->input('description', $player->description ?? ''),
             'bio' => $request->input('bio', $player->bio ?? ''),
             'keywords' => $request->input('keywords', $player->keywords ?? ''),
+            'icc_rankings' => !empty($iccRankings) ? $iccRankings : null,
         ]);
         return redirect()->route('admin.players')->with('success', 'Player updated successfully!');
     }
