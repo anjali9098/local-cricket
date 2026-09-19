@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<main class="container" style="padding: 40px 24px 80px; max-width: 900px; margin: 0 auto;">
+<main class="container" style="padding: 40px 20px 80px; max-width: 1240px; margin: 0 auto;">
 
     <!-- Back Navigation -->
     <div style="margin-bottom: 24px;">
@@ -10,80 +10,518 @@
         </a>
     </div>
 
-    <!-- Article Card -->
-    <article style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg, 16px); padding: 36px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+    <!-- 2-Column Responsive Layout -->
+    <div class="article-layout-grid">
         
-        <!-- Category & Read Time -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-            <span class="card-tag" style="background: #f1f5f9; color: #334155; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; text-transform: uppercase;">
-                {{ $article->category ?: 'CRICKET ARTICLE' }}
-            </span>
-            <div style="font-size: 0.82rem; color: var(--text-dim); font-weight: 600;">
-                ⏱️ {{ $article->read_time ?: '4 MIN READ' }} &bull; {{ $article->created_at ? \Carbon\Carbon::parse($article->created_at)->format('M d, Y') : ($article->published_date ?: 'Today') }}
-            </div>
+        <!-- Main Column (Left) -->
+        <div class="article-main-col">
+            <article class="article-card">
+                
+                <!-- Category & Read Time -->
+                <div class="article-meta-row">
+                    <span class="card-tag">
+                        {{ $article->category ?: 'CRICKET ARTICLE' }}
+                    </span>
+                    <div class="article-meta-time">
+                        ⏱️ {{ $article->read_time ?: '4 MIN READ' }} &bull; {{ $article->created_at ? \Carbon\Carbon::parse($article->created_at)->format('M d, Y') : ($article->published_date ?: 'Today') }}
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h1 class="article-title">
+                    {{ $article->h1_heading ?: $article->title }}
+                </h1>
+
+                <!-- Short Summary / Meta description -->
+                @if(!empty($article->meta_description) || !empty($article->summary))
+                    <div class="article-summary-lead">
+                        {{ $article->meta_description ?: $article->summary }}
+                    </div>
+                @endif
+
+                <!-- Poster Banner Image (No cut off, smart ambient background) -->
+                @if(!empty($article->image_url))
+                    <div class="article-hero-banner-wrap">
+                        <div class="article-hero-backdrop" style="background-image: url('{{ $article->image_url }}');"></div>
+                        <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="article-hero-image" onerror="this.closest('.article-hero-banner-wrap').style.display='none';">
+                    </div>
+                @endif
+
+                <!-- Full Content Body (Rich formatted HTML & Markdown with prominent H1, H2, H3, P, Lists) -->
+                <div class="rich-article-body">
+                    {!! \Illuminate\Support\Str::markdown($article->content ?: $article->summary) !!}
+                </div>
+
+                <!-- Keywords / Tags -->
+                @if(!empty($article->keywords))
+                    <div class="article-tags-wrap">
+                        <span class="article-tags-label">TAGS:</span>
+                        @foreach(explode(',', $article->keywords) as $tag)
+                            @if(trim($tag))
+                                <span class="article-tag-chip">
+                                    #{{ trim($tag) }}
+                                </span>
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
+
+            </article>
         </div>
 
-        <!-- Title -->
-        <h1 style="font-size: 2.2rem; font-weight: 900; color: var(--text-main); line-height: 1.3; margin: 0 0 16px 0; letter-spacing: -0.02em;">
-            {{ $article->h1_heading ?: $article->title }}
-        </h1>
+        <!-- Sidebar Column (Right) - Fills the empty right side! -->
+        <aside class="article-sidebar-col">
+            <!-- More Featured Articles -->
+            @if(isset($recentArticles) && $recentArticles->isNotEmpty())
+                <div class="sidebar-card">
+                    <div class="sidebar-card-header">
+                        <h3 class="sidebar-card-title">More Featured Articles</h3>
+                        <a href="{{ route('news', ['type' => 'article']) }}" class="sidebar-view-all">View All &rarr;</a>
+                    </div>
+                    <div class="sidebar-articles-list">
+                        @foreach($recentArticles as $ra)
+                            <a href="{{ route('article.show', $ra->id) }}" class="sidebar-article-item">
+                                @if(!empty($ra->image_url))
+                                    <div class="sidebar-article-thumb">
+                                        <img src="{{ $ra->image_url }}" alt="{{ $ra->title }}" onerror="this.parentElement.style.display='none';">
+                                    </div>
+                                @endif
+                                <div class="sidebar-article-info">
+                                    <span class="sidebar-article-cat">{{ $ra->category ?: 'ARTICLE' }}</span>
+                                    <h4 class="sidebar-article-heading">{{ Str::limit($ra->title, 60) }}</h4>
+                                    <span class="sidebar-article-date">{{ $ra->created_at ? \Carbon\Carbon::parse($ra->created_at)->format('M d, Y') : ($ra->read_time ?: '3 min read') }}</span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
-        <!-- Short Summary / Meta description -->
-        @if(!empty($article->meta_description) || !empty($article->summary))
-            <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 24px 0; font-weight: 500; border-left: 3px solid #0284c7; padding-left: 16px;">
-                {{ $article->meta_description ?: $article->summary }}
-            </p>
-        @endif
-
-        <!-- Poster Banner Image -->
-        @if(!empty($article->image_url))
-            <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary);">
-                <img src="{{ $article->image_url }}" alt="{{ $article->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
-            </div>
-        @endif
-
-        <!-- Full Content Body -->
-        <div style="color: var(--text-main); font-size: 1rem; line-height: 1.8; font-weight: 400;">
-            {!! nl2br($article->content ?: $article->summary) !!}
-        </div>
-
-        <!-- Keywords Tags -->
-        @if(!empty($article->keywords))
-            <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 0.8rem; font-weight: 800; color: var(--text-dim);">TAGS:</span>
-                @foreach(explode(',', $article->keywords) as $tag)
-                    @if(trim($tag))
-                        <span style="background: var(--bg-card-secondary); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
-                            #{{ trim($tag) }}
-                        </span>
-                    @endif
-                @endforeach
-            </div>
-        @endif
-
-    </article>
-
-    <!-- Recent Articles Row -->
-    @if(isset($recentArticles) && $recentArticles->isNotEmpty())
-        <div style="margin-top: 48px;">
-            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 16px;">
-                More Featured Articles
-            </h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
-                @foreach($recentArticles as $ra)
-                    <a href="{{ route('article.show', $ra->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        @if(!empty($ra->image_url))
-                            <div style="width: 100%; height: 120px; border-radius: 6px; overflow: hidden; background: #fafafa;">
-                                <img src="{{ $ra->image_url }}" alt="{{ $ra->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
-                            </div>
-                        @endif
-                        <div style="font-size: 0.72rem; font-weight: 700; color: #0284c7; text-transform: uppercase;">{{ $ra->category ?: 'ARTICLE' }}</div>
-                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-main); line-height: 1.4;">{{ Str::limit($ra->title, 60) }}</div>
+            <!-- Cricket Quick Hub -->
+            <div class="sidebar-card" style="margin-top: 20px;">
+                <div class="sidebar-card-header">
+                    <h3 class="sidebar-card-title">Cricket Hub</h3>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <a href="{{ route('live') }}" class="sidebar-quick-link">
+                        <span>🔴 Live Scores &amp; Matches</span>
+                        <span>&rarr;</span>
                     </a>
-                @endforeach
+                    <a href="{{ route('news') }}" class="sidebar-quick-link">
+                        <span>📰 Cricket News &amp; Updates</span>
+                        <span>&rarr;</span>
+                    </a>
+                    <a href="{{ route('compare') }}" class="sidebar-quick-link">
+                        <span>⚔️ Player vs Player Compare</span>
+                        <span>&rarr;</span>
+                    </a>
+                    <a href="{{ route('search') }}" class="sidebar-quick-link">
+                        <span>🔍 Search Players &amp; Stats</span>
+                        <span>&rarr;</span>
+                    </a>
+                </div>
             </div>
-        </div>
-    @endif
+        </aside>
+    </div>
 
 </main>
+
+<style>
+/* Layout Grid */
+.article-layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    gap: 32px;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .article-layout-grid {
+        grid-template-columns: 1fr;
+    }
+    .article-sidebar-col {
+        position: static !important;
+        margin-top: 24px;
+    }
+}
+
+.article-main-col {
+    min-width: 0;
+}
+
+.article-sidebar-col {
+    position: sticky;
+    top: 90px;
+}
+
+/* Article Card */
+.article-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-lg, 16px);
+    padding: 36px 36px 44px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+@media (max-width: 640px) {
+    .article-card {
+        padding: 22px 18px;
+    }
+}
+
+.article-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.card-tag {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 0.76rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.article-meta-time {
+    font-size: 0.82rem;
+    color: var(--text-dim, #94a3b8);
+    font-weight: 600;
+}
+
+.article-title {
+    font-size: 2.15rem;
+    font-weight: 900;
+    color: var(--text-main, #0f172a);
+    line-height: 1.3;
+    margin: 0 0 16px 0;
+    letter-spacing: -0.02em;
+}
+
+@media (max-width: 640px) {
+    .article-title {
+        font-size: 1.6rem;
+    }
+}
+
+.article-summary-lead {
+    font-size: 1.05rem;
+    color: var(--text-muted, #475569);
+    line-height: 1.65;
+    margin: 0 0 24px 0;
+    font-weight: 500;
+    border-left: 4px solid #0284c7;
+    background: var(--bg-card-secondary, #f8fafc);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Smart Banner Container (No cut off, ambient backdrop) */
+.article-hero-banner-wrap {
+    position: relative;
+    width: 100%;
+    max-height: 480px;
+    min-height: 240px;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    background: #090d16;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.article-hero-backdrop {
+    position: absolute;
+    inset: -20px;
+    background-size: cover;
+    background-position: center;
+    filter: blur(25px) brightness(0.45);
+    opacity: 0.85;
+    transform: scale(1.1);
+    pointer-events: none;
+}
+
+.article-hero-image {
+    position: relative;
+    z-index: 2;
+    max-width: 100%;
+    max-height: 480px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+
+/* Rich Article Body (ChatGPT / Markdown / HTML Styling) */
+.rich-article-body {
+    color: var(--text-main, #0f172a);
+    font-size: 1.05rem;
+    line-height: 1.85;
+    word-break: break-word;
+}
+
+.rich-article-body h1 {
+    font-size: 1.85rem !important;
+    font-weight: 900 !important;
+    color: var(--text-main, #0f172a) !important;
+    margin: 32px 0 16px 0 !important;
+    line-height: 1.3 !important;
+    padding-bottom: 8px !important;
+    border-bottom: 2px solid var(--border-color, #e2e8f0) !important;
+}
+
+.rich-article-body h2 {
+    font-size: 1.55rem !important;
+    font-weight: 800 !important;
+    color: var(--text-main, #0f172a) !important;
+    margin: 34px 0 14px 0 !important;
+    line-height: 1.35 !important;
+    position: relative !important;
+    padding-left: 14px !important;
+    border-left: 4px solid #0284c7 !important;
+}
+
+.rich-article-body h3 {
+    font-size: 1.3rem !important;
+    font-weight: 750 !important;
+    color: var(--text-main, #0f172a) !important;
+    margin: 26px 0 12px 0 !important;
+    line-height: 1.4 !important;
+}
+
+.rich-article-body h4 {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: var(--text-main, #0f172a) !important;
+    margin: 20px 0 8px 0 !important;
+}
+
+.rich-article-body p {
+    margin: 0 0 18px 0 !important;
+    line-height: 1.85 !important;
+    font-size: 1.02rem !important;
+    color: var(--text-main, #1e293b) !important;
+}
+
+.rich-article-body ul, .rich-article-body ol {
+    margin: 0 0 20px 0 !important;
+    padding-left: 26px !important;
+}
+
+.rich-article-body ul {
+    list-style-type: disc !important;
+}
+
+.rich-article-body ol {
+    list-style-type: decimal !important;
+}
+
+.rich-article-body li {
+    margin-bottom: 8px !important;
+    line-height: 1.75 !important;
+    color: var(--text-main, #1e293b) !important;
+}
+
+.rich-article-body strong, .rich-article-body b {
+    font-weight: 750 !important;
+    color: var(--text-main, #0f172a) !important;
+}
+
+.rich-article-body blockquote {
+    margin: 24px 0 !important;
+    padding: 16px 20px !important;
+    background: var(--bg-card-secondary, #f8fafc) !important;
+    border-left: 4px solid #0284c7 !important;
+    border-radius: 0 10px 10px 0 !important;
+    font-style: italic !important;
+    color: var(--text-muted, #475569) !important;
+}
+
+.rich-article-body hr {
+    border: none !important;
+    border-top: 1px solid var(--border-color, #e2e8f0) !important;
+    margin: 28px 0 !important;
+}
+
+.rich-article-body a {
+    color: #0284c7 !important;
+    text-decoration: underline !important;
+    font-weight: 600 !important;
+}
+
+.rich-article-body table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 24px 0 !important;
+    font-size: 0.95rem !important;
+}
+
+.rich-article-body th, .rich-article-body td {
+    padding: 10px 14px !important;
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    text-align: left !important;
+}
+
+.rich-article-body th {
+    background: var(--bg-card-secondary, #f8fafc) !important;
+    font-weight: 700 !important;
+}
+
+/* Tags Wrap */
+.article-tags-wrap {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.article-tags-label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-dim, #94a3b8);
+}
+
+.article-tag-chip {
+    background: var(--bg-card-secondary, #f1f5f9);
+    color: var(--text-muted, #475569);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* Sidebar Styles */
+.sidebar-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-lg, 16px);
+    padding: 22px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+}
+
+.sidebar-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.sidebar-card-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main, #0f172a);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.sidebar-view-all {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #0284c7;
+    text-decoration: none;
+}
+.sidebar-view-all:hover {
+    text-decoration: underline;
+}
+
+.sidebar-articles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.sidebar-article-item {
+    display: flex;
+    gap: 12px;
+    text-decoration: none;
+    padding: 8px;
+    border-radius: 10px;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.sidebar-article-item:hover {
+    background: var(--bg-card-secondary, #f8fafc);
+    transform: translateX(3px);
+}
+
+.sidebar-article-thumb {
+    width: 68px;
+    height: 68px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.sidebar-article-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-article-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+}
+
+.sidebar-article-cat {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #0284c7;
+    text-transform: uppercase;
+}
+
+.sidebar-article-heading {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-main, #0f172a);
+    line-height: 1.35;
+    margin: 0;
+}
+
+.sidebar-article-date {
+    font-size: 0.74rem;
+    color: var(--text-dim, #94a3b8);
+    font-weight: 500;
+}
+
+.sidebar-quick-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-main, #0f172a);
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 0.15s;
+}
+
+.sidebar-quick-link:hover {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+    color: #0369a1;
+    transform: translateX(3px);
+}
+</style>
 @endsection

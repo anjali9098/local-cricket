@@ -300,9 +300,24 @@
             if (!textarea || !preview) return;
             
             if (preview.style.display === 'none' || preview.style.display === '') {
-                preview.innerHTML = textarea.value.trim() 
-                    ? textarea.value 
-                    : '<p style="color:#94a3b8; font-style:italic; margin:0;">No content entered yet to preview.</p>';
+                let val = textarea.value.trim();
+                if (!val) {
+                    preview.innerHTML = '<p style="color:#94a3b8; font-style:italic; margin:0;">No content entered yet to preview.</p>';
+                } else {
+                    if (val.includes('#') || val.includes('**') || /^\s*-\s+/m.test(val)) {
+                        let parsed = val
+                            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                            .replace(/^\s*-\s+(.*$)/gim, '<li>$1</li>')
+                            .replace(/\n\n/g, '<p></p>');
+                        preview.innerHTML = parsed;
+                    } else {
+                        preview.innerHTML = val;
+                    }
+                }
                 preview.style.display = 'block';
             } else {
                 preview.style.display = 'none';
