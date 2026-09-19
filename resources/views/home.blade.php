@@ -436,8 +436,9 @@
                 @foreach($articles->take(6) as $art)
                     <a href="{{ route('article.show', $art->id) }}" class="article-item" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                         @if(!empty($art->image_url))
-                            <div class="article-img-box">
-                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" loading="lazy" onerror="this.parentElement.style.display='none';">
+                            <div class="article-img-box" style="position: relative; width: 100%; height: 190px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                <div style="position: absolute; inset: -10px; background-image: url('{{ $art->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
+                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" loading="lazy" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" onerror="this.closest('.article-img-box').style.display='none';">
                             </div>
                         @endif
                         <div class="article-body">

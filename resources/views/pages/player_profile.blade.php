@@ -556,16 +556,17 @@
                     <article style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 24px rgba(0,0,0,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.02)';">
                         
                         <!-- Article Thumbnail -->
-                        <div style="position: relative; width: 100%; height: 180px; background: var(--bg-card-secondary); overflow: hidden;">
+                        <div style="position: relative; width: 100%; height: 190px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                             @if(!empty($art->image_url))
-                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:linear-gradient(135deg,#0f172a,#1e293b);color:#38bdf8;\'>🏏</div>';">
+                                <div style="position: absolute; inset: -10px; background-image: url('{{ $art->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
+                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:linear-gradient(135deg,#0f172a,#1e293b);color:#38bdf8;\'>🏏</div>';">
                             @else
                                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; background: linear-gradient(135deg, #0f172a, #1e293b); color: #38bdf8;">
                                     🏏
                                 </div>
                             @endif
                             @if(!empty($art->category))
-                                <div style="position: absolute; top: 10px; left: 10px;">
+                                <div style="position: absolute; top: 10px; left: 10px; z-index: 2;">
                                     <span style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); color: #38bdf8; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; border: 1px solid rgba(56, 189, 248, 0.3);">
                                         {{ $art->category }}
                                     </span>

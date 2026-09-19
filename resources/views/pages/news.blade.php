@@ -80,13 +80,15 @@
                     @if(!empty($item->image_url))
                         @if($detailRoute)
                             <a href="{{ $detailRoute }}" style="text-decoration: none; display: block;">
-                                <div style="width: 100%; height: 180px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: var(--bg-card-secondary);">
-                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
+                                <div style="position: relative; width: 100%; height: 190px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: #0b1120; display: flex; align-items: center; justify-content: center;">
+                                    <div style="position: absolute; inset: -10px; background-image: url('{{ $item->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
+                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
                                 </div>
                             </a>
                         @else
-                            <div style="width: 100%; height: 180px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: var(--bg-card-secondary);">
-                                <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
+                            <div style="position: relative; width: 100%; height: 190px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: #0b1120; display: flex; align-items: center; justify-content: center;">
+                                <div style="position: absolute; inset: -10px; background-image: url('{{ $item->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
+                                <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" loading="lazy">
                             </div>
                         @endif
                     @endif

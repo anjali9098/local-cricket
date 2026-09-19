@@ -252,7 +252,10 @@
                     <a href="{{ route('article.show', $art->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         @if($art->image_url)
-                            <img src="{{ $art->image_url }}" alt="{{ $art->title }}" style="width: 100%; height: 140px; object-fit: cover;">
+                            <div style="position: relative; width: 100%; height: 160px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                <div style="position: absolute; inset: -10px; background-image: url('{{ $art->image_url }}'); background-size: cover; background-position: center; filter: blur(12px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
+                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;">
+                            </div>
                         @endif
                         <div style="padding: 14px;">
                             <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #a855f7; display: block; margin-bottom: 4px;">
@@ -268,7 +271,10 @@
                     <a href="{{ route('news.show', $nw->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         @if($nw->image_url)
-                            <img src="{{ $nw->image_url }}" alt="{{ $nw->title }}" style="width: 100%; height: 140px; object-fit: cover;">
+                            <div style="position: relative; width: 100%; height: 160px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                <div style="position: absolute; inset: -10px; background-image: url('{{ $nw->image_url }}'); background-size: cover; background-position: center; filter: blur(12px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
+                                <img src="{{ $nw->image_url }}" alt="{{ $nw->title }}" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;">
+                            </div>
                         @endif
                         <div style="padding: 14px;">
                             <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #38bdf8; display: block; margin-bottom: 4px;">
