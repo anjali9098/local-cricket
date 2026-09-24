@@ -7,20 +7,7 @@
 
 @section('content')
 <main class="home-container">
-
-    <!-- ========================================================
-         MAIN SEO H1 BANNER
-         ======================================================== -->
-    <div class="home-seo-hero-strip" style="padding: 18px 0 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; background: var(--bg-card-secondary, #0d1117);">
-        <div class="container">
-            <h1 style="font-size: 1.28rem; font-weight: 900; color: var(--text-main); margin: 0 0 6px; letter-spacing: -0.02em; line-height: 1.35;">
-                Live Cricket Scores, Match Predictions &amp; Fantasy Tips &mdash; <span style="color: #38bdf8;">CricketKaScore</span>
-            </h1>
-            <p style="font-size: 0.84rem; color: var(--text-dim); margin: 0; line-height: 1.5; font-weight: 500;">
-                Get real-time ball-by-ball cricket scores, accurate match predictions, expert fantasy tips, tournament schedules, and comprehensive local cricket stats.
-            </p>
-        </div>
-    </div>
+    <h1 class="sr-only">CricketKaScore &mdash; Live Cricket Scores, Today Match Predictions &amp; Fantasy Tips</h1>
 
     <!-- ========================================================
          SECTION 1: LIVE & UPCOMING MATCHES CAROUSEL
@@ -29,12 +16,12 @@
     <section id="matches" class="matches-carousel-section">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
-                    <span>LIVE &amp; UPCOMING MATCHES</span>
+                <div class="section-title">
+                    <span>LIVE & UPCOMING MATCHES</span>
                     @if($allMatches->where('status', 'live')->count() > 0)
                         <span class="badge-live">LIVE</span>
                     @endif
-                </h2>
+                </div>
                 <a href="{{ route('matches') }}" class="view-all-link">FULL SCHEDULE &rarr;</a>
             </div>
 
