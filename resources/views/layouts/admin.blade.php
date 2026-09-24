@@ -80,7 +80,15 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        const optimizedBase64 = canvas.toDataURL('image/jpeg', quality);
+                        let optimizedBase64;
+                        try {
+                            optimizedBase64 = canvas.toDataURL('image/webp', quality);
+                            if (!optimizedBase64 || !optimizedBase64.startsWith('data:image/webp')) {
+                                optimizedBase64 = canvas.toDataURL('image/jpeg', quality);
+                            }
+                        } catch (e) {
+                            optimizedBase64 = canvas.toDataURL('image/jpeg', quality);
+                        }
 
                         if (targetInput) targetInput.value = optimizedBase64;
                         if (previewImg) {
@@ -243,6 +251,18 @@
             const newCursorPos = start + replacement.length;
             textarea.setSelectionRange(newCursorPos, newCursorPos);
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function insertHtmlImage(textareaId, defaultFolder = 'articles') {
+            if (typeof openGlobalImageUploader === 'function') {
+                openGlobalImageUploader(textareaId, defaultFolder, 'content');
+            }
+        }
+
+        function openGlobalPosterUploader(targetInputId, previewImgId = null, defaultFolder = 'articles', badgeId = null) {
+            if (typeof openGlobalImageUploader === 'function') {
+                openGlobalImageUploader(targetInputId, defaultFolder, 'poster', previewImgId, badgeId);
+            }
         }
 
         function insertHtmlLink(textareaId) {
@@ -928,6 +948,9 @@
                 <a href="{{ route('admin.venues') }}" class="admin-subnav-item {{ request()->routeIs('admin.venues*') ? 'active' : '' }}">
                     <span class="subnav-icon">🏟️</span> Venues
                 </a>
+                <a href="{{ route('admin.image-uploader') }}" class="admin-subnav-item {{ request()->routeIs('admin.image-uploader*') ? 'active' : '' }}">
+                    <span class="subnav-icon">🖼️</span> Standard Image Uploader
+                </a>
             </div>
 
             <a href="{{ route('home') }}" class="admin-nav-link">
@@ -1363,6 +1386,9 @@
             });
         });
     </script>
+
+    <!-- Global Standard Image Uploader Modal -->
+    @include('admin.partials.image_uploader_modal')
 
 </body>
 </html>

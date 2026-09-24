@@ -48,7 +48,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
                 {{ $editItem ? '✏️ Edit ' . ($editType === 'FANTASY' ? 'Fantasy Tip' : 'Prediction') . ': ' . $editItem->title : '🎯 Add Prediction & Fantasy Tips' }}
             </h3>
-            <button type="button" onclick="togglePredictionForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.prediction') . "'" : "togglePredictionForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <form method="POST" action="{{ $editItem ? ($editType === 'FANTASY' ? route('admin.fantasy.update', $editItem->id) : route('admin.prediction.update', $editItem->id)) : route('admin.prediction.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
@@ -125,6 +125,7 @@
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('pred_summary', 'i')"><i>I</i></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('pred_summary', 'u')"><u>U</u></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('pred_summary', 'mark')">Highlight</button>
+                        <button type="button" class="html-editor-btn" title="Standard Image Uploader / Media Gallery" style="color: #0284c7; font-weight: 800;" onclick="insertHtmlImage('pred_summary', 'prediction')">🖼️ Image</button>
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlLink('pred_summary')">🔗 Link</button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlList('pred_summary', 'ul')">• Bullet List</button>
@@ -175,7 +176,7 @@
     </div>
 
     <!-- Existing Predictions & Fantasy Tips List Table (Series Design) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="pred-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         @if($predictions->isNotEmpty() || $fantasyTips->isNotEmpty())
             <div style="overflow-x: auto;">
@@ -387,8 +388,10 @@
 <script>
 function togglePredictionForm() {
     const container = document.getElementById('pred-form-container');
+    const tableContainer = document.getElementById('pred-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         const titleInput = document.getElementById('pred_title');
         if (titleInput) {
             titleInput.focus();
@@ -396,6 +399,7 @@ function togglePredictionForm() {
         }
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 

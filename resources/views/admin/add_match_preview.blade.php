@@ -40,7 +40,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
                 {{ $editItem ? '✏️ Edit Match Preview: ' . $editItem->title : '⚡ Add New Match Preview' }}
             </h3>
-            <button type="button" onclick="togglePreviewForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.match-preview') . "'" : "togglePreviewForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <form method="POST" action="{{ $editItem ? route('admin.match-preview.update', $editItem->id) : route('admin.match-preview.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
@@ -100,6 +100,7 @@
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'i')"><i>I</i></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'u')"><u>U</u></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('preview_summary', 'mark')">Highlight</button>
+                        <button type="button" class="html-editor-btn" title="Standard Image Uploader / Media Gallery" style="color: #0284c7; font-weight: 800;" onclick="insertHtmlImage('preview_summary', 'match_preview')">🖼️ Image</button>
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlLink('preview_summary')">🔗 Link</button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlList('preview_summary', 'ul')">• Bullet List</button>
@@ -150,7 +151,7 @@
     </div>
 
     <!-- Existing Previews List Table (Matching Exact Series Style) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="preview-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         @if($previews->isNotEmpty())
             <div style="overflow-x: auto;">
@@ -277,8 +278,10 @@
 <script>
 function togglePreviewForm() {
     const container = document.getElementById('preview-form-container');
+    const tableContainer = document.getElementById('preview-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         const titleInput = document.getElementById('preview_title');
         if (titleInput) {
             titleInput.focus();
@@ -286,6 +289,7 @@ function togglePreviewForm() {
         }
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 

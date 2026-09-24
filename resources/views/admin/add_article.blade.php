@@ -50,7 +50,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
                 {{ $editItem ? '✏️ Edit Article: ' . $editItem->title : '📰 Create New Article' }}
             </h3>
-            <button type="button" onclick="toggleArticleForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.article') . "'" : "toggleArticleForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <form method="POST" action="{{ $editItem ? route('admin.article.update', $editItem->id) : route('admin.article.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
@@ -85,7 +85,7 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Read Time
                     </label>
-                    <input type="text" name="read_time" value="{{ old('read_time', $editItem->read_time ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="read_time" value="{{ old('read_time', $editItem->read_time ?? '4 MIN READ') }}" placeholder="e.g. 4 MIN READ" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
 
                 <div>
@@ -137,6 +137,7 @@
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('article_content', 'i')"><i>I</i></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('article_content', 'u')"><u>U</u></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('article_content', 'mark')">Highlight</button>
+                        <button type="button" class="html-editor-btn" title="Standard Image Uploader / Media Gallery" style="color: #0284c7; font-weight: 800;" onclick="insertHtmlImage('article_content', 'articles')">🖼️ Image</button>
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlLink('article_content')">🔗 Link</button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlList('article_content', 'ul')">• Bullet List</button>
@@ -159,12 +160,12 @@
                 <div style="flex: 1; min-width: 280px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                         <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                            Article Image Poster
+                            Article Image Poster <span style="font-size: 0.72rem; color: #0284c7; font-weight: 600;">(WEBP / AVIF / JPG)</span>
                         </label>
                         <span id="article-poster-badge" style="display: none;"></span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'article_image_url_input', 'article-poster-preview', 'article-poster-badge')" style="font-size: 0.82rem; color: #475569;">
+                        <input type="file" name="poster_file" accept=".webp, .avif, image/webp, image/avif, image/*" onchange="previewAndConvertImage(this, 'article_image_url_input', 'article-poster-preview', 'article-poster-badge')" style="font-size: 0.82rem; color: #475569;">
                         <input type="text" id="article_image_url_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="previewUrlImage(this, 'article-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                         <img id="article-poster-preview" src="{{ old('image_url', $editItem->image_url ?? '') }}" alt="Poster" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('image_url', $editItem->image_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
@@ -187,7 +188,7 @@
     </div>
 
     <!-- Existing Articles List Table (Matching Exact Series Style) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="article-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         @if($articles->isNotEmpty())
             <div style="overflow-x: auto;">
@@ -316,8 +317,10 @@
 <script>
 function toggleArticleForm() {
     const container = document.getElementById('article-form-container');
+    const tableContainer = document.getElementById('article-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         const titleInput = document.getElementById('article_title');
         if (titleInput) {
             titleInput.focus();
@@ -325,6 +328,7 @@ function toggleArticleForm() {
         }
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 

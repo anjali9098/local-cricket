@@ -17,19 +17,22 @@ class WebStory extends Model {
     public function getImageUrlAttribute($value)
     {
         $formatted = self::formatImageUrl($value);
-        
-        // If image_url is broken, empty, or points to missing uploads, fallback to first slide which exists
-        $parsedPath = parse_url($formatted ?? '', PHP_URL_PATH);
-        $exists = $parsedPath ? file_exists(public_path(ltrim($parsedPath, '/\\'))) : false;
-        
-        if (!$exists || empty($value) || str_contains($value, 'uploads/web_stories')) {
-            $slides = $this->slides;
-            if (!empty($slides) && is_array($slides) && !empty($slides[0])) {
-                return $slides[0];
+        if (!empty($formatted)) {
+            return $formatted;
+        }
+
+        // If empty, fallback to first slide's image
+        $rawSlides = $this->getRawOriginal('slides');
+        $slides = is_string($rawSlides) ? json_decode($rawSlides, true) : $rawSlides;
+        if (!empty($slides) && is_array($slides)) {
+            $first = $slides[0];
+            $firstImg = is_array($first) ? ($first['image'] ?? ($first['url'] ?? '')) : $first;
+            if (!empty($firstImg)) {
+                return self::formatImageUrl($firstImg);
             }
         }
 
-        return $formatted ?: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80';
+        return null;
     }
 
     public function getSlidesAttribute($value)
@@ -38,9 +41,37 @@ class WebStory extends Model {
         if (!is_array($slides)) {
             return [];
         }
+
         return array_map(function($slide) {
-            return self::formatImageUrl($slide);
+            if (is_array($slide)) {
+                return [
+                    'image' => self::formatImageUrl($slide['image'] ?? ($slide['url'] ?? '')),
+                    'heading' => $slide['heading'] ?? ($slide['title'] ?? ''),
+                    'description' => $slide['description'] ?? ($slide['desc'] ?? ''),
+                    'cta_text' => $slide['cta_text'] ?? ($slide['ctaText'] ?? ''),
+                    'cta_url' => $slide['cta_url'] ?? ($slide['ctaUrl'] ?? ''),
+                ];
+            }
+
+            // Legacy string URL format
+            return [
+                'image' => self::formatImageUrl($slide),
+                'heading' => '',
+                'description' => '',
+                'cta_text' => '',
+                'cta_url' => '',
+            ];
         }, $slides);
+    }
+
+    public function getFirstSlideImageAttribute()
+    {
+        $slides = $this->slides;
+        if (!empty($slides) && is_array($slides) && isset($slides[0])) {
+            $first = $slides[0];
+            return is_array($first) ? ($first['image'] ?? '') : (string)$first;
+        }
+        return '';
     }
 }
 

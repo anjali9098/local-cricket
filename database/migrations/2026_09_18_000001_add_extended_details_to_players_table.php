@@ -12,21 +12,43 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('players', function (Blueprint $table) {
-            $table->string('local_name')->nullable()->after('name');
-            $table->string('nickname')->nullable()->after('local_name');
-            $table->string('birthplace')->nullable()->after('date_of_birth');
-            $table->string('height')->nullable()->after('birthplace');
-            $table->text('played_teams')->nullable()->after('bowling_style');
+            if (!Schema::hasColumn('players', 'local_name')) {
+                $table->string('local_name')->nullable()->after('name');
+            }
+            if (!Schema::hasColumn('players', 'nickname')) {
+                $table->string('nickname')->nullable()->after('local_name');
+            }
+            if (!Schema::hasColumn('players', 'birthplace')) {
+                $table->string('birthplace')->nullable()->after('date_of_birth');
+            }
+            if (!Schema::hasColumn('players', 'height')) {
+                $table->string('height')->nullable()->after('birthplace');
+            }
+            if (!Schema::hasColumn('players', 'played_teams')) {
+                $table->text('played_teams')->nullable()->after('bowling_style');
+            }
             
             // Family details
-            $table->string('father_name')->nullable()->after('played_teams');
-            $table->string('mother_name')->nullable()->after('father_name');
-            $table->string('spouse_name')->nullable()->after('mother_name');
-            $table->string('children')->nullable()->after('spouse_name');
-            $table->string('siblings')->nullable()->after('children');
+            if (!Schema::hasColumn('players', 'father_name')) {
+                $table->string('father_name')->nullable()->after('played_teams');
+            }
+            if (!Schema::hasColumn('players', 'mother_name')) {
+                $table->string('mother_name')->nullable()->after('father_name');
+            }
+            if (!Schema::hasColumn('players', 'spouse_name')) {
+                $table->string('spouse_name')->nullable()->after('mother_name');
+            }
+            if (!Schema::hasColumn('players', 'children')) {
+                $table->string('children')->nullable()->after('spouse_name');
+            }
+            if (!Schema::hasColumn('players', 'siblings')) {
+                $table->string('siblings')->nullable()->after('children');
+            }
             
             // Full Biography
-            $table->longText('bio')->nullable()->after('description');
+            if (!Schema::hasColumn('players', 'bio')) {
+                $table->longText('bio')->nullable()->after('description');
+            }
         });
     }
 

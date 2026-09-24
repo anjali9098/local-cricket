@@ -48,7 +48,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
                 {{ $editItem ? '✏️ Edit Term: ' . $editItem->term : '📚 Add New Cricket Glossary Term' }}
             </h3>
-            <button type="button" onclick="toggleGlossaryForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.glossary') . "'" : "toggleGlossaryForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <form method="POST" action="{{ $editItem ? route('admin.glossary.update', $editItem->id) : route('admin.glossary.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
@@ -107,6 +107,7 @@
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'i')"><i>I</i></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'u')"><u>U</u></button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlTag('glossary_definition', 'mark')">Highlight</button>
+                        <button type="button" class="html-editor-btn" title="Standard Image Uploader / Media Gallery" style="color: #0284c7; font-weight: 800;" onclick="insertHtmlImage('glossary_definition', 'glossary')">🖼️ Image</button>
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlLink('glossary_definition')">🔗 Link</button>
                         <button type="button" class="html-editor-btn" onclick="insertHtmlList('glossary_definition', 'ul')">• Bullet List</button>
@@ -152,7 +153,7 @@
     </div>
 
     <!-- Existing Glossary Terms List Table (Matching Exact Series Style) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="glossary-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         @if($glossaryTerms->isNotEmpty())
             <div style="overflow-x: auto;">
@@ -275,8 +276,10 @@
 <script>
 function toggleGlossaryForm() {
     const container = document.getElementById('glossary-form-container');
+    const tableContainer = document.getElementById('glossary-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         const nameInput = document.getElementById('glossary_term');
         if (nameInput) {
             nameInput.focus();
@@ -284,6 +287,7 @@ function toggleGlossaryForm() {
         }
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 

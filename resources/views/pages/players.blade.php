@@ -6,13 +6,24 @@
     <!-- Header -->
     <div class="text-center mb-8">
         <span class="text-xs font-black tracking-widest text-sky-400 uppercase block mb-1.5">
-            CRICKET DIRECTORY
+            {{ $selectedTeam ? 'TEAM SQUAD DIRECTORY' : 'CRICKET DIRECTORY' }}
         </span>
         <h1 class="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight m-0 mb-2">
-            All Popular Players
+            @if($selectedTeam)
+                🛡️ {{ $selectedTeam->name }} Squad
+            @else
+                All Popular Players
+            @endif
         </h1>
         <p class="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto m-0">
-            Explore cricket players, batting &amp; bowling profiles, and head-to-head career stats.
+            @if($selectedTeam)
+                Showing registered squad players for <strong>{{ $selectedTeam->name }}</strong> ({{ $allPlayers->count() }} {{ Str::plural('Player', $allPlayers->count()) }}).
+                <span class="block mt-1">
+                    <a href="{{ route('players') }}" class="text-sky-400 hover:underline font-bold text-xs">&larr; View All Cricket Players</a>
+                </span>
+            @else
+                Explore cricket players, batting &amp; bowling profiles, and head-to-head career stats.
+            @endif
         </p>
     </div>
 
@@ -27,7 +38,7 @@
                 </label>
                 <div class="relative">
                     <input type="text" name="search" id="player-search-input" value="{{ $search ?? '' }}" 
-                        placeholder="🔍 Type player name, role, country..." 
+                        placeholder="🔍 Type player name, role..." 
                         oninput="filterPlayersLive(this.value)"
                         class="w-full rounded-xl px-3.5 py-2.5 text-xs sm:text-sm outline-none transition-all" 
                         style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
@@ -68,9 +79,16 @@
         <!-- Showing Players Count Badge -->
         <div class="mt-3 pt-3 flex items-center justify-between text-xs text-gray-400 border-t" style="border-color: var(--border-color);">
             <div>
-                Showing <strong id="visible-player-count" class="text-white">{{ $allPlayers->count() }}</strong> of {{ $allPlayers->count() }} players
+                Showing <strong id="visible-player-count" class="text-white">{{ $allPlayers->count() }}</strong> {{ $selectedTeam ? 'players in ' . $selectedTeam->name : 'players' }}
             </div>
-            @if(!empty($search) || !empty($teamId) || request('team'))
+            @if($selectedTeam)
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] bg-sky-500/15 text-sky-400 px-2.5 py-0.5 rounded-full border border-sky-500/30 font-bold">
+                        🛡️ {{ $selectedTeam->name }}
+                    </span>
+                    <a href="{{ route('players') }}" class="text-[11px] text-gray-400 hover:text-white underline">Clear Team Filter</a>
+                </div>
+            @elseif(!empty($search) || !empty($teamId) || request('team'))
                 <span class="text-[11px] text-sky-400 font-semibold">Filtered results</span>
             @endif
         </div>

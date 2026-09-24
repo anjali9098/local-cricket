@@ -49,7 +49,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
                 {{ $editItem ? '✏️ Edit Series: ' . $editItem->name : '➕ Add New Series' }}
             </h3>
-            <button type="button" onclick="toggleSeriesForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.series') . "'" : "toggleSeriesForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <form method="POST" action="{{ $editItem ? route('admin.series.update', $editItem->id) : route('admin.series.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
@@ -207,10 +207,37 @@
 
             <!-- ROW 5: Series Full Description in HTML -->
             <div>
-                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                    Series Full Description in HTML
-                </label>
-                <textarea name="full_description" rows="4" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">{{ old('full_description', $editItem->full_description ?? ($editItem->description ?? '')) }}</textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b; margin: 0;">
+                        Series Full Description in HTML
+                    </label>
+                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Use formatting buttons to style content</span>
+                </div>
+                <div class="html-editor-wrapper">
+                    <div class="html-editor-toolbar">
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'h1')">H1</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'h2')">H2</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'h3')">H3</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'p')">P</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'b')"><b>B</b></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'i')"><i>I</i></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'u')"><u>U</u></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'mark')">Highlight</button>
+                        <button type="button" class="html-editor-btn" title="Standard Image Uploader / Media Gallery" style="color: #0284c7; font-weight: 800;" onclick="insertHtmlImage('series_full_description', 'series')">🖼️ Image</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlLink('series_full_description')">🔗 Link</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('series_full_description', 'ul')">• Bullet List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('series_full_description', 'ol')">1. Numbered List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'blockquote')">“ Quote</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'hr')">— Line</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('series_full_description', 'br')">↵ Break</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('series_full_description', 'series_full_description_preview')">👁️ Live Preview</button>
+                    </div>
+                    <textarea id="series_full_description" name="full_description" class="html-editor-textarea" rows="6" placeholder="Enter series overview, schedule info, tournament rules, venue details..." style="min-height: 130px;">{{ old('full_description', $editItem->full_description ?? ($editItem->description ?? '')) }}</textarea>
+                    <div id="series_full_description_preview" class="html-editor-preview"></div>
+                </div>
             </div>
 
             <!-- ROW 6: Series Image Poster | Enable | SUBMIT -->
@@ -248,7 +275,7 @@
     </div>
 
     <!-- Existing Series List Table (Matching Exact Screenshot) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="series-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         @if($tournaments->isNotEmpty())
             <div style="overflow-x: auto;">
@@ -567,8 +594,10 @@
 <script>
 function toggleSeriesForm() {
     const container = document.getElementById('series-form-container');
+    const tableContainer = document.getElementById('series-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         const nameInput = document.getElementById('series_name');
         if (nameInput) {
             nameInput.focus();
@@ -576,6 +605,7 @@ function toggleSeriesForm() {
         }
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 

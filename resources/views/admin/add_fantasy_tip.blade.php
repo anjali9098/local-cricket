@@ -23,8 +23,37 @@
                 <input type="text" name="title" value="{{ old('title', $editItem->title ?? '') }}" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; color: #0f172a; outline: none; box-sizing: border-box;" placeholder="">
             </div>
             <div>
-                <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">Summary / Players *</label>
-                <textarea name="summary" rows="4" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;" placeholder="">{{ old('summary', $editItem->summary ?? '') }}</textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b; margin: 0;">
+                        Summary / Players *
+                    </label>
+                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Use formatting buttons to style content</span>
+                </div>
+                <div class="html-editor-wrapper">
+                    <div class="html-editor-toolbar">
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'h1')">H1</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'h2')">H2</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'h3')">H3</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'p')">P</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'b')"><b>B</b></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'i')"><i>I</i></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'u')"><u>U</u></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'mark')">Highlight</button>
+                        <button type="button" class="html-editor-btn" title="Standard Image Uploader / Media Gallery" style="color: #0284c7; font-weight: 800;" onclick="insertHtmlImage('fantasy_summary', 'prediction')">🖼️ Image</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlLink('fantasy_summary')">🔗 Link</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('fantasy_summary', 'ul')">• Bullet List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('fantasy_summary', 'ol')">1. Numbered List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'blockquote')">“ Quote</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'hr')">— Line</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('fantasy_summary', 'br')">↵ Break</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('fantasy_summary', 'fantasy_summary_preview')">👁️ Live Preview</button>
+                    </div>
+                    <textarea id="fantasy_summary" name="summary" class="html-editor-textarea" rows="5" required placeholder="Enter player picks, captain choices, pitch considerations..." style="min-height: 120px;">{{ old('summary', $editItem->summary ?? '') }}</textarea>
+                    <div id="fantasy_summary_preview" class="html-editor-preview"></div>
+                </div>
             </div>
             <div style="display: flex; gap: 12px;">
                 <button type="submit" style="background: #0ea5e9; color: white; font-weight: 700; padding: 12px 32px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(14,165,233,0.2);">
@@ -38,7 +67,7 @@
     </div>
 
     <!-- Data List Panel -->
-    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+    <div style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 10px;">
                 <span>Existing Fantasy Tips</span>

@@ -4,7 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $pageTitle ?? 'CricketKaScore — Live Scores, Series & Local Cricket' }}</title>
+    <title>@yield('pageTitle', $pageTitle ?? 'CricketKaScore — Live Scores, Series & Local Cricket')</title>
+
+    <!-- Core SEO Meta Tags -->
+    <meta name="description" content="@yield('meta_description', 'Live cricket scores, ball-by-ball commentary, today match predictions, fantasy cricket tips, match previews, upcoming series schedules, player stats, and grassroots local cricket on CricketKaScore.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'CricketKaScore, live cricket score, today match prediction, fantasy cricket tips, dream11 prediction, match preview, cricket series, local cricket score, player stats, live cricket updates, cricket news, cricket tournaments')">
+    <meta name="robots" content="@yield('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
+    <link rel="canonical" href="@yield('canonical_url', url()->current())">
+
+    <!-- Open Graph (Facebook / WhatsApp / Social Media) Meta Tags -->
+    <meta property="og:locale" content="en_US">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="CricketKaScore">
+    <meta property="og:title" content="@yield('og_title', $pageTitle ?? 'CricketKaScore — Live Scores, Series & Local Cricket')">
+    <meta property="og:description" content="@yield('og_description', 'Get live cricket scores, today match predictions, fantasy cricket tips, match previews, player statistics, and local cricket tournaments on CricketKaScore.')">
+    <meta property="og:url" content="@yield('og_url', url()->current())">
+    <meta property="og:image" content="@yield('og_image', asset('images/logo.png'))">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('og_title', $pageTitle ?? 'CricketKaScore — Live Scores, Series & Local Cricket')">
+    <meta name="twitter:description" content="@yield('og_description', 'Get live cricket scores, today match predictions, fantasy cricket tips, match previews, player statistics, and local cricket tournaments on CricketKaScore.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))">
+
+    <!-- Structured Data: Schema.org (WebSite & SportsOrganization JSON-LD) -->
+    <script type="application/ld+json">
+    {!! json_encode([
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'graph' => [
+            [
+                chr(64) . 'type' => 'WebSite',
+                chr(64) . 'id' => url('/') . '/#website',
+                'url' => url('/'),
+                'name' => 'CricketKaScore',
+                'description' => 'Live Cricket Scores, Match Predictions, Fantasy Tips & Local Cricket Tournaments',
+                'potentialAction' => [
+                    chr(64) . 'type' => 'SearchAction',
+                    'target' => url('/search') . '?q={search_term_string}',
+                    'query-input' => 'required name=search_term_string'
+                ]
+            ],
+            [
+                chr(64) . 'type' => 'SportsOrganization',
+                chr(64) . 'id' => url('/') . '/#organization',
+                'name' => 'CricketKaScore',
+                'url' => url('/'),
+                'logo' => asset('images/logo.png'),
+                'description' => 'CricketKaScore is a comprehensive digital cricket platform providing ball-by-ball live scores, match predictions, fantasy cricket strategy, and grassroots tournament scoring.'
+            ]
+        ]
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+    @yield('additional_schema')
+
     <!-- Favicon Icon -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('images/favicon.png') }}">

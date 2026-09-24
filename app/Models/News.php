@@ -8,6 +8,18 @@ class News extends Model {
     public $timestamps = true;
     protected $guarded = [];
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function ($model) {
+            if (empty($model->read_time)) {
+                $wordCount = str_word_count(strip_tags($model->content ?? ''));
+                $minutes = $wordCount > 50 ? max(1, (int)ceil($wordCount / 200)) : 3;
+                $model->read_time = $minutes . ' MIN READ';
+            }
+        });
+    }
+
     public function getImageUrlAttribute($value)
     {
         return self::formatImageUrl($value);

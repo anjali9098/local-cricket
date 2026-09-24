@@ -60,7 +60,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
                 {{ $editItem ? '✏️ Edit Player: ' . $editItem->name : '👤 Add New Cricket Player' }}
             </h3>
-            <button type="button" onclick="togglePlayerForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.players') . "'" : "togglePlayerForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <form method="POST" action="{{ $editItem ? route('admin.players.update', $editItem->id) : route('admin.players.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
@@ -168,11 +168,25 @@
                     </label>
                     <input type="text" name="bowling_style" value="{{ old('bowling_style', $editItem->bowling_style ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        🏏 Played for Teams (Comma-separated)
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+                    <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                        🏏 Teams &amp; Squad Affiliation (Automatically synced from Database)
                     </label>
-                    <input type="text" name="played_teams" value="{{ old('played_teams', $editItem->played_teams ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <div style="font-size: 0.78rem; color: #64748b; line-height: 1.4;">
+                        Teams are automatically fetched from the <strong>Current Team</strong> selected above and match scorecards in MySQL database. No manual tags required!
+                    </div>
+                    @if(isset($editItem) && $editItem)
+                        <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            @if($editItem->team)
+                                <span style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                                    🛡️ {{ $editItem->team->name }} (Active Team)
+                                </span>
+                            @else
+                                <span style="font-size: 0.76rem; color: #94a3b8; font-style: italic;">No primary team assigned yet.</span>
+                            @endif
+                        </div>
+                    @endif
+                    <input type="hidden" name="played_teams" value="{{ old('played_teams', $editItem->played_teams ?? '') }}">
                 </div>
             </div>
 
@@ -217,11 +231,38 @@
 
             <!-- ROW 5: Full In-depth Biography -->
             <div>
-                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                    📖 Profile / Detailed Biography Narrative
-                    <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(Full player overview, debut story, records and paragraphs)</span>
-                </label>
-                <textarea name="bio" rows="4" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; font-family: inherit; line-height: 1.5;">{{ old('bio', $editItem->bio ?? '') }}</textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b; margin: 0;">
+                        📖 Profile / Detailed Biography Narrative
+                        <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(Full player overview, debut story, records)</span>
+                    </label>
+                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Use formatting buttons to style content</span>
+                </div>
+                <div class="html-editor-wrapper">
+                    <div class="html-editor-toolbar">
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'h1')">H1</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'h2')">H2</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'h3')">H3</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'p')">P</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'b')"><b>B</b></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'i')"><i>I</i></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'u')"><u>U</u></button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'mark')">Highlight</button>
+                        <button type="button" class="html-editor-btn" title="Standard Image Uploader / Media Gallery" style="color: #0284c7; font-weight: 800;" onclick="insertHtmlImage('player_bio', 'players')">🖼️ Image</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlLink('player_bio')">🔗 Link</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('player_bio', 'ul')">• Bullet List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlList('player_bio', 'ol')">1. Numbered List</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'blockquote')">“ Quote</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'hr')">— Line</button>
+                        <button type="button" class="html-editor-btn" onclick="insertHtmlTag('player_bio', 'br')">↵ Break</button>
+                        <span class="html-editor-divider"></span>
+                        <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('player_bio', 'player_bio_preview')">👁️ Live Preview</button>
+                    </div>
+                    <textarea id="player_bio" name="bio" class="html-editor-textarea" rows="5" placeholder="Enter player career story, early life, international debut, match-winning knocks, achievements..." style="min-height: 120px;">{{ old('bio', $editItem->bio ?? '') }}</textarea>
+                    <div id="player_bio_preview" class="html-editor-preview"></div>
+                </div>
             </div>
 
             <!-- ROW 6: Short Bio / Keywords -->
@@ -350,7 +391,7 @@
     </div>
 
     <!-- Existing Players List Table (Matching Exact Series Style) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="player-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         @if($players->isNotEmpty())
             <div style="overflow-x: auto;">
@@ -522,8 +563,10 @@
 <script>
 function togglePlayerForm() {
     const container = document.getElementById('player-form-container');
+    const tableContainer = document.getElementById('player-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         const nameInput = document.getElementById('player_name');
         if (nameInput) {
             nameInput.focus();
@@ -531,6 +574,7 @@ function togglePlayerForm() {
         }
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 

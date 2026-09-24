@@ -60,7 +60,13 @@ return Application::configure(basePath: dirname(__DIR__))
                     'error' => $e->getMessage(),
                 ], 500);
             }
-            return response()->view('errors.500', ['exception' => $e], 500);
+            if (config('app.debug')) {
+                return null; // Show full stack trace in development
+            }
+            if (view()->exists('errors.500')) {
+                return response()->view('errors.500', ['exception' => $e], 500);
+            }
+            return null;
         });
     })->create();
 

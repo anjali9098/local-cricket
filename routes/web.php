@@ -223,6 +223,9 @@ Route::middleware(['superadmin'])->group(function () {
     Route::get('/admin/teams/json', [AdminController::class, 'getTeamsJson'])->name('admin.teams.json');
     Route::post('/admin/venues/quick-add', [AdminController::class, 'quickAddVenue'])->name('admin.venues.quick-add');
     Route::get('/admin/venues/json', [AdminController::class, 'getVenuesJson'])->name('admin.venues.json');
+    // Standard Image Uploader (Crop, Multi-Resolution & WebP/AVIF Export)
+    Route::get('/admin/image-uploader', [AdminController::class, 'showImageUploader'])->name('admin.image-uploader');
+    Route::post('/admin/image-uploader/upload', [AdminController::class, 'uploadStandardImage'])->name('admin.image-uploader.upload');
 });
 
 // 5. Authentication (Email/Password, Google OAuth, Password Reset)

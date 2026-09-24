@@ -336,14 +336,62 @@
     color: var(--text-main, #0f172a) !important;
 }
 
-.rich-article-body blockquote {
+.rich-article-body blockquote,
+.rich-article-body div[style*="background"],
+.rich-article-body div[style*="border-left"] {
     margin: 24px 0 !important;
     padding: 16px 20px !important;
-    background: var(--bg-card-secondary, #f8fafc) !important;
+    background: rgba(30, 41, 59, 0.75) !important;
+    border-left: 4px solid #38bdf8 !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-radius: 8px !important;
+    font-style: normal !important;
+    color: var(--text-main, #f8fafc) !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2) !important;
+}
+
+.rich-article-body div[style*="background"] *,
+.rich-article-body div[style*="border-left"] *,
+.rich-article-body blockquote * {
+    color: var(--text-main, #f8fafc) !important;
+}
+
+.rich-article-body div[style*="background"] strong,
+.rich-article-body div[style*="background"] b,
+.rich-article-body div[style*="border-left"] strong,
+.rich-article-body div[style*="border-left"] b,
+.rich-article-body blockquote strong,
+.rich-article-body blockquote b {
+    color: #38bdf8 !important;
+    font-weight: 800 !important;
+}
+
+/* Light Theme overrides */
+body.light-theme .rich-article-body blockquote,
+body.light-theme .rich-article-body div[style*="background"],
+body.light-theme .rich-article-body div[style*="border-left"] {
+    background: #f0f7ff !important;
     border-left: 4px solid #0284c7 !important;
-    border-radius: 0 10px 10px 0 !important;
-    font-style: italic !important;
-    color: var(--text-muted, #475569) !important;
+    color: #1e293b !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+}
+
+body.light-theme .rich-article-body div[style*="background"] *,
+body.light-theme .rich-article-body div[style*="border-left"] *,
+body.light-theme .rich-article-body blockquote * {
+    color: #1e293b !important;
+}
+
+body.light-theme .rich-article-body div[style*="background"] strong,
+body.light-theme .rich-article-body div[style*="background"] b,
+body.light-theme .rich-article-body div[style*="border-left"] strong,
+body.light-theme .rich-article-body div[style*="border-left"] b,
+body.light-theme .rich-article-body blockquote strong,
+body.light-theme .rich-article-body blockquote b {
+    color: #0369a1 !important;
+    font-weight: 800 !important;
 }
 
 .rich-article-body hr {

@@ -1,12 +1,74 @@
 @extends('layouts.app')
 
+@php
+    $pageHeading = 'MATCH SCHEDULE & RESULTS';
+    $customTitle = 'Cricket Match Schedule, Live Scores & Fixtures | CricketKaScore';
+    $customDesc = 'Explore complete cricket match schedules, today live fixtures, upcoming tournament dates, and recent match results on CricketKaScore.';
+
+    if (($status ?? '') === 'live') {
+        $pageHeading = 'LIVE CRICKET MATCHES';
+        $customTitle = 'Live Cricket Matches Today — Scores & Schedules | CricketKaScore';
+        $customDesc = 'Watch all currently live cricket matches, real-time ball-by-ball scorecards, and live match status on CricketKaScore.';
+    } elseif (in_array(($status ?? ''), ['upcoming', 'scheduled'])) {
+        $pageHeading = 'UPCOMING CRICKET MATCHES';
+        $customTitle = 'Upcoming Cricket Matches Schedule & Fixtures | CricketKaScore';
+        $customDesc = 'Check upcoming cricket matches, future fixture dates, venues, start times, and team schedules on CricketKaScore.';
+    } elseif (($status ?? '') === 'completed') {
+        $pageHeading = 'COMPLETED CRICKET MATCHES & RESULTS';
+        $customTitle = 'Recent Cricket Match Results & Final Scores | CricketKaScore';
+        $customDesc = 'View recent cricket match results, winners, margin of victory, full scorecards, and player performances on CricketKaScore.';
+    } elseif (($category ?? '') === 'local') {
+        $pageHeading = 'LOCAL CRICKET MATCHES & FIXTURES';
+        $customTitle = 'Local Cricket Matches, Tournaments & Gully Fixtures | CricketKaScore';
+        $customDesc = 'Follow grassroots and local club cricket matches, community league scores, and local tournament schedules on CricketKaScore.';
+    }
+@endphp
+
+@section('pageTitle', $customTitle)
+@section('meta_description', $customDesc)
+@section('meta_keywords', 'cricket match schedule, upcoming cricket matches, cricket fixtures, live match results, completed matches, today cricket match time, local cricket matches, CricketKaScore matches')
+@section('canonical_url', url()->current())
+@section('og_type', 'website')
+@section('og_title', $customTitle)
+@section('og_description', $customDesc)
+@section('og_url', url()->current())
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'type' => 'CollectionPage',
+    'name' => $customTitle,
+    'url' => url()->current(),
+    'description' => $customDesc,
+    'breadcrumb' => [
+        chr(64) . 'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Matches',
+                'item' => route('matches')
+            ]
+        ]
+    ]
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container py-6 sm:py-10">
     <!-- Header & Category Badges -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">MATCH SCHEDULE &amp; RESULTS</h1>
-            <p class="text-xs sm:text-sm text-gray-400 mt-1">All international, domestic and local cricket matches</p>
+            <h1 class="text-xl sm:text-2xl font-black text-white uppercase tracking-tight m-0">{{ $pageHeading }}</h1>
+            <p class="text-xs sm:text-sm text-gray-400 mt-1 mb-0">All international, domestic and local cricket matches</p>
         </div>
         
         <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none flex-nowrap">
@@ -64,11 +126,13 @@
                             <span class="bg-blue-600 text-white font-black text-[10px] px-1.5 py-0.5 rounded tracking-widest uppercase flex-shrink-0">LOCAL</span>
                         @endif
                         @if($m->tournament)
-                            <a href="{{ route('tournament.public', $m->tournament->id) }}" class="text-sky-400 hover:underline truncate" title="{{ $m->tournament->name }}">
-                                {{ $m->tournament->short_name ?? Str::limit($m->tournament->name, 16) }}
-                            </a>
+                            <h2 class="text-xs font-bold text-sky-400 hover:underline truncate m-0" style="display:inline;">
+                                <a href="{{ route('tournament.public', $m->tournament->id) }}" class="text-sky-400 hover:underline truncate" title="{{ $m->tournament->name }}">
+                                    {{ $m->tournament->short_name ?? Str::limit($m->tournament->name, 16) }}
+                                </a>
+                            </h2>
                         @else
-                            <span class="truncate">{{ $m->level_type ?? $m->match_type }}</span>
+                            <h2 class="text-xs font-bold truncate m-0 text-gray-400" style="display:inline;">{{ $m->level_type ?? $m->match_type }}</h2>
                         @endif
                     </div>
                     @if($m->status === 'live')
@@ -85,7 +149,7 @@
                                 <div class="team-avatar w-7 h-7 text-xs font-black flex items-center justify-center rounded-full" style="border-color: {{ $m->team1?->color_code ?? 'var(--primary)' }};">
                                     {{ $m->team1?->short_name ?? ($m->team1?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team1->name), 0, 3)) : '') }}
                                 </div>
-                                <span class="team-name text-sm sm:text-base font-semibold text-white truncate max-w-[160px]">{{ $m->team1?->name ?? '' }}</span>
+                                <h3 class="team-name text-sm sm:text-base font-semibold text-white truncate max-w-[160px] m-0">{{ $m->team1?->name ?? '' }}</h3>
                             </div>
                             <div class="team-score text-sm font-bold text-white">
                                 @if($m->status === 'completed' || $m->status === 'live' || $m->team1_score > 0)
@@ -101,7 +165,7 @@
                                 <div class="team-avatar w-7 h-7 text-xs font-black flex items-center justify-center rounded-full" style="border-color: {{ $m->team2?->color_code ?? '#38bdf8' }};">
                                     {{ $m->team2?->short_name ?? ($m->team2?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team2->name), 0, 3)) : '') }}
                                 </div>
-                                <span class="team-name text-sm sm:text-base font-semibold text-white truncate max-w-[160px]">{{ $m->team2?->name ?? '' }}</span>
+                                <h3 class="team-name text-sm sm:text-base font-semibold text-white truncate max-w-[160px] m-0">{{ $m->team2?->name ?? '' }}</h3>
                             </div>
                             <div class="team-score text-sm font-bold text-white">
                                 @if($m->status === 'completed' || $m->status === 'live' || $m->team2_score > 0)
@@ -140,5 +204,29 @@
             </div>
         @endforelse
     </div>
+
+    <!-- SEO Content & Match Hub Highlights -->
+    <section class="mt-12 p-6 sm:p-8 rounded-2xl border" style="background: var(--bg-card); border-color: var(--border-color);">
+        <h2 class="text-base sm:text-lg font-bold text-white mb-3 flex items-center gap-2 m-0">
+            <span>🏏</span> Comprehensive Cricket Fixtures, Match Schedules &amp; Live Tracking
+        </h2>
+        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed mb-4 mt-2">
+            Stay ahead of every match with <strong>CricketKaScore's</strong> central Match Schedule &amp; Results hub. Whether tracking upcoming international clashes, T20 bilateral series, high-stakes franchise tournaments like IPL 2026, or neighborhood grassroots club games, get accurate match dates, venue locations with map navigation, toss results, and ball-by-ball updates.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t" style="border-color: var(--border-color);">
+            <div>
+                <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 m-0">⚡ Live Coverage</h3>
+                <p class="text-xs text-gray-400 mb-0 mt-1">Real-time ball-by-ball scorecard, active partnerships, and run rates.</p>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-1 m-0">📅 Upcoming Schedules</h3>
+                <p class="text-xs text-gray-400 mb-0 mt-1">Confirmed dates, timings in your local timezone, and ground directions.</p>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1 m-0">🏆 Results &amp; Archives</h3>
+                <p class="text-xs text-gray-400 mb-0 mt-1">Final scores, winning margins, player statistics, and match summaries.</p>
+            </div>
+        </div>
+    </section>
 </main>
 @endsection

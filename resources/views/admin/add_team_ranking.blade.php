@@ -58,7 +58,7 @@
                     🏆 Add Team / Player Ranking
                 @endif
             </h3>
-            <button type="button" onclick="toggleRankingForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $isEditing ? "window.location.href='" . route('admin.ranking') . "'" : "toggleRankingForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <!-- TYPE SELECTOR -->
@@ -268,7 +268,7 @@
     </div>
 
     <!-- Existing Rankings List Table (Matching Exact Series Style) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="ranking-table-container" style="display: {{ $isEditing ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         <div style="overflow-x: auto;">
             <table id="ranking-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
@@ -479,11 +479,14 @@
 <script>
 function toggleRankingForm() {
     const container = document.getElementById('ranking-form-container');
+    const tableContainer = document.getElementById('ranking-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         container.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 

@@ -54,7 +54,22 @@ class PageController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('pages.live', compact('liveMatches'));
+        $upcomingMatches = CricketMatch::approved()
+            ->has('team1')->has('team2')
+            ->with(['team1', 'team2', 'venue'])
+            ->whereIn('status', ['upcoming', 'scheduled'])
+            ->whereDate('match_date', '>=', $todayDate)
+            ->where(function($q) {
+                $q->whereNull('tournament_id')
+                  ->orWhereHas('tournament', function($tq) {
+                      $tq->where('is_approved', true);
+                  });
+            })
+            ->orderBy('match_date', 'asc')
+            ->take(6)
+            ->get();
+
+        return view('pages.live', compact('liveMatches', 'upcomingMatches'));
     }
 
     public function matches(Request $request)
@@ -489,15 +504,18 @@ class PageController extends Controller
         $search = trim($request->query('search', ''));
 
         $query = \App\Models\Player::with('team')->orderBy('name', 'asc');
+        $selectedTeam = null;
+
         if (!empty($teamId)) {
             $query->where('team_id', $teamId);
+            $selectedTeam = \App\Models\Team::find($teamId);
         }
+
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('role', 'like', "%{$search}%")
-                  ->orWhere('country', 'like', "%{$search}%")
-                  ->orWhereHas('team', fn($tq) => $tq->where('name', 'like', "%{$search}%"));
+                  ->orWhereHas('team', fn($tq) => $tq->where('name', 'like', "%{$search}%")->orWhere('short_name', 'like', "%{$search}%"));
             });
         }
         $allPlayers = $query->get();
@@ -510,7 +528,7 @@ class PageController extends Controller
             ->unique('name')
             ->values();
 
-        return view('pages.players', compact('allPlayers', 'teams', 'teamId', 'search'));
+        return view('pages.players', compact('allPlayers', 'teams', 'teamId', 'search', 'selectedTeam'));
     }
 
     public function compare(Request $request)
@@ -1196,7 +1214,64 @@ class PageController extends Controller
                 ->get();
         }
 
-        return view('pages.player_profile', compact('player', 'stats', 'battingScores', 'bowlingScores', 'teammates', 'articles'));
+        // Build resolved backend played teams strictly from the database
+        $backendTeams = collect();
+        $allDbTeams = \App\Models\Team::all(['id', 'name', 'short_name', 'logo']);
+
+        // 1. Player's primary assigned team in backend DB
+        if ($player->team) {
+            $backendTeams->put($player->team->id, $player->team);
+        } elseif (!empty($player->team_id)) {
+            $t = $allDbTeams->firstWhere('id', $player->team_id);
+            if ($t) $backendTeams->put($t->id, $t);
+        }
+
+        // 2. Any teams in played_teams that match real backend teams in DB
+        if (!empty($player->played_teams)) {
+            $rawTeams = array_values(array_filter(array_map('trim', explode(',', $player->played_teams))));
+            foreach ($rawTeams as $raw) {
+                if (empty($raw)) continue;
+                $matched = $allDbTeams->first(function($t) use ($raw) {
+                    return strcasecmp($t->name, $raw) === 0 
+                        || strcasecmp($t->short_name, $raw) === 0
+                        || (is_numeric($raw) && $t->id == (int)$raw)
+                        || stripos($t->name, $raw) !== false;
+                });
+                if ($matched && !$backendTeams->has($matched->id)) {
+                    $backendTeams->put($matched->id, $matched);
+                }
+            }
+        }
+
+        // 3. Any teams the player played for in matches/stats in DB
+        $statMatchIds = \App\Models\PlayerBattingStat::where('player_name', $player->name)->pluck('match_id')
+            ->merge(\App\Models\PlayerBowlingStat::where('player_name', $player->name)->pluck('match_id'))
+            ->unique();
+        if ($statMatchIds->isNotEmpty()) {
+            $matches = \App\Models\CricketMatch::whereIn('id', $statMatchIds)->with(['team1', 'team2'])->get();
+            foreach ($matches as $m) {
+                if ($m->team1 && !$backendTeams->has($m->team1->id) && $player->team_id == $m->team1->id) {
+                    $backendTeams->put($m->team1->id, $m->team1);
+                }
+                if ($m->team2 && !$backendTeams->has($m->team2->id) && $player->team_id == $m->team2->id) {
+                    $backendTeams->put($m->team2->id, $m->team2);
+                }
+            }
+        }
+
+        $playedTeamsData = [];
+        foreach ($backendTeams->values() as $t) {
+            $playedTeamsData[] = [
+                'name' => $t->name,
+                'short_name' => $t->short_name,
+                'team_id' => $t->id,
+                'url' => route('players', ['team' => $t->id]),
+                'logo' => $t->logo,
+                'is_matched' => true
+            ];
+        }
+
+        return view('pages.player_profile', compact('player', 'stats', 'battingScores', 'bowlingScores', 'teammates', 'articles', 'playedTeamsData'));
     }
 
     public function webStories()
@@ -1209,8 +1284,22 @@ class PageController extends Controller
 
     public function showWebStory($id)
     {
-        $story = \App\Models\WebStory::findOrFail($id);
-        $slides = $story->slides ?? [$story->image_url];
+        $story = is_numeric($id) ? \App\Models\WebStory::find($id) : \App\Models\WebStory::where('slug', $id)->first();
+        if (!$story) {
+            $story = \App\Models\WebStory::findOrFail($id);
+        }
+
+        $slides = $story->slides;
+        if (empty($slides)) {
+            $slides = [[
+                'image' => $story->image_url,
+                'heading' => $story->title,
+                'description' => $story->meta_description ?? '',
+                'cta_text' => '',
+                'cta_url' => ''
+            ]];
+        }
+
         return view('pages.show_web_story', compact('story', 'slides'));
     }
 

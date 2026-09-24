@@ -30,18 +30,73 @@ class AdminController extends Controller
 
     protected function saveBase64Image(string $base64String, string $folder = 'uploads/images'): ?string
     {
-        return trim($base64String);
+        $base64String = trim($base64String);
+        if (empty($base64String)) {
+            return null;
+        }
+
+        if (!preg_match('/^data:image\/(\w+);base64,/', $base64String, $matches)) {
+            return $base64String;
+        }
+
+        $extension = strtolower($matches[1]);
+        if ($extension === 'jpeg') {
+            $extension = 'jpg';
+        }
+
+        $targetDir = public_path($folder);
+        if (!file_exists($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
+        $filename = 'img_' . date('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) . '.' . $extension;
+        $data = substr($base64String, strpos($base64String, ',') + 1);
+        $decoded = base64_decode($data);
+        if ($decoded !== false) {
+            file_put_contents("{$targetDir}/{$filename}", $decoded);
+            return asset("{$folder}/{$filename}");
+        }
+
+        return null;
     }
 
     protected function handleUploadedImage(Request $request, string $fileKey, string $urlKey, ?string $fallback = null, string $folder = 'uploads/images'): ?string
     {
+        // Infer appropriate subfolder if default is passed
+        if ($folder === 'uploads/images') {
+            if (str_contains($urlKey, 'venue') || str_contains($fileKey, 'venue') || $request->is('*venue*')) {
+                $folder = 'uploads/venues';
+            } elseif (str_contains($urlKey, 'player') || str_contains($fileKey, 'player') || $request->is('*player*')) {
+                $folder = 'uploads/players';
+            } elseif (str_contains($urlKey, 'team') || str_contains($fileKey, 'team') || $request->is('*team*')) {
+                $folder = 'uploads/teams';
+            } elseif (str_contains($urlKey, 'article') || str_contains($fileKey, 'article') || $request->is('*article*')) {
+                $folder = 'uploads/articles';
+            } elseif (str_contains($urlKey, 'news') || str_contains($fileKey, 'news') || $request->is('*news*')) {
+                $folder = 'uploads/news';
+            } elseif (str_contains($urlKey, 'series') || str_contains($fileKey, 'series') || $request->is('*series*')) {
+                $folder = 'uploads/series';
+            } elseif (str_contains($urlKey, 'preview') || str_contains($fileKey, 'preview') || $request->is('*preview*')) {
+                $folder = 'uploads/match_preview';
+            } elseif (str_contains($urlKey, 'prediction') || str_contains($fileKey, 'prediction') || $request->is('*prediction*')) {
+                $folder = 'uploads/prediction';
+            }
+        }
+
+        $targetDir = public_path($folder);
+        if (!file_exists($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
         // 1. Check all candidate file keys for actual file uploads
         $fileKeys = array_unique([$fileKey, 'poster_file', 'poster_image_file', 'image_file', 'logo_file', 'image', 'file', 'poster_image', 'profile_image_file', 'photo_file']);
         foreach ($fileKeys as $k) {
             if ($request->hasFile($k) && $request->file($k)->isValid()) {
                 $file = $request->file($k);
-                $mime = $file->getMimeType() ?: 'image/jpeg';
-                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+                $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                $name = 'upload_' . date('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) . '.' . $ext;
+                $file->move($targetDir, $name);
+                return asset("{$folder}/{$name}");
             }
         }
 
@@ -51,6 +106,12 @@ class AdminController extends Controller
             if ($request->filled($k)) {
                 $val = trim($request->input($k));
                 if (!empty($val)) {
+                    if (str_starts_with($val, 'data:image/')) {
+                        $savedUrl = $this->saveBase64Image($val, $folder);
+                        if ($savedUrl) {
+                            return $savedUrl;
+                        }
+                    }
                     return $val;
                 }
             }
@@ -571,16 +632,7 @@ class AdminController extends Controller
     {
         $title = trim($request->input('title', ''));
         if (!empty($title)) {
-            $imageUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', '');
-
-            if (empty($imageUrl)) {
-                $images = [
-                    'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop&q=80',
-                    'https://images.unsplash.com/photo-1512719994953-eabf50895df7?w=800&auto=format&fit=crop&q=80'
-                ];
-                $imageUrl = $images[array_rand($images)];
-            }
+            $imageUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', null);
 
             $slug = trim($request->input('slug', ''));
             if (empty($slug)) {
@@ -593,17 +645,29 @@ class AdminController extends Controller
                 $summary = substr(strip_tags($content), 0, 160);
             }
 
+            $readTime = trim((string)$request->input('read_time', ''));
+            if (empty($readTime)) {
+                $wordCount = str_word_count(strip_tags($content));
+                $minutes = $wordCount > 50 ? max(1, (int)ceil($wordCount / 200)) : 4;
+                $readTime = $minutes . ' MIN READ';
+            }
+
+            $h1Heading = trim((string)$request->input('h1_heading', ''));
+            if (empty($h1Heading)) {
+                $h1Heading = $title;
+            }
+
             Article::create([
                 'category' => $request->input('category', 'INTERNATIONAL'),
                 'title' => $title,
                 'slug' => $slug,
                 'meta_description' => $request->input('meta_description', ''),
                 'keywords' => $request->input('keywords', ''),
-                'h1_heading' => $request->input('h1_heading', $title),
+                'h1_heading' => $h1Heading,
                 'content' => $content,
                 'summary' => $summary,
                 'image_url' => $imageUrl,
-                'read_time' => $request->input('read_time', '4 MIN READ'),
+                'read_time' => $readTime,
                 'display_order' => (int)$request->input('display_order', 1),
                 'is_enabled' => $request->has('is_enabled') ? true : false,
                 'published_date' => date('M d')
@@ -634,17 +698,29 @@ class AdminController extends Controller
                 $summary = $request->input('summary', '');
             }
 
+            $readTime = trim((string)$request->input('read_time', ''));
+            if (empty($readTime)) {
+                $wordCount = str_word_count(strip_tags($content));
+                $minutes = $wordCount > 50 ? max(1, (int)ceil($wordCount / 200)) : 3;
+                $readTime = $minutes . ' MIN READ';
+            }
+
+            $h1Heading = trim((string)$request->input('h1_heading', ''));
+            if (empty($h1Heading)) {
+                $h1Heading = $title;
+            }
+
             News::create([
                 'category' => $request->input('category', 'CRICKET'),
                 'title' => $title,
                 'slug' => $slug,
                 'meta_description' => $request->input('meta_description', ''),
                 'keywords' => $request->input('keywords', ''),
-                'h1_heading' => $request->input('h1_heading', $title),
+                'h1_heading' => $h1Heading,
                 'content' => $content,
                 'summary' => $summary,
                 'image_url' => $imageUrl,
-                'read_time' => $request->input('read_time', '3 MIN READ'),
+                'read_time' => $readTime,
                 'display_order' => (int)$request->input('display_order', 1),
                 'is_enabled' => $request->has('is_enabled') ? true : false,
                 'published_date' => date('M d')
@@ -1014,6 +1090,95 @@ class AdminController extends Controller
         return back()->with('success', 'Match deleted successfully.');
     }
 
+    protected function parseWebStorySlides(Request $request): array
+    {
+        $parsed = [];
+
+        // Check if slides_json is passed (from dynamic JS slide builder)
+        if ($request->filled('slides_json')) {
+            $raw = json_decode($request->input('slides_json'), true);
+            if (is_array($raw)) {
+                foreach ($raw as $idx => $s) {
+                    if (is_array($s)) {
+                        $img = trim($s['image'] ?? ($s['url'] ?? ''));
+                        $heading = trim($s['heading'] ?? ($s['title'] ?? ''));
+                        $desc = trim($s['description'] ?? ($s['desc'] ?? ''));
+                        $ctaText = trim($s['cta_text'] ?? ($s['ctaText'] ?? ''));
+                        $ctaUrl = trim($s['cta_url'] ?? ($s['ctaUrl'] ?? ''));
+
+                        // Check if file upload was provided for this slide
+                        if ($request->hasFile("slide_file_{$idx}")) {
+                            $file = $request->file("slide_file_{$idx}");
+                            if ($file && $file->isValid()) {
+                                $filename = 'slide_' . time() . '_' . $idx . '.' . $file->getClientOriginalExtension();
+                                $file->move(public_path('uploads/web_stories'), $filename);
+                                $img = asset('uploads/web_stories/' . $filename);
+                            }
+                        }
+
+                        if (!empty($img) || !empty($heading) || !empty($desc)) {
+                            $parsed[] = [
+                                'image' => $img,
+                                'heading' => $heading,
+                                'description' => mb_substr($desc, 0, 160),
+                                'cta_text' => $ctaText,
+                                'cta_url' => $ctaUrl,
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        // Also check if slides array is passed via normal form inputs: slides[0][image], etc.
+        if (empty($parsed) && $request->has('slides') && is_array($request->input('slides'))) {
+            foreach ($request->input('slides') as $idx => $s) {
+                if (is_array($s)) {
+                    $img = trim($s['image'] ?? '');
+                    $heading = trim($s['heading'] ?? '');
+                    $desc = trim($s['description'] ?? '');
+                    $ctaText = trim($s['cta_text'] ?? '');
+                    $ctaUrl = trim($s['cta_url'] ?? '');
+
+                    if ($request->hasFile("slide_file_{$idx}")) {
+                        $file = $request->file("slide_file_{$idx}");
+                        if ($file && $file->isValid()) {
+                            $filename = 'slide_' . time() . '_' . $idx . '.' . $file->getClientOriginalExtension();
+                            $file->move(public_path('uploads/web_stories'), $filename);
+                            $img = asset('uploads/web_stories/' . $filename);
+                        }
+                    }
+
+                    if (!empty($img) || !empty($heading) || !empty($desc)) {
+                        $parsed[] = [
+                            'image' => $img,
+                            'heading' => $heading,
+                            'description' => mb_substr($desc, 0, 160),
+                            'cta_text' => $ctaText,
+                            'cta_url' => $ctaUrl,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Fallback to legacy multiple file uploads: images[]
+        if (empty($parsed) && $request->hasFile('images')) {
+            $uploaded = $this->handleUploadedImagesMultiple($request, 'images');
+            foreach ($uploaded as $upImg) {
+                $parsed[] = [
+                    'image' => $upImg,
+                    'heading' => '',
+                    'description' => '',
+                    'cta_text' => '',
+                    'cta_url' => '',
+                ];
+            }
+        }
+
+        return $parsed;
+    }
+
     public function addWebStory(Request $request)
     {
         $title = trim($request->input('title', ''));
@@ -1025,23 +1190,14 @@ class AdminController extends Controller
             $author = 'Admin';
         }
 
-        $slides = $this->handleUploadedImagesMultiple($request, 'images');
-        $coverUrl = !empty($slides) ? $slides[0] : null;
+        $parsedSlides = $this->parseWebStorySlides($request);
 
-        $singleCover = $this->handleUploadedImage($request, 'image', 'image_url', '');
-        if (!empty($singleCover)) {
-            if (empty($coverUrl)) {
-                $coverUrl = $singleCover;
-            }
-            if (empty($slides)) {
-                $slides = [$singleCover];
-            }
+        $coverUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', '');
+        if (empty($coverUrl)) {
+            $coverUrl = $this->handleUploadedImage($request, 'image', 'image_url', '');
         }
-
-        if (empty($title) && $request->hasFile('images')) {
-            $firstFile = is_array($request->file('images')) ? $request->file('images')[0] : $request->file('images');
-            $originalName = pathinfo($firstFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $title = ucwords(str_replace(['-', '_'], ' ', $originalName));
+        if (empty($coverUrl) && !empty($parsedSlides)) {
+            $coverUrl = $parsedSlides[0]['image'] ?? null;
         }
 
         if (empty($title)) {
@@ -1053,27 +1209,28 @@ class AdminController extends Controller
             $slug = \Illuminate\Support\Str::slug($title);
         }
 
-        if ($coverUrl || !empty($slides)) {
-            $publishDate = $request->filled('publish_date') ? \Carbon\Carbon::parse($request->input('publish_date')) : now();
+        $category = trim($request->input('category', $request->input('tag', 'Cricket')));
+        $metaDescription = trim($request->input('meta_description', ''));
 
-            \App\Models\WebStory::create([
-                'title' => $title,
-                'slug' => $slug,
-                'image_url' => $coverUrl,
-                'tag' => $request->input('tag', 'STORY'),
-                'display_order' => (int)$request->input('display_order', 1),
-                'keywords' => $request->input('keywords', ''),
-                'is_enabled' => $request->has('is_enabled') ? true : false,
-                'slides' => $slides,
-                'author' => $author,
-                'created_at' => $publishDate,
-                'updated_at' => $publishDate,
-            ]);
+        $publishDate = $request->filled('publish_date') ? \Carbon\Carbon::parse($request->input('publish_date')) : now();
 
-            return redirect()->route('admin.story')->with('success', 'Web Story created successfully!');
-        }
+        \App\Models\WebStory::create([
+            'title' => $title,
+            'category' => $category,
+            'slug' => $slug,
+            'meta_description' => $metaDescription,
+            'image_url' => $coverUrl,
+            'tag' => $category,
+            'display_order' => (int)$request->input('display_order', 1),
+            'keywords' => $request->input('keywords', ''),
+            'is_enabled' => $request->has('is_enabled') ? true : false,
+            'slides' => $parsedSlides,
+            'author' => $author,
+            'created_at' => $publishDate,
+            'updated_at' => $publishDate,
+        ]);
 
-        return redirect()->route('admin.story')->with('error', 'Please upload at least one image or provide an image URL.');
+        return redirect()->route('admin.story')->with('success', 'Web Story created successfully!');
     }
 
     public function showCreateMatchForm()
@@ -1352,17 +1509,27 @@ class AdminController extends Controller
             $summary = $item->summary;
         }
 
+        $readTime = trim((string)$request->input('read_time', ''));
+        if (empty($readTime)) {
+            $readTime = !empty($item->read_time) ? $item->read_time : '4 MIN READ';
+        }
+
+        $h1Heading = trim((string)$request->input('h1_heading', ''));
+        if (empty($h1Heading)) {
+            $h1Heading = $item->h1_heading ?: $title;
+        }
+
         $item->update([
             'category' => $request->input('category', $item->category),
             'title' => $title,
             'slug' => $slug,
             'meta_description' => $request->input('meta_description', $item->meta_description),
             'keywords' => $request->input('keywords', $item->keywords),
-            'h1_heading' => $request->input('h1_heading', $item->h1_heading ?: $title),
+            'h1_heading' => $h1Heading,
             'content' => $content,
             'summary' => $summary,
             'image_url' => $imageUrl,
-            'read_time' => $request->input('read_time', $item->read_time),
+            'read_time' => $readTime,
             'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
             'is_enabled' => $request->has('is_enabled') ? true : false,
         ]);
@@ -1395,17 +1562,27 @@ class AdminController extends Controller
             $summary = $request->input('summary', $item->summary);
         }
 
+        $readTime = trim((string)$request->input('read_time', ''));
+        if (empty($readTime)) {
+            $readTime = !empty($item->read_time) ? $item->read_time : '3 MIN READ';
+        }
+
+        $h1Heading = trim((string)$request->input('h1_heading', ''));
+        if (empty($h1Heading)) {
+            $h1Heading = $item->h1_heading ?: $title;
+        }
+
         $item->update([
             'category' => $request->input('category', $item->category),
             'title' => $title,
             'slug' => $slug,
             'meta_description' => $request->input('meta_description', $item->meta_description),
             'keywords' => $request->input('keywords', $item->keywords),
-            'h1_heading' => $request->input('h1_heading', $item->h1_heading ?: $title),
+            'h1_heading' => $h1Heading,
             'content' => $content,
             'summary' => $summary,
             'image_url' => $imageUrl,
-            'read_time' => $request->input('read_time', $item->read_time),
+            'read_time' => $readTime,
             'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
             'is_enabled' => $request->has('is_enabled') ? true : false,
         ]);
@@ -1422,20 +1599,15 @@ class AdminController extends Controller
     public function updateWebStory(Request $request, $id)
     {
         $item = \App\Models\WebStory::findOrFail($id);
-        
-        $slides = $item->slides ?? [];
-        $uploadedSlides = $this->handleUploadedImagesMultiple($request, 'images');
-        if (!empty($uploadedSlides)) {
-            $slides = $uploadedSlides;
+
+        $parsedSlides = $this->parseWebStorySlides($request);
+        if (empty($parsedSlides) && !$request->has('slides_json') && !$request->has('slides')) {
+            $parsedSlides = $item->slides ?? [];
         }
 
-        $coverUrl = !empty($slides) ? $slides[0] : $item->image_url;
-        $singleCover = $this->handleUploadedImage($request, 'image', 'image_url', '');
-        if (!empty($singleCover)) {
-            $coverUrl = $singleCover;
-            if (empty($slides)) {
-                $slides = [$singleCover];
-            }
+        $coverUrl = $this->handleUploadedImage($request, 'poster_file', 'image_url', $item->image_url);
+        if (empty($coverUrl) && !empty($parsedSlides)) {
+            $coverUrl = $parsedSlides[0]['image'] ?? $item->image_url;
         }
 
         $author = trim($request->input('author', ''));
@@ -1449,16 +1621,21 @@ class AdminController extends Controller
             $slug = \Illuminate\Support\Str::slug($title);
         }
 
+        $category = trim($request->input('category', $request->input('tag', $item->category ?? 'Cricket')));
+        $metaDescription = trim($request->input('meta_description', $item->meta_description ?? ''));
+
         $updateData = [
             'title' => $title,
+            'category' => $category,
             'slug' => $slug,
+            'meta_description' => $metaDescription,
             'author' => $author,
-            'tag' => $request->input('tag', $item->tag ?? 'STORY'),
+            'tag' => $category,
             'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
             'keywords' => $request->input('keywords', $item->keywords ?? ''),
             'is_enabled' => $request->has('is_enabled') ? true : false,
             'image_url' => $coverUrl,
-            'slides' => $slides
+            'slides' => $parsedSlides,
         ];
 
         if ($request->filled('publish_date')) {
@@ -2274,6 +2451,168 @@ class AdminController extends Controller
         $match->delete();
 
         return redirect()->back()->with('success', "API Match '{$name}' deleted successfully.");
+    }
+
+    /**
+     * Show Standard Image Uploader page
+     */
+    public function showImageUploader()
+    {
+        return view('admin.image_uploader');
+    }
+
+    /**
+     * Upload processed image (WebP / AVIF) from Standard Image Uploader
+     */
+    public function uploadStandardImage(Request $request)
+    {
+        $folder = strtolower(trim($request->input('folder', 'articles')));
+        $allowedFolders = [
+            'series',
+            'match_preview',
+            'prediction',
+            'articles',
+            'news',
+            'teams',
+            'web_stories',
+            'glossary',
+            'players',
+            'venues',
+            'blog',
+            'banners'
+        ];
+        if (!in_array($folder, $allowedFolders)) {
+            $folder = 'articles';
+        }
+
+        $imageName = trim($request->input('image_name', ''));
+        if (empty($imageName)) {
+            $imageName = $folder . '_' . date('Ymd_His');
+        }
+        $imageName = \Illuminate\Support\Str::slug($imageName);
+
+        $format = strtolower($request->input('format', 'webp'));
+        if (!in_array($format, ['webp', 'avif', 'jpg', 'png'])) {
+            $format = 'webp';
+        }
+
+        $targetDir = public_path("uploads/{$folder}");
+        if (!file_exists($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
+        $baseName = $imageName;
+        $filename = "{$baseName}.{$format}";
+        $filePath = "{$targetDir}/{$filename}";
+
+        $counter = 1;
+        while (file_exists($filePath)) {
+            $filename = "{$baseName}-" . date('Ymd_His') . ($counter > 1 ? "-{$counter}" : "") . ".{$format}";
+            $filePath = "{$targetDir}/{$filename}";
+            $counter++;
+        }
+
+        $publicUrl = asset("uploads/{$folder}/{$filename}");
+
+        // Handle Base64 image data from canvas export
+        if ($request->filled('image_data')) {
+            $data = $request->input('image_data');
+            if (preg_match('/^data:image\/(\w+);base64,/', $data)) {
+                $data = substr($data, strpos($data, ',') + 1);
+            }
+            $decoded = base64_decode($data);
+            if ($decoded !== false) {
+                $converted = false;
+                if (function_exists('imagecreatefromstring')) {
+                    try {
+                        $img = @imagecreatefromstring($decoded);
+                        if ($img !== false) {
+                            imagealphablending($img, true);
+                            imagesavealpha($img, true);
+                            if ($format === 'avif' && function_exists('imageavif')) {
+                                imageavif($img, $filePath, 85);
+                                $converted = true;
+                            } elseif ($format === 'webp' && function_exists('imagewebp')) {
+                                imagewebp($img, $filePath, 85);
+                                $converted = true;
+                            } elseif ($format === 'png' && function_exists('imagepng')) {
+                                imagepng($img, $filePath, 8);
+                                $converted = true;
+                            } elseif (function_exists('imagejpeg')) {
+                                imagejpeg($img, $filePath, 90);
+                                $converted = true;
+                            }
+                            imagedestroy($img);
+                        }
+                    } catch (\Throwable $t) {
+                        $converted = false;
+                    }
+                }
+
+                if (!$converted) {
+                    file_put_contents($filePath, $decoded);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Image successfully processed and saved as ' . strtoupper($format) . '!',
+                    'url' => $publicUrl,
+                    'path' => "uploads/{$folder}/{$filename}",
+                    's3_path' => "S3//{$folder}/{$filename}",
+                    'format' => $format,
+                    'size_kb' => round(filesize($filePath) / 1024, 2)
+                ]);
+            }
+        }
+
+        // Handle direct file upload with genuine conversion
+        if ($request->hasFile('image_file') && $request->file('image_file')->isValid()) {
+            $file = $request->file('image_file');
+            $fileContent = file_get_contents($file->getRealPath());
+            $converted = false;
+
+            if (function_exists('imagecreatefromstring')) {
+                try {
+                    $img = @imagecreatefromstring($fileContent);
+                    if ($img !== false) {
+                        imagealphablending($img, true);
+                        imagesavealpha($img, true);
+                        if ($format === 'avif' && function_exists('imageavif')) {
+                            imageavif($img, $filePath, 85);
+                            $converted = true;
+                        } elseif ($format === 'webp' && function_exists('imagewebp')) {
+                            imagewebp($img, $filePath, 85);
+                            $converted = true;
+                        } elseif ($format === 'png' && function_exists('imagepng')) {
+                            imagepng($img, $filePath, 8);
+                            $converted = true;
+                        } elseif (function_exists('imagejpeg')) {
+                            imagejpeg($img, $filePath, 90);
+                            $converted = true;
+                        }
+                        imagedestroy($img);
+                    }
+                } catch (\Throwable $t) {
+                    $converted = false;
+                }
+            }
+
+            if (!$converted) {
+                $file->move($targetDir, $filename);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image successfully uploaded and saved as ' . strtoupper($format) . '!',
+                'url' => $publicUrl,
+                'path' => "uploads/{$folder}/{$filename}",
+                's3_path' => "S3//{$folder}/{$filename}",
+                'format' => $format,
+                'size_kb' => round(filesize($filePath) / 1024, 2)
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No valid image data received.'], 422);
     }
 }
 

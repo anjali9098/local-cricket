@@ -1,7 +1,26 @@
 @extends('layouts.app')
 
+@section('pageTitle', 'CricketKaScore — Live Scores, Series, Today Match Predictions & Fantasy Tips')
+@section('meta_description', 'Live cricket scores, ball-by-ball commentary, today match predictions, fantasy cricket tips, match previews, upcoming series schedules, player stats, and grassroots local cricket on CricketKaScore.')
+@section('meta_keywords', 'CricketKaScore, live cricket score, today match prediction, fantasy cricket tips, dream11 prediction, match preview, cricket series, local cricket score, player stats, live cricket updates, cricket news, cricket tournaments')
+@section('canonical_url', url('/'))
+
 @section('content')
 <main class="home-container">
+
+    <!-- ========================================================
+         MAIN SEO H1 BANNER
+         ======================================================== -->
+    <div class="home-seo-hero-strip" style="padding: 18px 0 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; background: var(--bg-card-secondary, #0d1117);">
+        <div class="container">
+            <h1 style="font-size: 1.28rem; font-weight: 900; color: var(--text-main); margin: 0 0 6px; letter-spacing: -0.02em; line-height: 1.35;">
+                Live Cricket Scores, Match Predictions &amp; Fantasy Tips &mdash; <span style="color: #38bdf8;">CricketKaScore</span>
+            </h1>
+            <p style="font-size: 0.84rem; color: var(--text-dim); margin: 0; line-height: 1.5; font-weight: 500;">
+                Get real-time ball-by-ball cricket scores, accurate match predictions, expert fantasy tips, tournament schedules, and comprehensive local cricket stats.
+            </p>
+        </div>
+    </div>
 
     <!-- ========================================================
          SECTION 1: LIVE & UPCOMING MATCHES CAROUSEL
@@ -10,12 +29,12 @@
     <section id="matches" class="matches-carousel-section">
         <div class="container">
             <div class="section-header">
-                <div class="section-title">
-                    <span>LIVE & UPCOMING MATCHES</span>
+                <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>LIVE &amp; UPCOMING MATCHES</span>
                     @if($allMatches->where('status', 'live')->count() > 0)
                         <span class="badge-live">LIVE</span>
                     @endif
-                </div>
+                </h2>
                 <a href="{{ route('matches') }}" class="view-all-link">FULL SCHEDULE &rarr;</a>
             </div>
 
@@ -89,10 +108,10 @@
     <section id="series" class="series-section">
         <div class="container">
             <div class="section-header">
-                <div class="section-title">
+                <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                     <span class="section-title-icon">🏆</span>
-                    <span>SERIES</span>
-                </div>
+                    <span>CRICKET SERIES &amp; TOURNAMENTS</span>
+                </h2>
                 <a href="{{ route('tournaments') }}" class="view-all-link">ALL SERIES &rarr;</a>
             </div>
 
@@ -153,7 +172,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h4 class="series-title">{{ $s->name }}</h4>
+                            <h3 class="series-title">{{ $s->name }}</h3>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -184,7 +203,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h4 class="series-title">{{ $s->name }}</h4>
+                            <h3 class="series-title">{{ $s->name }}</h3>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -216,7 +235,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h4 class="series-title">{{ $s->name }}</h4>
+                            <h3 class="series-title">{{ $s->name }}</h3>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -248,7 +267,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h4 class="series-title">{{ $s->name }}</h4>
+                            <h3 class="series-title">{{ $s->name }}</h3>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -280,7 +299,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h4 class="series-title">{{ $s->name }}</h4>
+                            <h3 class="series-title">{{ $s->name }}</h3>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -317,10 +336,10 @@
                 <!-- Column 1: Match Predictions -->
                 <div>
                     <div class="section-header">
-                        <div class="section-title">
+                        <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                             <span class="section-title-icon">🎯</span>
-                            <span>MATCH PREDICTIONS</span>
-                        </div>
+                            <span>TODAY MATCH PREDICTIONS</span>
+                        </h2>
                         <a href="{{ route('news', ['type' => 'prediction']) }}" class="view-all-link">ALL PREDICTIONS &rarr;</a>
                     </div>
                     @forelse($predictions->take(6) as $p)
@@ -328,7 +347,7 @@
                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(249, 115, 22, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                             <div>
                                 <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">{{ $p->tag && $p->tag !== 'PREDICTION' ? $p->tag : 'MATCH PREDICTION' }}</span>
-                                <h4 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $p->title }}</h4>
+                                <h3 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $p->title }}</h3>
                                 <p class="article-desc" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
                                     {{ Str::limit($p->summary, 180) }}
                                     <span style="color: #38bdf8; font-weight: 700; font-size: 0.8rem; margin-left: 4px;">Read More &rarr;</span>
@@ -347,10 +366,10 @@
                 <!-- Column 2: Fantasy Tips -->
                 <div>
                     <div class="section-header">
-                        <div class="section-title">
+                        <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                             <span class="section-title-icon">⭐</span>
-                            <span>FANTASY TIPS</span>
-                        </div>
+                            <span>FANTASY CRICKET TIPS</span>
+                        </h2>
                         <a href="{{ route('news', ['type' => 'fantasy']) }}" class="view-all-link">ALL FANTASY TIPS &rarr;</a>
                     </div>
                     @forelse($fantasyTips->take(6) as $f)
@@ -358,7 +377,7 @@
                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(34, 197, 94, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                             <div>
                                 <span class="card-tag fantasy" style="font-size: 0.68rem; padding: 2px 7px;">{{ $f->tag ?? 'FANTASY' }}</span>
-                                <h4 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $f->title }}</h4>
+                                <h3 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $f->title }}</h3>
                                 <p class="article-desc" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
                                     {{ Str::limit($f->summary, 180) }}
                                     <span style="color: #22c55e; font-weight: 700; font-size: 0.8rem; margin-left: 4px;">Read More &rarr;</span>
@@ -383,10 +402,10 @@
     <section class="match-previews-section" style="padding: 32px 0 20px;">
         <div class="container">
             <div class="section-header">
-                <div class="section-title">
+                <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                     <span class="section-title-icon">⚡</span>
-                    <span>MATCH PREVIEWS</span>
-                </div>
+                    <span>CRICKET MATCH PREVIEWS</span>
+                </h2>
                 <a href="{{ route('news', ['type' => 'preview']) }}" class="view-all-link">ALL MATCH PREVIEWS &rarr;</a>
             </div>
 
@@ -405,7 +424,7 @@
                                 <img src="{{ $previewImg }}" alt="{{ $preview->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)';" onmouseout="this.style.transform='scale(1)';" loading="lazy">
                             </div>
                             <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">MATCH PREVIEW</span>
-                            <h4 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35; color: var(--text-main);">{{ $preview->title }}</h4>
+                            <h3 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35; color: var(--text-main);">{{ $preview->title }}</h3>
                             <p class="article-desc" style="font-size: 0.83rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
                                 {{ Str::limit($preview->summary, 150) }}
                                 <span style="color: #38bdf8; font-weight: 700; font-size: 0.82rem; margin-left: 5px;">Read More &rarr;</span>
@@ -427,7 +446,7 @@
         <div class="container">
             <div class="section-header">
                 <div class="section-title">
-                    <span>LATEST ARTICLES</span>
+                    <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">LATEST CRICKET ARTICLES</h2>
                 </div>
                 <a href="{{ route('news', ['type' => 'article']) }}" class="view-all-link">ALL ARTICLES &rarr;</a>
             </div>
@@ -436,14 +455,14 @@
                 @foreach($articles->take(6) as $art)
                     <a href="{{ route('article.show', $art->id) }}" class="article-item" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                         @if(!empty($art->image_url))
-                            <div class="article-img-box" style="position: relative; width: 100%; height: 190px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            <div class="article-img-box" style="position: relative; width: 100%; aspect-ratio: 16 / 9; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                                 <div style="position: absolute; inset: -10px; background-image: url('{{ $art->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
-                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" loading="lazy" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" onerror="this.closest('.article-img-box').style.display='none';">
+                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" loading="lazy" style="position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.closest('.article-img-box').style.display='none';">
                             </div>
                         @endif
                         <div class="article-body">
                             <span class="tag-badge primary">{{ $art->category }}</span>
-                            <h4 class="article-title">{{ $art->title }}</h4>
+                            <h3 class="article-title" style="font-size: 0.95rem; font-weight: 800; line-height: 1.35; margin: 8px 0; color: var(--text-main);">{{ $art->title }}</h3>
                             <p class="article-desc">{{ $art->summary }}</p>
                             <div class="article-meta">
                                 <span>📅 {{ $art->published_date ?? 'TODAY' }}</span>
@@ -462,7 +481,7 @@
         <div class="container">
             <div class="section-header">
                 <div class="section-title">
-                    <span>LATEST NEWS</span>
+                    <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">LATEST CRICKET NEWS</h2>
                 </div>
                 <a href="{{ route('news') }}" class="view-all-link">ALL NEWS &rarr;</a>
             </div>
@@ -472,7 +491,7 @@
                     <a href="{{ route('news.show', $n->id) }}" class="news-card-horizontal" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
                         <div style="flex: 1;">
                             <span class="card-tag prediction">{{ $n->category }}</span>
-                            <h4 class="article-title" style="margin-top:6px; color: var(--text-main);">{{ $n->title }}</h4>
+                            <h3 class="article-title" style="margin-top:6px; color: var(--text-main); font-size: 0.95rem; font-weight: 700; line-height: 1.35;">{{ $n->title }}</h3>
                         </div>
                         @if(!empty($n->image_url))
                             <img src="{{ $n->image_url }}" alt="News" class="news-thumb" loading="lazy" style="width: 72px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0;" onerror="this.style.display='none';">
@@ -493,7 +512,7 @@
                 <div class="section-header">
                     <div class="section-title">
                         <span class="section-title-icon">🛡️</span>
-                        <span>MOST POPULAR TEAMS</span>
+                        <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em; display: inline;">MOST POPULAR TEAMS</h2>
                     </div>
                     <a href="{{ route('teams') }}" class="view-all-link">ALL POPULAR TEAMS &rarr;</a>
                 </div>
@@ -524,7 +543,7 @@
             <div class="section-header">
                 <div class="section-title">
                     <span class="section-title-icon">🏟️</span>
-                    <span>CRICKET VENUES</span>
+                    <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em; display: inline;">CRICKET STADIUMS & VENUES</h2>
                 </div>
                 <a href="{{ route('venues') }}" class="view-all-link">ALL VENUES &rarr;</a>
             </div>
@@ -540,7 +559,7 @@
                             <div style="width: 100%; height: 100px; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 2rem;">🏟️</div>
                         @endif
                         <div style="padding: 12px 14px;">
-                            <div style="font-weight: 800; color: var(--text-main); font-size: 0.88rem;">{{ $venue->name }}</div>
+                            <h3 style="font-weight: 800; color: var(--text-main); font-size: 0.88rem; margin: 0;">{{ $venue->name }}</h3>
                             <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 3px;">
                                 @if($venue->city) 📍 {{ $venue->city }}{{ $venue->country ? ', ' . $venue->country : '' }} @endif
                                 @if($venue->capacity) <br>Capacity: {{ is_numeric($venue->capacity) ? number_format($venue->capacity) : $venue->capacity }} @endif
@@ -561,9 +580,9 @@
             <div class="container">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; margin-bottom: 24px;">
                     <div class="section-title" style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: var(--text-main);">WEB STORIES</span>
+                        <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">CRICKET WEB STORIES</h2>
                     </div>
-                    <a href="{{ route('webstories.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">ALL STORIES</a>
+                    <a href="{{ route('webstories.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">ALL STORIES &rarr;</a>
                 </div>
 
                 <div style="position: relative; display: flex; align-items: center;">
@@ -584,7 +603,7 @@
                                 </div>
                                 
                                 <!-- BG Image -->
-                                <img src="{{ $story->image_url }}" alt="{{ $story->title }}" onerror="if (!this.dataset.tried && '{{ $story->slides[0] ?? '' }}') { this.dataset.tried='1'; this.src='{{ $story->slides[0] ?? '' }}'; } else { this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80'; }" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                                <img src="{{ $story->image_url ?: $story->first_slide_image }}" alt="{{ $story->title }}" onerror="if (!this.dataset.tried && '{{ $story->first_slide_image }}') { this.dataset.tried='1'; this.src='{{ $story->first_slide_image }}'; } else { this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80'; }" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
                                 
                                 <!-- Gradient Overlay -->
                                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(11,15,23,0.95) 100%); z-index: 2;"></div>
@@ -640,7 +659,7 @@
                         <div class="section-header" style="margin-bottom: 12px;">
                             <div class="section-title">
                                 <span class="section-title-icon">📊</span>
-                                <span>PLAYER RANKINGS</span>
+                                <h2 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em; display: inline;">CRICKET PLAYER RANKINGS</h2>
                             </div>
                             <a href="{{ route('stats') }}" class="view-all-link">FULL RANKINGS &rarr;</a>
                         </div>
@@ -693,7 +712,7 @@
                         <div class="section-header" style="margin-bottom: 12px;">
                             <div class="section-title">
                                 <span class="section-title-icon">🔥</span>
-                                <span>MOST POPULAR PLAYERS</span>
+                                <h2 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em; display: inline;">TRENDING CRICKETERS</h2>
                             </div>
                             <a href="{{ route('compare') }}" class="view-all-link">COMPARE PLAYERS &rarr;</a>
                         </div>
@@ -727,7 +746,7 @@
                     <div>
                         <div class="section-header" style="margin-bottom: 12px;">
                             <div class="section-title">
-                                <span>POINTS TABLE</span>
+                                <h2 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">CRICKET POINTS TABLE</h2>
                             </div>
                         </div>
 
@@ -763,7 +782,7 @@
                         <div class="section-header" style="margin-bottom: 12px;">
                             <div class="section-title">
                                 <span class="section-title-icon">🎂</span>
-                                <span>PLAYER BIRTHDAYS</span>
+                                <h2 style="font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em; display: inline;">CRICKETER BIRTHDAYS</h2>
                             </div>
                             <a href="{{ route('player.birthdays') }}" class="view-all-link">CALENDAR &rarr;</a>
                         </div>
@@ -823,9 +842,9 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; margin-bottom: 24px;">
                     <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
                         <span style="color: #22c55e; font-size: 1.2rem;">📖</span>
-                        <span style="color: var(--text-main);">GLOSSARY OF CRICKET TERMS</span>
+                        <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">GLOSSARY OF CRICKET TERMS</h2>
                     </div>
-                    <a href="{{ route('glossary.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">FULL GLOSSARY</a>
+                    <a href="{{ route('glossary.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">FULL GLOSSARY &rarr;</a>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px;">
@@ -845,9 +864,9 @@
 
                             <!-- Details -->
                             <div>
-                                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">
+                                <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0;">
                                     {{ $term->term }}
-                                </h4>
+                                </h3>
                                 <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin: 0;">
                                     {{ $term->definition }}
                                 </p>
@@ -858,6 +877,45 @@
             </div>
         </section>
     @endif
+
+    <!-- ========================================================
+         SEO OVERVIEW & CRICKET FAQS (RICH DOMAIN RELEVANCE)
+         ======================================================== -->
+    <section class="seo-overview-section" style="padding: 40px 0; background: var(--bg-card); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+        <div class="container">
+            <div style="max-width: 960px; margin: 0 auto;">
+                <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>⚡</span> CricketKaScore — India's Fast Live Score & Match Predictions Platform
+                </h2>
+                <p style="font-size: 0.88rem; line-height: 1.7; color: var(--text-dim); margin-bottom: 20px;">
+                    <strong>CricketKaScore</strong> is your premier online destination for live cricket scores, ball-by-ball commentary, today match predictions, fantasy cricket tips, team playing 11, points table, and grassroots local cricket score tracking. Whether you are tracking the IPL 2026, ICC T20 World Cup, Bilateral ODI/Test series, or local gully and club tournaments, our real-time engine delivers lightening fast live cricket score updates, pitch reports, and deep analytical previews.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 24px;">
+                    <div style="background: var(--bg-main); padding: 18px; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 0.95rem; font-weight: 800; color: #22c55e; margin: 0 0 8px 0;">🔴 Real-Time Live Cricket Scorecard</h3>
+                        <p style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; margin: 0;">
+                            Experience ultra-fast ball-by-ball commentary, current run rate (CRR), required run rate (RRR), batsman strike rates, and bowler spells for all international and domestic matches.
+                        </p>
+                    </div>
+
+                    <div style="background: var(--bg-main); padding: 18px; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 0.95rem; font-weight: 800; color: #38bdf8; margin: 0 0 8px 0;">🎯 Match Prediction & Fantasy Tips</h3>
+                        <p style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; margin: 0;">
+                            Expert match analysis, head-to-head records, pitch and weather reports, dream team picks, captain & vice-captain recommendations, and likely playing 11 squad announcements.
+                        </p>
+                    </div>
+
+                    <div style="background: var(--bg-main); padding: 18px; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 0.95rem; font-weight: 800; color: #f59e0b; margin: 0 0 8px 0;">🏏 Local & Grassroots Cricket Scorer</h3>
+                        <p style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; margin: 0;">
+                            Score your neighborhood tournaments and club games ball-by-ball. Automatically generate player statistics, batting averages, bowling economy, and team leaderboards.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- ========================================================
          SECTION 8: GRASSROOTS CTA BANNER

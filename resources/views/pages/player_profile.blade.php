@@ -199,13 +199,6 @@
                         </span>
                     </div>
 
-                    <!-- Played Teams list summary -->
-                    <div style="padding-top: 10px; border-top: 1px dashed var(--border-color);">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 6px;">Played Teams</span>
-                        <div style="font-size: 0.84rem; line-height: 1.5; color: var(--text-main); font-weight: 600;">
-                            {{ $player->played_teams ?: ($player->team ? $player->team->name : '-') }}
-                        </div>
-                    </div>
 
                 </div>
             </div>
@@ -292,19 +285,30 @@
             
             <!-- Played for the Teams Section -->
             @php
-                $teamsList = !empty($player->played_teams) ? array_values(array_filter(array_map('trim', explode(',', $player->played_teams)))) : ($player->team ? [$player->team->name] : []);
+                $teamsToDisplay = $playedTeamsData ?? [];
+                if (empty($teamsToDisplay) && $player->team) {
+                    $teamsToDisplay[] = [
+                        'name' => $player->team->name,
+                        'url' => route('players', ['team' => $player->team->id])
+                    ];
+                }
             @endphp
-            @if(!empty($teamsList))
+            @if(!empty($teamsToDisplay))
                 <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
-                    <h2 style="font-size: 1.15rem; font-weight: 900; color: var(--text-main); margin-top: 0; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                        <span>🛡️</span> Played for the Teams:
+                    <h2 style="font-size: 1.15rem; font-weight: 900; color: var(--text-main); margin-top: 0; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span>🛡️</span> Played for the Teams:
+                        </span>
+                        <span style="font-size: 0.75rem; color: #38bdf8; font-weight: 700;">Click team to view squad</span>
                     </h2>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                        @foreach($teamsList as $tm)
-                            @if(!empty($tm))
-                                <span style="background: var(--bg-card-secondary); color: var(--text-main); font-weight: 700; font-size: 0.84rem; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                                    <span style="color: #38bdf8;">•</span> {{ $tm }}
-                                </span>
+                        @foreach($teamsToDisplay as $tm)
+                            @if(!empty($tm['name']))
+                                <a href="{{ $tm['url'] }}" title="View squad for {{ $tm['name'] }}" style="text-decoration: none; background: var(--bg-card-secondary); color: var(--text-main); font-weight: 700; font-size: 0.84rem; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border-color); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;" onmouseover="this.style.borderColor='#38bdf8'; this.style.color='#38bdf8'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-main)'; this.style.transform='translateY(0)';">
+                                    <span style="color: #38bdf8; font-weight: 900;">•</span>
+                                    <span>{{ $tm['name'] }}</span>
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity: 0.7; margin-left: 2px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                </a>
                             @endif
                         @endforeach
                     </div>
@@ -317,13 +321,17 @@
                     <span>📖</span> Profile:
                 </h2>
                 
-                <div style="font-size: 0.96rem; line-height: 1.8; color: var(--text-muted, #334155); font-weight: 500;">
+                <div class="rich-player-bio" style="font-size: 0.96rem; line-height: 1.8; color: var(--text-muted, #334155); font-weight: 500;">
                     @if(!empty($player->bio))
-                        @foreach(preg_split("/\r\n|\n|\r/", $player->bio) as $para)
-                            @if(trim($para) !== '')
-                                <p style="margin-bottom: 16px;">{{ trim($para) }}</p>
-                            @endif
-                        @endforeach
+                        @if(strip_tags($player->bio) !== $player->bio)
+                            {!! $player->bio !!}
+                        @else
+                            @foreach(preg_split("/\r\n|\n|\r/", $player->bio) as $para)
+                                @if(trim($para) !== '')
+                                    <p style="margin-bottom: 16px;">{{ trim($para) }}</p>
+                                @endif
+                            @endforeach
+                        @endif
                     @else
                         <p style="color: var(--text-dim); font-style: italic; margin-bottom: 0;">
                             No biography profile details recorded yet.
@@ -556,10 +564,10 @@
                     <article style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 24px rgba(0,0,0,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.02)';">
                         
                         <!-- Article Thumbnail -->
-                        <div style="position: relative; width: 100%; height: 190px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        <div style="position: relative; width: 100%; aspect-ratio: 16 / 9; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                             @if(!empty($art->image_url))
                                 <div style="position: absolute; inset: -10px; background-image: url('{{ $art->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
-                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" style="position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block;" onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:linear-gradient(135deg,#0f172a,#1e293b);color:#38bdf8;\'>🏏</div>';">
+                                <img src="{{ $art->image_url }}" alt="{{ $art->title }}" style="position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:linear-gradient(135deg,#0f172a,#1e293b);color:#38bdf8;\'>🏏</div>';">
                             @else
                                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; background: linear-gradient(135deg, #0f172a, #1e293b); color: #38bdf8;">
                                     🏏

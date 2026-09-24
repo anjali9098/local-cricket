@@ -48,7 +48,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
                 {{ $editItem ? '✏️ Edit Team: ' . $editItem->name : '🏏 Add New Popular Team' }}
             </h3>
-            <button type="button" onclick="toggleTeamForm()" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.popular') . "'" : "toggleTeamForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
         <form method="POST" action="{{ $editItem ? route('admin.popular.update', $editItem->id) : route('admin.popular.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
@@ -171,7 +171,7 @@
     </div>
 
     <!-- Existing Teams List Table (Matching Exact Series Style) -->
-    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div id="team-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
         @if($teams->isNotEmpty())
             <div style="overflow-x: auto;">
@@ -300,8 +300,10 @@
 <script>
 function toggleTeamForm() {
     const container = document.getElementById('team-form-container');
+    const tableContainer = document.getElementById('team-table-container');
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
         const nameInput = document.getElementById('team_name');
         if (nameInput) {
             nameInput.focus();
@@ -309,6 +311,7 @@ function toggleTeamForm() {
         }
     } else {
         container.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
     }
 }
 
