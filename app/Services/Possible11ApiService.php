@@ -197,8 +197,14 @@ class Possible11ApiService
      * @param int $page
      * @return array
      */
-    public function syncSeries(string $status = 'live', bool $syncSquads = false, string $sport = 'Cricket', int $limit = 50, int $page = 0): array
+    public function syncSeries(string $status = 'live', bool $syncSquads = false, string $sport = 'Cricket', int $limit = 25, int $page = 0): array
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+        @ini_set('max_execution_time', '300');
+        @ini_set('memory_limit', '512M');
+
         $statusesToSync = ($status === 'all') ? ['live', 'upcoming', 'completed'] : [$status];
         
         $stats = [
@@ -219,48 +225,83 @@ class Possible11ApiService
                 $seriesList = $this->getSeriesList($st, $sport, $limit, $page);
                 $stats['series_fetched'] += count($seriesList);
 
-                foreach ($seriesList as $seriesItem) {
-                    $apiSeriesId = (int)($seriesItem['id'] ?? 0);
-                    if (!$apiSeriesId) continue;
+                // Process in parallel batches of 10 series to avoid any timeout
+                $chunks = array_chunk($seriesList, 10);
+                foreach ($chunks as $chunk) {
+                    $chunkIds = [];
+                    foreach ($chunk as $sItem) {
+                        $sId = (int)($sItem['id'] ?? 0);
+                        if ($sId) $chunkIds[] = $sId;
+                    }
 
-                    // 1. Upsert Tournament
-                    $tournamentRes = $this->upsertTournament($seriesItem, $st, $adminUserId);
-                    $tournament = $tournamentRes['tournament'];
-                    if ($tournamentRes['action'] === 'created') $stats['series_created']++;
-                    if ($tournamentRes['action'] === 'updated') $stats['series_updated']++;
+                    // Parallel HTTP fetch for all teams and details in this batch
+                    $responses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($chunkIds) {
+                        $reqs = [];
+                        foreach ($chunkIds as $id) {
+                            $reqs[] = $pool->as("teams_{$id}")->timeout(8)->withHeaders([
+                                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                                'Accept' => 'application/json'
+                            ])->get($this->baseUrl . "?action=series-teams&id={$id}");
 
-                    // 2. Fetch and Sync Teams for this Series
-                    $teamsData = $this->getSeriesTeams($apiSeriesId);
-                    $teamIdMap = []; // Possible11 team ID => Local Team ID
+                            $reqs[] = $pool->as("detail_{$id}")->timeout(8)->withHeaders([
+                                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                                'Accept' => 'application/json'
+                            ])->get($this->baseUrl . "?action=series-detail&id={$id}");
+                        }
+                        return $reqs;
+                    });
 
-                    foreach ($teamsData as $tData) {
-                        $team = $this->upsertTeam($tData, $tournament->id);
-                        $teamIdMap[$tData['id']] = $team->id;
-                        $stats['teams_synced']++;
+                    // Save data to database
+                    foreach ($chunk as $seriesItem) {
+                        $apiSeriesId = (int)($seriesItem['id'] ?? 0);
+                        if (!$apiSeriesId) continue;
 
-                        // 3. Sync Squads if requested
-                        if ($syncSquads) {
-                            $squadData = $this->getSeriesSquad($apiSeriesId, (int)$tData['id'], 2);
-                            $playersList = $squadData['players'] ?? [];
-                            if (empty($playersList)) {
-                                $squadData = $this->getSeriesSquad($apiSeriesId, (int)$tData['id'], 3);
+                        // 1. Upsert Tournament
+                        $tournamentRes = $this->upsertTournament($seriesItem, $st, $adminUserId);
+                        $tournament = $tournamentRes['tournament'];
+                        if ($tournamentRes['action'] === 'created') $stats['series_created']++;
+                        if ($tournamentRes['action'] === 'updated') $stats['series_updated']++;
+
+                        // 2. Teams data from parallel response
+                        $teamResp = $responses["teams_{$apiSeriesId}"] ?? null;
+                        $teamsData = ($teamResp instanceof \Illuminate\Http\Client\Response && $teamResp->successful()) 
+                            ? ($teamResp->json()['teams'] ?? []) 
+                            : [];
+
+                        $teamIdMap = [];
+                        foreach ($teamsData as $tData) {
+                            $team = $this->upsertTeam($tData, $tournament->id);
+                            $teamIdMap[$tData['id']] = $team->id;
+                            $stats['teams_synced']++;
+
+                            // 3. Sync Squads if requested
+                            if ($syncSquads) {
+                                $squadData = $this->getSeriesSquad($apiSeriesId, (int)$tData['id'], 2);
                                 $playersList = $squadData['players'] ?? [];
-                            }
-                            if (!empty($playersList)) {
-                                foreach ($playersList as $pData) {
-                                    $this->upsertPlayer($pData, $team->id);
-                                    $stats['players_synced']++;
+                                if (empty($playersList)) {
+                                    $squadData = $this->getSeriesSquad($apiSeriesId, (int)$tData['id'], 3);
+                                    $playersList = $squadData['players'] ?? [];
+                                }
+                                if (!empty($playersList)) {
+                                    foreach ($playersList as $pData) {
+                                        $this->upsertPlayer($pData, $team->id);
+                                        $stats['players_synced']++;
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // 4. Fetch Series Detail & Sync Matches
-                    $detail = $this->getSeriesDetail($apiSeriesId);
-                    if ($detail && !empty($detail['matches'])) {
-                        foreach ($detail['matches'] as $mItem) {
-                            $this->upsertMatch($mItem, $tournament->id, $teamIdMap);
-                            $stats['matches_synced']++;
+                        // 4. Matches data from parallel response
+                        $detailResp = $responses["detail_{$apiSeriesId}"] ?? null;
+                        $detailData = ($detailResp instanceof \Illuminate\Http\Client\Response && $detailResp->successful()) 
+                            ? ($detailResp->json()['data'] ?? null) 
+                            : null;
+
+                        if ($detailData && !empty($detailData['matches'])) {
+                            foreach ($detailData['matches'] as $mItem) {
+                                $this->upsertMatch($mItem, $tournament->id, $teamIdMap);
+                                $stats['matches_synced']++;
+                            }
                         }
                     }
                 }

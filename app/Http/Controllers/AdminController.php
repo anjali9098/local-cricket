@@ -1288,6 +1288,12 @@ class AdminController extends Controller
      */
     public function syncPossible11Series(Request $request, \App\Services\Possible11ApiService $service)
     {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+        @ini_set('max_execution_time', '300');
+        @ini_set('memory_limit', '512M');
+
         $seriesId = $request->input('series_id');
         $syncSquads = $request->boolean('sync_squads', false);
 
@@ -1296,7 +1302,7 @@ class AdminController extends Controller
         } else {
             $status = $request->input('status', 'live');
             $sport = $request->input('sport', 'Cricket');
-            $limit = (int)$request->input('limit', 50);
+            $limit = (int)$request->input('limit', 25);
             $result = $service->syncSeries($status, $syncSquads, $sport, $limit);
         }
 
