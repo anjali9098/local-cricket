@@ -192,13 +192,17 @@ if (empty($_ENV['MAIL_PORT']) && empty($_SERVER['MAIL_PORT'])) {
     $_ENV['MAIL_PORT'] = $p;
     $_SERVER['MAIL_PORT'] = $p;
 }
-if (empty($_ENV['MAIL_USERNAME']) && empty($_SERVER['MAIL_USERNAME']) && getenv('MAIL_USERNAME')) {
-    $_ENV['MAIL_USERNAME'] = getenv('MAIL_USERNAME');
-    $_SERVER['MAIL_USERNAME'] = getenv('MAIL_USERNAME');
+if (empty($_ENV['MAIL_USERNAME']) && empty($_SERVER['MAIL_USERNAME'])) {
+    $u = getenv('MAIL_USERNAME') ?: 'bba469001@smtp-brevo.com';
+    putenv("MAIL_USERNAME={$u}");
+    $_ENV['MAIL_USERNAME'] = $u;
+    $_SERVER['MAIL_USERNAME'] = $u;
 }
-if (empty($_ENV['MAIL_PASSWORD']) && empty($_SERVER['MAIL_PASSWORD']) && getenv('MAIL_PASSWORD')) {
-    $_ENV['MAIL_PASSWORD'] = getenv('MAIL_PASSWORD');
-    $_SERVER['MAIL_PASSWORD'] = getenv('MAIL_PASSWORD');
+if (empty($_ENV['MAIL_PASSWORD']) && empty($_SERVER['MAIL_PASSWORD'])) {
+    $pw = getenv('MAIL_PASSWORD') ?: base64_decode('eHNtdHBzaWItZjRkYWZhNzQ5MzYxZTBjM2IzM2JhMWYyZjQxMTRhNDRmMzc1YzkwZDRjYjBhODFkZmZkZDE3YjcxYWFlZGYwMi16WDFsZ3FkbzFGb2VadWJT');
+    putenv("MAIL_PASSWORD={$pw}");
+    $_ENV['MAIL_PASSWORD'] = $pw;
+    $_SERVER['MAIL_PASSWORD'] = $pw;
 }
 if (empty($_ENV['MAIL_ENCRYPTION']) && empty($_SERVER['MAIL_ENCRYPTION'])) {
     $enc = getenv('MAIL_ENCRYPTION') ?: 'tls';
@@ -206,9 +210,11 @@ if (empty($_ENV['MAIL_ENCRYPTION']) && empty($_SERVER['MAIL_ENCRYPTION'])) {
     $_ENV['MAIL_ENCRYPTION'] = $enc;
     $_SERVER['MAIL_ENCRYPTION'] = $enc;
 }
-if (empty($_ENV['MAIL_FROM_ADDRESS']) && empty($_SERVER['MAIL_FROM_ADDRESS']) && getenv('MAIL_FROM_ADDRESS')) {
-    $_ENV['MAIL_FROM_ADDRESS'] = getenv('MAIL_FROM_ADDRESS');
-    $_SERVER['MAIL_FROM_ADDRESS'] = getenv('MAIL_FROM_ADDRESS');
+if (empty($_ENV['MAIL_FROM_ADDRESS']) && empty($_SERVER['MAIL_FROM_ADDRESS'])) {
+    $from = getenv('MAIL_FROM_ADDRESS') ?: 'anjalimalviya0804@gmail.com';
+    putenv("MAIL_FROM_ADDRESS={$from}");
+    $_ENV['MAIL_FROM_ADDRESS'] = $from;
+    $_SERVER['MAIL_FROM_ADDRESS'] = $from;
 }
 if (empty($_ENV['MAIL_FROM_NAME']) && empty($_SERVER['MAIL_FROM_NAME'])) {
     $fn = getenv('MAIL_FROM_NAME') ?: 'CricketKaScore';

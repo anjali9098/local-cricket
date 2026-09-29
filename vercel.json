@@ -51,6 +51,13 @@
     "LOG_CHANNEL": "stderr",
     "QUEUE_CONNECTION": "sync",
     "APP_MAINTENANCE_DRIVER": "file",
-    "VIEW_COMPILED_PATH": "/tmp/storage/framework/views"
+    "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
+    "MAIL_MAILER": "smtp",
+    "MAIL_HOST": "smtp-relay.brevo.com",
+    "MAIL_PORT": "587",
+    "MAIL_USERNAME": "bba469001@smtp-brevo.com",
+    "MAIL_ENCRYPTION": "tls",
+    "MAIL_FROM_ADDRESS": "anjalimalviya0804@gmail.com",
+    "MAIL_FROM_NAME": "CricketKaScore"
   }
 }
