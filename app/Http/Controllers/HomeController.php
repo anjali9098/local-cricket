@@ -35,41 +35,25 @@ class HomeController extends Controller
                   });
             })
             ->where(function($q) use ($todayDate) {
-                $testStartLimit = \Carbon\Carbon::parse($todayDate)->subDays(4)->toDateString();
-
-                // Live matches: ONLY if active for current running date or active multi-day window
-                $q->where(function($lq) use ($todayDate, $testStartLimit) {
-                    $lq->where('status', 'live')
-                       ->where(function($dateCond) use ($todayDate, $testStartLimit) {
-                           // Multi-day match (Test spans up to 5 days: starts on or before today, within last 4 days)
-                           $dateCond->where(function($testQ) use ($todayDate, $testStartLimit) {
-                               $testQ->where('match_type', 'Test')
-                                     ->whereDate('match_date', '<=', $todayDate)
-                                     ->whereDate('match_date', '>=', $testStartLimit);
-                           })
-                           // Single-day match (T20, T10, ODI, Local, etc.): ONLY active if match_date is today
-                           ->orWhere(function($singleQ) use ($todayDate) {
-                               $singleQ->where(function($mtype) {
-                                   $mtype->whereNull('match_type')->orWhere('match_type', '!=', 'Test');
-                               })
-                               ->whereDate('match_date', $todayDate);
-                           });
-                       });
-                })
-                // Upcoming or scheduled matches show on home (today onwards)
+                // Live matches: ALWAYS show live matches
+                $q->where('status', 'live')
+                // Upcoming or scheduled matches (today or future)
                 ->orWhere(function($upq) use ($todayDate) {
                     $upq->whereIn('status', ['upcoming', 'scheduled'])
-                        ->whereDate('match_date', '>=', $todayDate);
+                        ->where(function($dateCond) use ($todayDate) {
+                            $dateCond->whereNull('match_date')
+                                     ->orWhereDate('match_date', '>=', $todayDate);
+                        });
                 })
-                // Completed matches ONLY if played today
+                // Completed matches (today or recent)
                 ->orWhere(function($subQ) use ($todayDate) {
                     $subQ->where('status', 'completed')
-                         ->whereDate('match_date', $todayDate);
+                         ->whereDate('match_date', '>=', \Carbon\Carbon::parse($todayDate)->subDays(1)->toDateString());
                 });
             })
             ->orderByRaw("CASE WHEN status = 'live' THEN 1 WHEN status IN ('scheduled', 'upcoming') THEN 2 ELSE 3 END")
             ->orderBy('id', 'desc')
-            ->take(8)
+            ->take(12)
             ->get();
 
         if ($allMatches->isEmpty()) {
@@ -82,10 +66,9 @@ class HomeController extends Controller
                           $tq->where('is_approved', true);
                       });
                 })
-                ->whereIn('status', ['upcoming', 'scheduled'])
-                ->whereDate('match_date', '>=', $todayDate)
+                ->orderByRaw("CASE WHEN status = 'live' THEN 1 WHEN status IN ('scheduled', 'upcoming') THEN 2 ELSE 3 END")
                 ->orderBy('id', 'desc')
-                ->take(8)
+                ->take(12)
                 ->get();
         }
 

@@ -82,11 +82,67 @@ use App\Http\Controllers\Api\SearchApiController;
 Route::get('/search', [SearchApiController::class, 'search']);
 Route::get('/admin/search', [SearchApiController::class, 'adminSearch']);
 
-// 8. Possible11 Automated Series Sync Endpoint
-Route::match(['get', 'post'], '/possible11/sync-series', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
-    $status = $request->input('status', 'live');
-    $result = $service->syncSeries($status);
-    return response()->json($result);
+// 8. Possible11 Comprehensive Cricket API Endpoints
+Route::prefix('possible11')->group(function () {
+    // 1. Series List (Live, Upcoming, Completed)
+    Route::get('/series', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
+        $status = $request->input('status', 'live');
+        $sport = $request->input('sport', 'Cricket');
+        $limit = (int) $request->input('limit', 20);
+        $page = (int) $request->input('page', 0);
+        return response()->json([
+            'status' => 'OK',
+            'data' => $service->getSeriesList($status, $sport, $limit, $page)
+        ]);
+    });
+
+    // 2. Full Details of any Series
+    Route::get('/series-detail', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
+        $id = (int) $request->input('id', 0);
+        return response()->json([
+            'status' => 'OK',
+            'data' => $service->getSeriesDetail($id)
+        ]);
+    });
+
+    // 3. All Teams of any Series
+    Route::get('/series-teams', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
+        $id = (int) $request->input('id', 0);
+        return response()->json([
+            'status' => 'OK',
+            'teams' => $service->getSeriesTeams($id)
+        ]);
+    });
+
+    // 4. Squad of any Team from Series
+    Route::get('/series-squad', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
+        $id = (int) $request->input('id', 0);
+        $teamId = (int) $request->input('teamId', 0);
+        $formatId = (int) ($request->input('formatId', $request->input('$formatId', 2)));
+        return response()->json([
+            'status' => 'OK',
+            'data' => $service->getSeriesSquad($id, $teamId, $formatId)
+        ]);
+    });
+
+    // 5. Automated Deep Sync (Series + Teams + Matches + Squads)
+    Route::match(['get', 'post'], '/sync-series', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
+        $seriesId = $request->input('id', $request->input('series_id'));
+        $syncSquads = $request->boolean('sync_squads', false);
+
+        if (!empty($seriesId)) {
+            $result = $service->syncSingleSeries((int)$seriesId, $syncSquads);
+            return response()->json($result);
+        }
+
+        $status = $request->input('status', 'live');
+        $sport = $request->input('sport', 'Cricket');
+        $limit = (int) $request->input('limit', 50);
+        $page = (int) $request->input('page', 0);
+        $result = $service->syncSeries($status, $syncSquads, $sport, $limit, $page);
+        return response()->json($result);
+    });
 });
+
 
 

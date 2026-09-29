@@ -35,14 +35,52 @@
         </div>
 
         <!-- Right: Action Buttons (Possible11 Sync & Add Series) -->
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <form method="POST" action="{{ route('admin.series.sync-possible11') }}" style="margin: 0; display: inline-flex; align-items: center; gap: 4px;">
-                @csrf
-                <input type="hidden" name="status" value="live">
-                <button type="submit" onclick="this.innerHTML='⏳ Syncing...'; this.disabled=true; this.form.submit();" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #38bdf8; border-radius: 4px; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 3px rgba(2,132,199,0.3); transition: all 0.2s;" title="Fetch latest live series from Possible11 API directly into Database">
-                    <span>⚡</span> Sync Live Series (Possible11)
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <!-- Possible11 Quick Sync Dropdown / Group -->
+            <div style="position: relative; display: inline-block;">
+                <button type="button" onclick="document.getElementById('possible11-sync-dropdown').style.display = (document.getElementById('possible11-sync-dropdown').style.display === 'none' ? 'block' : 'none')" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #38bdf8; border-radius: 4px; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 3px rgba(2,132,199,0.3); transition: all 0.2s;" title="Possible11 Automation Sync">
+                    <span>⚡</span> Sync API Series & Matches <span style="font-size: 0.7rem;">▼</span>
                 </button>
-            </form>
+                <div id="possible11-sync-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 1000; min-width: 260px; padding: 8px 0;">
+                    <form method="POST" action="{{ route('admin.series.sync-possible11') }}" style="margin: 0;">
+                        @csrf
+                        <input type="hidden" name="status" value="live">
+                        <button type="submit" onclick="this.innerHTML='⏳ Syncing Live...'; this.disabled=true; this.form.submit();" style="width: 100%; text-align: left; padding: 8px 16px; border: none; background: transparent; font-size: 0.85rem; font-weight: 700; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
+                            <span style="color: #ef4444;">⚡</span> Sync Live Series & Matches
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.series.sync-possible11') }}" style="margin: 0;">
+                        @csrf
+                        <input type="hidden" name="status" value="upcoming">
+                        <button type="submit" onclick="this.innerHTML='⏳ Syncing Upcoming...'; this.disabled=true; this.form.submit();" style="width: 100%; text-align: left; padding: 8px 16px; border: none; background: transparent; font-size: 0.85rem; font-weight: 700; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
+                            <span style="color: #0284c7;">📅</span> Sync Upcoming Series
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.series.sync-possible11') }}" style="margin: 0;">
+                        @csrf
+                        <input type="hidden" name="status" value="completed">
+                        <button type="submit" onclick="this.innerHTML='⏳ Syncing Completed...'; this.disabled=true; this.form.submit();" style="width: 100%; text-align: left; padding: 8px 16px; border: none; background: transparent; font-size: 0.85rem; font-weight: 700; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
+                            <span style="color: #10b981;">🏆</span> Sync Completed Series
+                        </button>
+                    </form>
+                    <div style="border-top: 1px solid #e2e8f0; margin: 4px 0;"></div>
+                    <form method="POST" action="{{ route('admin.series.sync-possible11') }}" style="margin: 0;">
+                        @csrf
+                        <input type="hidden" name="status" value="all">
+                        <button type="submit" onclick="this.innerHTML='⏳ Syncing All...'; this.disabled=true; this.form.submit();" style="width: 100%; text-align: left; padding: 8px 16px; border: none; background: transparent; font-size: 0.85rem; font-weight: 800; color: #0284c7; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
+                            <span>🔄</span> Full Sync All (Live + Upcoming + Completed)
+                        </button>
+                    </form>
+                    <div style="border-top: 1px solid #e2e8f0; margin: 4px 0;"></div>
+                    <div style="padding: 8px 16px;">
+                        <form method="POST" action="{{ route('admin.series.sync-possible11') }}" style="display: flex; gap: 4px; align-items: center;">
+                            @csrf
+                            <input type="number" name="series_id" placeholder="Series ID (e.g. 562)" required style="flex: 1; padding: 4px 8px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+                            <button type="submit" style="padding: 4px 8px; font-size: 0.8rem; background: #0f172a; color: white; border: none; border-radius: 4px; font-weight: 700; cursor: pointer;">Sync ID</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
             <button type="button" onclick="toggleSeriesForm()" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; color: #0f172a; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                 <span style="font-size: 1.1rem; line-height: 1; color: #0284c7;">+</span> Add New Series

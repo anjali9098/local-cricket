@@ -36,20 +36,20 @@ class PageController extends Controller
             })
             ->get();
 
-        // 1. Upcoming Matches (Future scheduled fixtures, excluding today)
+        // 1. Upcoming Matches (Future scheduled fixtures, excluding active live)
         $upcomingMatches = $allMatches->filter(function($m) use ($todayDate) {
-            if ($m->effective_status === 'completed') {
+            if ($m->effective_status === 'completed' || $m->effective_status === 'live') {
                 return false;
             }
             $mDate = !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->toDateString() : null;
-            if ($mDate === $todayDate) {
-                return false; // Belongs strictly to Today's tab
-            }
-            return in_array($m->effective_status, ['upcoming', 'scheduled']) || ($mDate && $mDate > $todayDate);
+            return in_array($m->effective_status, ['upcoming', 'scheduled']) || ($mDate && $mDate >= $todayDate);
         })->sortBy('match_date')->values();
 
-        // 2. Today's Matches (STRICTLY matches occurring on CURRENT DATE)
+        // 2. Today's & Live Matches (STRICTLY any LIVE match or match occurring today)
         $todayMatches = $allMatches->filter(function($m) use ($todayDate) {
+            if ($m->effective_status === 'live') {
+                return true;
+            }
             return !empty($m->match_date) && \Carbon\Carbon::parse($m->match_date)->toDateString() === $todayDate;
         })->sortBy(function($m) {
             return $m->effective_status === 'live' ? 1 : 2;
@@ -92,22 +92,12 @@ class PageController extends Controller
         if (!empty($status)) {
             if ($status === 'upcoming' || $status === 'scheduled') {
                 $query->whereIn('status', ['upcoming', 'scheduled'])
-                      ->whereDate('match_date', '>=', $todayDate);
-            } elseif ($status === 'live') {
-                $query->where('status', 'live')
-                      ->where(function($dateCond) use ($todayDate, $testStartLimit) {
-                          $dateCond->where(function($testQ) use ($todayDate, $testStartLimit) {
-                              $testQ->where('match_type', 'Test')
-                                    ->whereDate('match_date', '<=', $todayDate)
-                                    ->whereDate('match_date', '>=', $testStartLimit);
-                          })
-                          ->orWhere(function($singleQ) use ($todayDate) {
-                              $singleQ->where(function($mtype) {
-                                  $mtype->whereNull('match_type')->orWhere('match_type', '!=', 'Test');
-                              })
-                              ->whereDate('match_date', $todayDate);
-                          });
+                      ->where(function($dq) use ($todayDate) {
+                          $dq->whereNull('match_date')
+                             ->orWhereDate('match_date', '>=', $todayDate);
                       });
+            } elseif ($status === 'live') {
+                $query->where('status', 'live');
             } else {
                 $query->where('status', $status);
             }

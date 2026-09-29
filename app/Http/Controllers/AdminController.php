@@ -1284,18 +1284,27 @@ class AdminController extends Controller
     }
 
     /**
-     * Trigger Possible11 API Live/Upcoming Series Synchronization
+     * Trigger Possible11 API Live/Upcoming/Completed Series Synchronization
      */
     public function syncPossible11Series(Request $request, \App\Services\Possible11ApiService $service)
     {
-        $status = $request->input('status', 'live');
-        $result = $service->syncSeries($status);
+        $seriesId = $request->input('series_id');
+        $syncSquads = $request->boolean('sync_squads', false);
+
+        if (!empty($seriesId)) {
+            $result = $service->syncSingleSeries((int)$seriesId, $syncSquads);
+        } else {
+            $status = $request->input('status', 'live');
+            $sport = $request->input('sport', 'Cricket');
+            $limit = (int)$request->input('limit', 50);
+            $result = $service->syncSeries($status, $syncSquads, $sport, $limit);
+        }
 
         if ($result['success']) {
             return redirect()->route('admin.series')->with('success', $result['message']);
         }
 
-        return redirect()->route('admin.series')->with('error', 'Failed to synchronize with Possible11 API.');
+        return redirect()->route('admin.series')->with('error', $result['message'] ?? 'Failed to synchronize with Possible11 API.');
     }
 
     public function showAddFantasyTipForm(Request $request)
