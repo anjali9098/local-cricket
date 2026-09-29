@@ -35,9 +35,9 @@ class HomeController extends Controller
                   });
             })
             ->where(function($q) use ($todayDate) {
-                // Live matches: ALWAYS show live matches
+                // Live matches: ALWAYS show active live matches
                 $q->where('status', 'live')
-                // Upcoming or scheduled matches (today or future)
+                // Upcoming / Scheduled matches
                 ->orWhere(function($upq) use ($todayDate) {
                     $upq->whereIn('status', ['upcoming', 'scheduled'])
                         ->where(function($dateCond) use ($todayDate) {
@@ -45,7 +45,7 @@ class HomeController extends Controller
                                      ->orWhereDate('match_date', '>=', $todayDate);
                         });
                 })
-                // Completed matches (today or recent)
+                // Completed matches (played today or recent)
                 ->orWhere(function($subQ) use ($todayDate) {
                     $subQ->where('status', 'completed')
                          ->whereDate('match_date', '>=', \Carbon\Carbon::parse($todayDate)->subDays(1)->toDateString());

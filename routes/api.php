@@ -7,13 +7,12 @@ use App\Http\Controllers\Api\TeamApiController;
 use App\Http\Controllers\Api\PlayerApiController;
 use App\Http\Controllers\Api\NewsArticleApiController;
 use App\Http\Controllers\Api\StatsApiController;
+use App\Http\Controllers\Api\SearchApiController;
 
 /*
 |--------------------------------------------------------------------------
-| CricketKaScore & CrickArena RESTful API Routes
+| CricketKaScore RESTful API Routes
 |--------------------------------------------------------------------------
-| All data sent to these endpoints is validated and stored dynamically in MySQL database (score_tracker)
-| and immediately displayed live across all website pages.
 */
 
 // 1. Matches & Live Scoring API
@@ -78,13 +77,11 @@ Route::get('/glossary', [StatsApiController::class, 'getGlossary']);
 Route::post('/glossary', [StatsApiController::class, 'storeGlossary']);
 
 // 7. Real-Time Global Search API & Common Super Admin Search API
-use App\Http\Controllers\Api\SearchApiController;
 Route::get('/search', [SearchApiController::class, 'search']);
 Route::get('/admin/search', [SearchApiController::class, 'adminSearch']);
 
-// 8. Possible11 Comprehensive Cricket API Endpoints
+// 8. Possible11 API Routes
 Route::prefix('possible11')->group(function () {
-    // 1. Series List (Live, Upcoming, Completed)
     Route::get('/series', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
         $status = $request->input('status', 'live');
         $sport = $request->input('sport', 'Cricket');
@@ -96,7 +93,6 @@ Route::prefix('possible11')->group(function () {
         ]);
     });
 
-    // 2. Full Details of any Series
     Route::get('/series-detail', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
         $id = (int) $request->input('id', 0);
         return response()->json([
@@ -105,7 +101,6 @@ Route::prefix('possible11')->group(function () {
         ]);
     });
 
-    // 3. All Teams of any Series
     Route::get('/series-teams', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
         $id = (int) $request->input('id', 0);
         return response()->json([
@@ -114,7 +109,6 @@ Route::prefix('possible11')->group(function () {
         ]);
     });
 
-    // 4. Squad of any Team from Series
     Route::get('/series-squad', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
         $id = (int) $request->input('id', 0);
         $teamId = (int) $request->input('teamId', 0);
@@ -125,24 +119,12 @@ Route::prefix('possible11')->group(function () {
         ]);
     });
 
-    // 5. Automated Deep Sync (Series + Teams + Matches + Squads)
     Route::match(['get', 'post'], '/sync-series', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
-        $seriesId = $request->input('id', $request->input('series_id'));
-        $syncSquads = $request->boolean('sync_squads', false);
-
-        if (!empty($seriesId)) {
-            $result = $service->syncSingleSeries((int)$seriesId, $syncSquads);
-            return response()->json($result);
-        }
-
         $status = $request->input('status', 'live');
         $sport = $request->input('sport', 'Cricket');
-        $limit = (int) $request->input('limit', 50);
+        $limit = (int) $request->input('limit', 25);
         $page = (int) $request->input('page', 0);
-        $result = $service->syncSeries($status, $syncSquads, $sport, $limit, $page);
+        $result = $service->syncSeries($status, true, $sport, $limit, $page);
         return response()->json($result);
     });
 });
-
-
-

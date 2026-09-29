@@ -130,79 +130,7 @@ class Possible11ApiService
     }
 
     /**
-     * 5. Sync a Single Series by ID
-     */
-    public function syncSingleSeries(int $seriesId, bool $syncSquads = true): array
-    {
-        if (function_exists('set_time_limit')) {
-            @set_time_limit(300);
-        }
-        @ini_set('max_execution_time', '300');
-        @ini_set('memory_limit', '512M');
-
-        $adminUser = User::where('role', 'admin')->orWhere('role', 'super_admin')->first() ?: User::first();
-        $adminUserId = $adminUser ? $adminUser->id : 1;
-
-        $detail = $this->getSeriesDetail($seriesId);
-        if (!$detail) {
-            return [
-                'success' => false,
-                'message' => "Series with ID {$seriesId} not found on Possible11 API."
-            ];
-        }
-
-        // Upsert tournament from detail
-        $tRes = $this->upsertTournament($detail, $detail['status'] ?? 'ongoing', $adminUserId);
-        $tournament = $tRes['tournament'];
-
-        // Teams
-        $teamsData = $this->getSeriesTeams($seriesId);
-        $teamIdMap = [];
-        $teamsCount = 0;
-        $playersCount = 0;
-
-        foreach ($teamsData as $tData) {
-            $team = $this->upsertTeam($tData, $tournament->id);
-            $teamIdMap[$tData['id']] = $team->id;
-            $teamsCount++;
-
-            // Always fetch squad for team
-            $squadData = $this->getSeriesSquad($seriesId, (int)$tData['id'], 2);
-            $playersList = $squadData['players'] ?? [];
-            if (empty($playersList)) {
-                $squadData = $this->getSeriesSquad($seriesId, (int)$tData['id'], 3);
-                $playersList = $squadData['players'] ?? [];
-            }
-            if (empty($playersList)) {
-                $squadData = $this->getSeriesSquad($seriesId, (int)$tData['id'], 4);
-                $playersList = $squadData['players'] ?? [];
-            }
-            foreach ($playersList as $pData) {
-                $this->upsertPlayer($pData, $team->id);
-                $playersCount++;
-            }
-        }
-
-        // Matches
-        $matchesCount = 0;
-        if (!empty($detail['matches'])) {
-            foreach ($detail['matches'] as $mItem) {
-                $match = $this->upsertMatch($mItem, $tournament->id, $teamIdMap);
-                if ($match) {
-                    $this->populateMatchScorecard($match);
-                    $matchesCount++;
-                }
-            }
-        }
-
-        return [
-            'success' => true,
-            'message' => "Synced series '{$tournament->name}': {$teamsCount} teams, {$matchesCount} matches, {$playersCount} players."
-        ];
-    }
-
-    /**
-     * 6. Deep Synchronize Series + Teams + Matches + Squads
+     * 5. Deep Synchronize Series + Teams + Matches + Squads
      */
     public function syncSeries(string $status = 'live', bool $syncSquads = true, string $sport = 'Cricket', int $limit = 25, int $page = 0): array
     {
@@ -232,7 +160,7 @@ class Possible11ApiService
                 $seriesList = $this->getSeriesList($st, $sport, $limit, $page);
                 $stats['series_fetched'] += count($seriesList);
 
-                // Process in parallel batches of 10 series to avoid any timeout
+                // Process in parallel batches of 10 series
                 $chunks = array_chunk($seriesList, 10);
                 foreach ($chunks as $chunk) {
                     $chunkIds = [];
@@ -241,7 +169,7 @@ class Possible11ApiService
                         if ($sId) $chunkIds[] = $sId;
                     }
 
-                    // Parallel HTTP fetch for all teams and details in this batch
+                    // Parallel HTTP fetch for all teams and details
                     $responses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($chunkIds) {
                         $reqs = [];
                         foreach ($chunkIds as $id) {
@@ -277,9 +205,9 @@ class Possible11ApiService
 
                         $teamIdMap = [];
                         
-                        // Squad parallel fetch for all teams in this series
+                        // Fetch squad players for all teams in this series
                         $squadResponses = [];
-                        if (!empty($teamsData)) {
+                        if ($syncSquads && !empty($teamsData)) {
                             $squadResponses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($apiSeriesId, $teamsData) {
                                 $sReqs = [];
                                 foreach ($teamsData as $t) {
@@ -303,17 +231,19 @@ class Possible11ApiService
                             $teamIdMap[$tData['id']] = $team->id;
                             $stats['teams_synced']++;
 
-                            // Extract squad players from pool
-                            $tId = $tData['id'];
-                            $pList = $this->extractPlayersFromResponse($squadResponses["squad_{$tId}_t20"] ?? null);
-                            if (empty($pList)) {
-                                $pList = $this->extractPlayersFromResponse($squadResponses["squad_{$tId}_odi"] ?? null);
-                            }
+                            // Extract squad players
+                            if ($syncSquads) {
+                                $tId = $tData['id'];
+                                $pList = $this->extractPlayersFromResponse($squadResponses["squad_{$tId}_t20"] ?? null);
+                                if (empty($pList)) {
+                                    $pList = $this->extractPlayersFromResponse($squadResponses["squad_{$tId}_odi"] ?? null);
+                                }
 
-                            if (!empty($pList)) {
-                                foreach ($pList as $pData) {
-                                    $this->upsertPlayer($pData, $team->id);
-                                    $stats['players_synced']++;
+                                if (!empty($pList)) {
+                                    foreach ($pList as $pData) {
+                                        $this->upsertPlayer($pData, $team->id);
+                                        $stats['players_synced']++;
+                                    }
                                 }
                             }
                         }
@@ -494,7 +424,6 @@ class Possible11ApiService
 
         // Populate batting stats if none exist
         if ($match->battingStats()->count() == 0 && $t1Players->isNotEmpty()) {
-            // Clean old
             PlayerBattingStat::where('match_id', $match->id)->delete();
             PlayerBowlingStat::where('match_id', $match->id)->delete();
             BallByBall::where('match_id', $match->id)->delete();
