@@ -1,5 +1,55 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = 'Cricket Glossary & Terminology — Complete Dictionary of Terms, Rules & Slang | CricketKaScore';
+    $metaDesc = 'Explore the complete cricket glossary and terminology dictionary on CricketKaScore. Learn definitions of bowling deliveries (Yorker, Googly), batting shots, fielding positions, cricket rules, and slang.';
+    $metaKeywords = 'cricket glossary, cricket terms, cricket dictionary, cricket terminology, googly, yorker, LBW, fielding positions, batting terms, cricket rules, CricketKaScore glossary';
+    $canonicalUrl = route('glossary.all');
+
+    $glossarySchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'DefinedTermSet',
+        'name' => 'Cricket Glossary & Terminology Dictionary',
+        'description' => $metaDesc,
+        'url' => $canonicalUrl,
+        'publisher' => [
+            chr(64) . 'type' => 'SportsOrganization',
+            'name' => 'CricketKaScore',
+            'url' => url('/'),
+            'logo' => asset('images/logo.png')
+        ]
+    ];
+
+    if ($glossaryTerms->isNotEmpty()) {
+        $definedTerms = [];
+        foreach ($glossaryTerms->take(20) as $gt) {
+            $definedTerms[] = [
+                chr(64) . 'type' => 'DefinedTerm',
+                'name' => $gt->term,
+                'description' => \Illuminate\Support\Str::limit(strip_tags($gt->definition), 180),
+                'url' => route('glossary.show', $gt->id),
+                'inDefinedTermSet' => $canonicalUrl
+            ];
+        }
+        $glossarySchema['hasDefinedTerm'] = $definedTerms;
+    }
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'website')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($glossarySchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container" style="padding: 40px 24px 80px; margin: 0 auto; font-family: var(--font-body, 'Inter', sans-serif);">
     

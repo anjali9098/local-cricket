@@ -1,15 +1,120 @@
 @extends('layouts.app')
 
+@php
+    $playerNames = [];
+    if (!empty($p1?->name)) $playerNames[] = $p1->name;
+    if (!empty($p2?->name)) $playerNames[] = $p2->name;
+    if ($count >= 3 && !empty($p3?->name)) $playerNames[] = $p3->name;
+    if ($count >= 4 && !empty($p4?->name)) $playerNames[] = $p4->name;
+
+    $hasPlayers = count($playerNames) >= 2;
+    $vsString = implode(' vs ', $playerNames);
+
+    if ($hasPlayers) {
+        $pageTitle = $vsString . ' — Player Head-to-Head Comparison & Career Stats | CricketKaScore';
+        $metaDesc = 'Comprehensive head-to-head cricket comparison between ' . $vsString . '. Compare career batting averages, strike rates, boundaries, bowling economy, wickets, milestones, and head-to-head records on CricketKaScore.';
+        $metaKeywords = $vsString . ', ' . implode(', ', $playerNames) . ', cricket player comparison, head to head cricket, batting comparison, bowling statistics, career records, player stats, CricketKaScore compare';
+        $ogTitle = $vsString . ' — Head-to-Head Cricket Comparison | CricketKaScore';
+        $ogDesc = 'Compare ' . $vsString . ' head-to-head. Analyze batting stats, strike rates, bowling metrics, and career milestones on CricketKaScore.';
+    } else {
+        $pageTitle = 'Cricket Player Head-to-Head Comparison & Career Statistics | CricketKaScore';
+        $metaDesc = 'Compare cricket players head-to-head on CricketKaScore. Analyze batting averages, strike rates, bowling metrics, boundary percentage, and career milestones side-by-side.';
+        $metaKeywords = 'cricket player comparison, head to head cricket stats, batsman comparison, bowler comparison, cricket records, CricketKaScore compare, cricket player stats';
+        $ogTitle = 'Cricket Player Head-to-Head Comparison & Stats | CricketKaScore';
+        $ogDesc = 'Compare 2, 3, or 4 cricket players side-by-side. Visual scoring breakdown, batting average, strike rate, and bowling economy records on CricketKaScore.';
+    }
+
+    $canonicalUrl = request()->fullUrl();
+    $ogImage = (!empty($p1?->profile_image)) ? $p1->profile_image : asset('images/logo.png');
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'website')
+@section('og_title', $ogTitle)
+@section('og_description', $ogDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'type' => 'ItemPage',
+    'name' => $pageTitle,
+    'url' => $canonicalUrl,
+    'description' => $metaDesc,
+    'isPartOf' => [
+        chr(64) . 'type' => 'WebSite',
+        'name' => 'CricketKaScore',
+        'url' => url('/')
+    ],
+    'breadcrumb' => [
+        chr(64) . 'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Stats & Leaderboards',
+                'item' => route('stats')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 3,
+                'name' => $hasPlayers ? ($vsString . ' Comparison') : 'Player Comparison',
+                'item' => $canonicalUrl
+            ]
+        ]
+    ],
+    'mainEntity' => array_values(array_filter(array_map(function($item) {
+        if (empty($item['player'])) return null;
+        $player = $item['player'];
+        $person = [
+            chr(64) . 'type' => 'Person',
+            'name' => $player->name,
+            'jobTitle' => $player->role ?? 'Cricket Player',
+        ];
+        if (!empty($player->team?->name)) {
+            $person['memberOf'] = [
+                chr(64) . 'type' => 'SportsTeam',
+                'name' => $player->team->name
+            ];
+        }
+        if (!empty($player->profile_image)) {
+            $person['image'] = $player->profile_image;
+        }
+        return $person;
+    }, $playersList ?? [])))
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container" style="margin: 0 auto; padding: 24px 24px 80px; width: 100%; box-sizing: border-box; font-family: var(--font-body, 'Inter', sans-serif);">
 
     <!-- Section Header (Clean & Simple, No Loud Highlights) -->
     <div style="text-align: center; margin-bottom: 20px; width: 100%;">
         <h1 style="font-size: clamp(1.35rem, 4vw, 1.85rem); font-weight: 800; color: var(--text-main); margin: 0 0 6px 0; letter-spacing: -0.01em; word-break: break-word;">
-            Player Head-to-Head Comparison
+            @if($hasPlayers)
+                {{ $vsString }} — Player Head-to-Head Comparison
+            @else
+                Player Head-to-Head Comparison
+            @endif
         </h1>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
-            Compare 2, 3, or 4 players career statistics, visual scoring distribution, and bowling metrics
+            @if($hasPlayers)
+                Detailed head-to-head career statistical breakdown, boundary scoring distribution, and bowling metrics between {{ $vsString }}
+            @else
+                Compare 2, 3, or 4 players career statistics, visual scoring distribution, and bowling metrics side-by-side
+            @endif
         </p>
     </div>
 

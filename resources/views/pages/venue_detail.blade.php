@@ -1,5 +1,62 @@
 @extends('layouts.app')
 
+@php
+    $venueName = trim($venue->name);
+    $venueCity = !empty($venue->city) ? $venue->city : '';
+    $venueCountry = !empty($venue->country) ? $venue->country : '';
+    $venueLocation = trim(implode(', ', array_filter([$venueCity, $venueCountry])));
+    
+    $pageTitle = $venueName . ($venueLocation ? ' (' . $venueLocation . ')' : '') . ' — Cricket Stadium Profile, Pitch Report & Capacity | CricketKaScore';
+    $metaDesc = "Explore {$venueName}" . ($venueLocation ? " located in {$venueLocation}" : "") . " on CricketKaScore. View seating capacity, pitch condition reports, stadium biography, and match records.";
+    $metaKeywords = "{$venueName}, {$venueName} capacity, {$venueName} pitch report, {$venueName} location, {$venueName} matches, cricket stadium, CricketKaScore";
+    $canonicalUrl = route('venue.show', $venue->id);
+    
+    $ogImage = asset('images/logo.png');
+    if (!empty($venue->image_url) && !str_starts_with($venue->image_url, 'data:')) {
+        $ogImage = str_starts_with($venue->image_url, 'http') ? $venue->image_url : asset($venue->image_url);
+    }
+
+    $venueSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'CivicStructure',
+        'name' => $venueName,
+        'url' => $canonicalUrl,
+        'description' => "{$venueName} is a cricket stadium located in {$venueLocation}."
+    ];
+    if (!empty($venue->image_url) && !str_starts_with($venue->image_url, 'data:')) {
+        $venueSchema['image'] = $ogImage;
+    }
+    if (!empty($venueCity) || !empty($venueCountry)) {
+        $venueSchema['address'] = [
+            chr(64) . 'type' => 'PostalAddress',
+            'addressLocality' => $venueCity,
+            'addressCountry' => $venueCountry
+        ];
+    }
+    if (!empty($venue->capacity)) {
+        $cleanCap = (int) preg_replace('/[^0-9]/', '', $venue->capacity);
+        if ($cleanCap > 0) {
+            $venueSchema['maximumAttendeeCapacity'] = $cleanCap;
+        }
+    }
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'place')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($venueSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container" style="max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; font-family: var(--font-body, 'Inter', sans-serif);">
 

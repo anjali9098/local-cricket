@@ -1,5 +1,75 @@
 @extends(isset($isLocal) && $isLocal ? 'layouts.local' : 'layouts.admin')
 
+@php
+    $seoName        = $tournament->name ?? 'Local Cricket Tournament';
+    $seoCity        = $tournament->city ?? '';
+    $seoState       = $tournament->state ?? '';
+    $seoFormat      = $tournament->format ?? 'T20';
+    $seoStatus      = ucfirst($tournament->status ?? 'ongoing');
+    $seoVenue       = $tournament->venue ?? '';
+    $seoDesc        = $tournament->description ?? '';
+    $seoLocation    = trim(implode(', ', array_filter([$seoCity, $seoState])));
+    $seoStartDate   = $tournament->start_date ? \Carbon\Carbon::parse($tournament->start_date)->toDateString() : null;
+    $seoEndDate     = $tournament->end_date   ? \Carbon\Carbon::parse($tournament->end_date)->toDateString()   : null;
+    $seoTeamCount   = $tournament->teams->count();
+    $seoMatchCount  = $tournament->matches->count();
+
+    $pageTitle  = $seoName . ($seoLocation ? ' — ' . $seoLocation : '') . ' | ' . $seoFormat . ' Cricket | CricketKaScore';
+    $metaDesc   = 'View live scores, points table and match schedule for ' . $seoName
+                . ($seoLocation ? ' in ' . $seoLocation : '')
+                . ' — a ' . $seoFormat . ' local cricket tournament on CricketKaScore.'
+                . ($seoDesc ? ' ' . Str::limit($seoDesc, 80) : '');
+    $metaKw     = $seoName . ', local cricket tournament, ' . $seoFormat . ' cricket'
+                . ($seoCity ? ', ' . $seoCity . ' cricket' : '')
+                . ($seoState ? ', ' . $seoState . ' cricket tournament' : '')
+                . ', grassroots cricket, gully cricket, CricketKaScore';
+    $canonicalUrl = route('local.tournament.preview', $tournament->id);
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKw)
+@section('canonical_url', $canonicalUrl)
+@section('og_title', $seoName . ($seoLocation ? ' — ' . $seoLocation : '') . ' | ' . $seoFormat . ' Tournament')
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode(array_filter([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'SportsEvent',
+    'name'        => $seoName,
+    'description' => $metaDesc,
+    'url'         => $canonicalUrl,
+    'sport'       => 'Cricket',
+    'eventStatus' => $seoStatus === 'Completed'
+                        ? 'https://schema.org/EventScheduled'
+                        : 'https://schema.org/EventScheduled',
+    'startDate'   => $seoStartDate,
+    'endDate'     => $seoEndDate,
+    'location'    => $seoVenue || $seoLocation ? array_filter([
+        '@type'   => 'Place',
+        'name'    => $seoVenue ?: ($seoLocation ?: null),
+        'address' => $seoLocation ?: null,
+    ]) : null,
+    'organizer'   => [
+        '@type' => 'Organization',
+        'name'  => 'CricketKaScore',
+        'url'   => url('/'),
+    ],
+    'breadcrumb'  => [
+        '@type'           => 'BreadcrumbList',
+        'itemListElement' => array_filter([
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home',            'item' => url('/')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Local Dashboard', 'item' => route('local.dashboard')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $seoName,          'item' => $canonicalUrl],
+        ]),
+    ],
+]), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endsection
+
 @section('content')
 <!-- Header Banner -->
 <div class="tournament-hero-banner" style="background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 36px 20px; transition: background-color 0.3s ease, border-color 0.3s ease;">

@@ -1,11 +1,30 @@
 @extends('layouts.app')
 
+@php
+    $articleTitle = trim($article->h1_heading ?: $article->title);
+    $pageTitle = $articleTitle . ' — CricketKaScore';
+    $metaDesc = trim($article->meta_description ?: ($article->summary ? \Illuminate\Support\Str::limit(strip_tags($article->summary), 160) : 'Read full cricket analysis and feature article on CricketKaScore.'));
+    $metaKeywords = $article->keywords ?: ($articleTitle . ', cricket article, cricket analysis, CricketKaScore');
+    $canonicalUrl = route('article.show', $article->id);
+    $ogImage = $article->image_url ?: asset('images/logo.png');
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'article')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
 @section('content')
 <main class="container" style="padding: 40px 20px 80px; max-width: 1240px; margin: 0 auto;">
 
     <!-- Back Navigation -->
     <div style="margin-bottom: 24px;">
-        <a href="{{ route('news', ['type' => 'article']) }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-text, #38bdf8); font-weight: 700; text-decoration: none; font-size: 0.9rem;">
+        <a href="{{ route('articles') }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-text, #38bdf8); font-weight: 700; text-decoration: none; font-size: 0.9rem;">
             &larr; Back to All Articles
         </a>
     </div>
@@ -76,7 +95,7 @@
                 <div class="sidebar-card">
                     <div class="sidebar-card-header">
                         <h3 class="sidebar-card-title">More Featured Articles</h3>
-                        <a href="{{ route('news', ['type' => 'article']) }}" class="sidebar-view-all">View All &rarr;</a>
+                        <a href="{{ route('articles') }}" class="sidebar-view-all">View All &rarr;</a>
                     </div>
                     <div class="sidebar-articles-list">
                         @foreach($recentArticles as $ra)

@@ -1,5 +1,19 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = 'Reset Password — Set New Password | CricketKaScore';
+    $metaDesc = 'Create a new secure password for your CricketKaScore account.';
+    $metaKeywords = 'reset password, new password, CricketKaScore password reset';
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('meta_robots', 'noindex, nofollow')
+@section('og_type', 'website')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+
 @section('content')
 <main class="auth-page-wrapper">
     <div class="auth-card">

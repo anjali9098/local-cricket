@@ -536,7 +536,8 @@ class AdminController extends Controller
             'team2_score' => (int)$request->input('team2_score', 0),
             'team2_wickets' => (int)$request->input('team2_wickets', 0),
             'team2_overs' => (float)$request->input('team2_overs', 0.0),
-            'custom_note' => $status === 'live' ? 'Match in progress' : 'Match Scheduled'
+            'custom_note' => $status === 'live' ? 'Match in progress' : 'Match Scheduled',
+            'where_to_watch' => $request->input('where_to_watch')
         ]);
 
         $tournName = $tournament ? " under series '{$tournament->name}'" : "";
@@ -555,6 +556,9 @@ class AdminController extends Controller
             $match->team2_score = (int)$request->input('team2_score', 0);
             $match->team2_wickets = (int)$request->input('team2_wickets', 0);
             $match->custom_note = $request->input('custom_note', 'Match in progress');
+            if ($request->filled('where_to_watch')) {
+                $match->where_to_watch = $request->input('where_to_watch');
+            }
             $match->save();
 
             return redirect()->route('admin.dashboard')->with('success', "Match #$matchId updated successfully!");
@@ -2308,149 +2312,6 @@ class AdminController extends Controller
             'message' => "Venue '{$venue->name}' added successfully!",
             'venue' => $venue
         ]);
-    }
-
-    /**
-     * Show CricketData.org API matches management screen
-     */
-    public function showApiMatches(Request $request, \App\Services\CricketApiService $apiService)
-    {
-        $tab = $request->query('tab', 'matches'); // 'matches' or 'series'
-        $statusFilter = $request->query('status', 'all');
-        $approvalFilter = $request->query('approval', 'all');
-        $search = trim($request->query('search', ''));
-
-        // Aggregate counts for API matches
-        $totalApiMatches = CricketMatch::where('is_api_match', true)->count();
-        $approvedCount = CricketMatch::where('is_api_match', true)->where('is_approved', true)->count();
-        $pendingCount = CricketMatch::where('is_api_match', true)->where('is_approved', false)->count();
-        $liveCount = CricketMatch::where('is_api_match', true)->where('status', 'live')->count();
-        $scheduledCount = CricketMatch::where('is_api_match', true)->whereIn('status', ['scheduled', 'upcoming'])->count();
-        $completedCount = CricketMatch::where('is_api_match', true)->where('status', 'completed')->count();
-
-        // Upcoming & active series count
-        $upcomingSeriesCount = Tournament::where(function($q) {
-            $q->where('status', 'upcoming')
-              ->orWhere('status', 'ongoing')
-              ->orWhereDate('start_date', '>=', now()->toDateString());
-        })->count();
-
-        if ($tab === 'series') {
-            $seriesQuery = Tournament::withCount(['matches', 'teams']);
-            if (!empty($search)) {
-                $seriesQuery->where(function($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('category', 'LIKE', "%{$search}%")
-                      ->orWhere('format', 'LIKE', "%{$search}%")
-                      ->orWhere('short_name', 'LIKE', "%{$search}%");
-                });
-            }
-            if ($statusFilter !== 'all') {
-                $seriesQuery->where('status', $statusFilter);
-            }
-            $series = $seriesQuery->orderByRaw("CASE WHEN status = 'upcoming' THEN 1 WHEN status = 'ongoing' THEN 2 ELSE 3 END")
-                ->orderBy('start_date', 'asc')
-                ->orderBy('id', 'desc')
-                ->paginate(15)->withQueryString();
-            $matches = collect();
-        } else {
-            $query = CricketMatch::where('is_api_match', true)->with(['team1', 'team2', 'venue', 'tournament']);
-
-            if ($statusFilter !== 'all') {
-                if ($statusFilter === 'scheduled' || $statusFilter === 'upcoming') {
-                    $query->whereIn('status', ['scheduled', 'upcoming']);
-                } else {
-                    $query->where('status', $statusFilter);
-                }
-            }
-
-            if ($approvalFilter === 'approved') {
-                $query->where('is_approved', true);
-            } elseif ($approvalFilter === 'pending') {
-                $query->where('is_approved', false);
-            }
-
-            if (!empty($search)) {
-                $query->where(function($q) use ($search) {
-                    $q->whereHas('team1', function($tq) use ($search) {
-                        $tq->where('name', 'LIKE', "%{$search}%");
-                    })->orWhereHas('team2', function($tq) use ($search) {
-                        $tq->where('name', 'LIKE', "%{$search}%");
-                    })->orWhereHas('venue', function($vq) use ($search) {
-                        $vq->where('name', 'LIKE', "%{$search}%");
-                    })->orWhereHas('tournament', function($sq) use ($search) {
-                        $sq->where('name', 'LIKE', "%{$search}%");
-                    });
-                });
-            }
-
-            $matches = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
-            $series = collect();
-        }
-
-        $stats = $apiService->getApiUsageStats();
-
-        return view('admin.api_matches', compact(
-            'tab',
-            'matches',
-            'series',
-            'stats',
-            'statusFilter',
-            'approvalFilter',
-            'search',
-            'totalApiMatches',
-            'approvedCount',
-            'pendingCount',
-            'liveCount',
-            'scheduledCount',
-            'completedCount',
-            'upcomingSeriesCount'
-        ));
-    }
-
-    /**
-     * Trigger CricketData API sync on-demand
-     */
-    public function fetchApiMatches(Request $request, \App\Services\CricketApiService $apiService)
-    {
-        $autoApprove = $request->boolean('auto_approve', false);
-        $result = $apiService->syncCurrentMatches($autoApprove);
-
-        if ($result['success']) {
-            return redirect()->route('admin.api-matches')
-                ->with('success', $result['message']);
-        }
-
-        return redirect()->route('admin.api-matches')
-            ->with('error', $result['message']);
-    }
-
-    /**
-     * Toggle match approval status (Published / Pending)
-     */
-    public function toggleApiMatchApproval($id)
-    {
-        $match = CricketMatch::findOrFail($id);
-        $match->is_approved = !$match->is_approved;
-        $match->save();
-
-        $msg = $match->is_approved 
-            ? "Match '{$match->team1?->name} vs {$match->team2?->name}' approved & published to live site!" 
-            : "Match '{$match->team1?->name} vs {$match->team2?->name}' hidden from live site.";
-
-        return redirect()->back()->with('success', $msg);
-    }
-
-    /**
-     * Delete an API match
-     */
-    public function deleteApiMatch($id)
-    {
-        $match = CricketMatch::findOrFail($id);
-        $name = "{$match->team1?->name} vs {$match->team2?->name}";
-        $match->delete();
-
-        return redirect()->back()->with('success', "API Match '{$name}' deleted successfully.");
     }
 
     /**

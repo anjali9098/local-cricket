@@ -246,16 +246,17 @@ class SearchApiController extends Controller
             ->take(8)
             ->get()
             ->map(function($pr) {
+                $isMatchPreview = ($pr->tag === 'MATCH PREVIEW');
                 return [
                     'id' => $pr->id,
-                    'type' => 'prediction',
-                    'type_label' => 'Prediction',
+                    'type' => $isMatchPreview ? 'preview' : 'prediction',
+                    'type_label' => $isMatchPreview ? 'Match Preview' : 'Prediction',
                     'title' => $pr->title,
-                    'subtitle' => $pr->match_title ?: 'Match Prediction & Tips',
-                    'badge' => '🎯 ' . strtoupper($pr->tag ?: 'PREDICTION'),
-                    'badge_class' => 'badge-prediction',
-                    'image' => $pr->poster_image ?: null,
-                    'url' => url('/news/' . $pr->id)
+                    'subtitle' => $pr->match_title ?: ($isMatchPreview ? 'Match Preview & Analysis' : 'Match Prediction & Tips'),
+                    'badge' => ($isMatchPreview ? '⚡ ' : '🎯 ') . strtoupper($pr->tag ?: 'PREDICTION'),
+                    'badge_class' => $isMatchPreview ? 'badge-preview' : 'badge-prediction',
+                    'image' => $pr->poster_image ?: ($pr->image_url ?: null),
+                    'url' => $isMatchPreview ? route('preview.show', $pr->id) : route('prediction.show', $pr->id)
                 ];
             });
 
@@ -281,8 +282,8 @@ class SearchApiController extends Controller
                     'subtitle' => $ft->summary ? Str::limit(strip_tags($ft->summary), 65) : 'Fantasy Dream Team Tips',
                     'badge' => '⚡ ' . strtoupper($ft->tag ?: 'FANTASY TIP'),
                     'badge_class' => 'badge-fantasy',
-                    'image' => $ft->poster_image ?: null,
-                    'url' => url('/news/' . $ft->id)
+                    'image' => $ft->poster_image ?: ($ft->image_url ?: null),
+                    'url' => route('fantasy.show', $ft->id)
                 ];
             });
 

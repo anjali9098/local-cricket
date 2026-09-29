@@ -26,10 +26,22 @@ Route::get('/tournaments', [PageController::class, 'tournaments'])->name('tourna
 Route::get('/t/{id}', [PageController::class, 'tournamentDetail'])->name('tournament.public');
 Route::get('/news', [PageController::class, 'news'])->name('news');
 Route::get('/news/{id}', [PageController::class, 'showNews'])->name('news.show');
-Route::get('/article/{id}', [PageController::class, 'showArticle'])->name('article.show');
+
+Route::get('/predictions', [PageController::class, 'predictions'])->name('predictions');
+Route::get('/prediction', [PageController::class, 'predictions']);
 Route::get('/prediction/{id}', [PageController::class, 'showPrediction'])->name('prediction.show');
+
+Route::get('/fantasy', [PageController::class, 'fantasyTips'])->name('fantasy');
+Route::get('/fantasy-tips', [PageController::class, 'fantasyTips'])->name('fantasy.tips');
 Route::get('/fantasy/{id}', [PageController::class, 'showFantasyTip'])->name('fantasy.show');
+
+Route::get('/match-previews', [PageController::class, 'matchPreviews'])->name('previews');
+Route::get('/previews', [PageController::class, 'matchPreviews']);
 Route::get('/match-preview/{id}', [PageController::class, 'showMatchPreview'])->name('preview.show');
+
+Route::get('/articles', [PageController::class, 'articles'])->name('articles');
+Route::get('/article/{id}', [PageController::class, 'showArticle'])->name('article.show');
+
 Route::get('/compare', [PageController::class, 'compare'])->name('compare');
 Route::get('/teams', [PageController::class, 'teams'])->name('teams');
 Route::get('/players', [PageController::class, 'players'])->name('players');
@@ -39,10 +51,20 @@ Route::get('/venues', [PageController::class, 'venues'])->name('venues');
 Route::get('/venues/{id}', [PageController::class, 'showVenue'])->name('venues.show');
 Route::get('/venue/{id}', [PageController::class, 'showVenue'])->name('venue.show');
 Route::get('/web-stories', [PageController::class, 'webStories'])->name('webstories.all');
+Route::get('/web-story', [PageController::class, 'webStories']);
+Route::get('/webstory', [PageController::class, 'webStories']);
+Route::get('/webstories', [PageController::class, 'webStories']);
 Route::get('/web-story/{id}', [PageController::class, 'showWebStory'])->name('webstories.show');
+Route::get('/webstory/{id}', [PageController::class, 'showWebStory']);
+Route::get('/web-stories/{id}', [PageController::class, 'showWebStory']);
 Route::get('/glossary', [PageController::class, 'glossary'])->name('glossary.all');
+Route::get('/glossary-terms', [PageController::class, 'glossary']);
 Route::get('/glossary/{id}', [PageController::class, 'showGlossaryTerm'])->name('glossary.show');
+Route::get('/glossary-term/{id}', [PageController::class, 'showGlossaryTerm']);
 Route::get('/player-birthdays', [PageController::class, 'playerBirthdays'])->name('player.birthdays');
+Route::get('/player-birthday', [PageController::class, 'playerBirthdays']);
+Route::get('/birthdays', [PageController::class, 'playerBirthdays']);
+Route::get('/rankings', [PageController::class, 'stats']);
 Route::get('/search', [PageController::class, 'globalSearch'])->name('search');
 Route::get('/api/admin/search', [\App\Http\Controllers\Api\SearchApiController::class, 'adminSearch'])->name('api.admin.search');
 
@@ -181,12 +203,6 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/tournament/{id}/delete', [AdminController::class, 'deleteTournament'])->name('admin.delete-tournament');
     Route::post('/admin/tournament/{id}/reject-deletion', [AdminController::class, 'rejectDeletion'])->name('admin.reject-deletion');
 
-    // CricketData.org API Live & Upcoming Matches Management
-    Route::get('/admin/api-matches', [AdminController::class, 'showApiMatches'])->name('admin.api-matches');
-    Route::post('/admin/api-matches/fetch', [AdminController::class, 'fetchApiMatches'])->name('admin.api-matches.fetch');
-    Route::post('/admin/api-matches/toggle-approval/{id}', [AdminController::class, 'toggleApiMatchApproval'])->name('admin.api-matches.toggle-approval');
-    Route::post('/admin/api-matches/delete/{id}', [AdminController::class, 'deleteApiMatch'])->name('admin.api-matches.delete');
-
     // Player ranking and stats management routes
     Route::post('/admin/ranking/update/{id}', [AdminController::class, 'updateTeamRanking'])->name('admin.ranking.update');
     Route::post('/admin/player-ranking', [AdminController::class, 'addPlayerRanking'])->name('admin.player-ranking.post');
@@ -228,13 +244,20 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/image-uploader/upload', [AdminController::class, 'uploadStandardImage'])->name('admin.image-uploader.upload');
 });
 
-// 5. Authentication (Email/Password, Google OAuth, Password Reset)
+// 5. Authentication (Email/Password, Google OAuth, Email OTP Verification, Password Reset)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/login/google', [AuthController::class, 'showGoogleLoginSim'])->name('google.login');
 Route::post('/login/google', [AuthController::class, 'googleLoginSimPost'])->name('google.login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+// Email OTP Verification
+Route::get('/verify-email', [AuthController::class, 'showVerifyOtp'])->name('verification.notice');
+Route::get('/verify-otp', [AuthController::class, 'showVerifyOtp']);
+Route::post('/verify-email', [AuthController::class, 'verifyOtp'])->name('verification.verify');
+Route::post('/verify-email/resend', [AuthController::class, 'resendOtp'])->name('verification.resend');
+
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.forgot');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
 Route::get('/reset-password/{token?}', [AuthController::class, 'showResetPassword'])->name('password.reset');

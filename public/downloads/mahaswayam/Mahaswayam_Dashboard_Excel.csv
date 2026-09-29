@@ -1,0 +1,37 @@
+﻿PORTAL DASHBOARD REPORT,Maharashtra Udyog Portal (Mahaswayam)
+SOURCE URL,https://udyog.mahaswayam.gov.in/#/user-dashboard
+DATA STATUS,Official Live Real-time Government Portal Data
+
+[TABLE 1] SCHEME-WISE APPLICATION STATUS (योजना स्तर सारांश)
+Scheme ID,Scheme Name (Marathi),Scheme Name (English),Total Applied,LOI Generated,Sanction Approved,Claim Application Count
+10,वैयक्तिक कर्ज व्याज परतावा योजना (IR-I),Individual Loan Interest Refund Scheme,428198,215349,180907,175348
+11,गट कर्ज व्याज परतावा योजना (IR-II),Group Loan Interest Refund Scheme,3052,1669,1499,1477
+
+[TABLE 2] BUSINESS CATEGORY BENEFICIARIES (व्यवसायानुसार लाभार्थी विभाजन)
+Business Category (व्यवसाय प्रकार),Total Beneficiaries (एकूण लाभार्थी),Percentage Share (%)
+TOTAL BENEFICIARY,182406,100.0%
+AGRICUTURE ALIED BUSINESS,102060,55.95%
+FOODS BUSINESS,4906,2.69%
+MANUFACTURING,4859,2.66%
+OTHER,378,0.21%
+SERVICE INDUSTRIES,52497,28.78%
+TRADING,17581,9.64%
+
+[TABLE 3] DIVISION-WISE DATA - IR-I INDIVIDUAL SCHEME (विभागवार तपशील - वैयक्तिक योजना)
+Division Name (विभाग),LOI Generated,Sanction Approved,Claim Applications Count
+Amravati,6111,5322,5210
+Chhatrapati Sambhajinagar,58643,48671,47129
+Konkan Division,5414,4560,4490
+Nagpur,455,435,430
+Nashik,51738,44292,43032
+Pune,92888,77073,75047
+
+[TABLE 4] DIVISION-WISE DATA - IR-II GROUP SCHEME (विभागवार तपशील - गट योजना)
+Division Name (विभाग),LOI Generated,Sanction Approved,Claim Applications Count
+Amravati,10,9,9
+Chhatrapati Sambhajinagar,354,326,323
+Konkan Division,46,44,44
+Nagpur,2,2,2
+Nashik,167,151,149
+Pune,1090,965,950
+

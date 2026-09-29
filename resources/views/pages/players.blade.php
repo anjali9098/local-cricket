@@ -1,13 +1,32 @@
 @extends('layouts.app')
 
+@php
+    if ($selectedTeam) {
+        $pageTitle = $selectedTeam->name . ' Squad & Players List — CricketKaScore';
+        $metaDesc = "Explore the full team squad of {$selectedTeam->name} on CricketKaScore. Detailed player profiles, batting & bowling roles, and player stats.";
+        $metaKeywords = "{$selectedTeam->name} squad, {$selectedTeam->name} players, {$selectedTeam->name} team, cricket players, CricketKaScore";
+        $canonicalUrl = route('players', ['team' => $selectedTeam->id]);
+    } else {
+        $pageTitle = 'All Popular Cricket Players — Profiles, Records & Stats | CricketKaScore';
+        $metaDesc = 'Browse all international, domestic, and local cricket players on CricketKaScore. View detailed career stats, batting & bowling styles, and player profiles.';
+        $metaKeywords = 'cricket players, all players list, player profiles, cricket career stats, bowler stats, batsman stats, CricketKaScore';
+        $canonicalUrl = route('players');
+    }
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
 @section('content')
-<main class="container mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24 font-['Inter',sans-serif]">
+<main class="container mx-auto px-4 sm:px-6 pt-3 sm:pt-5 pb-24 font-['Inter',sans-serif]">
 
     <!-- Header -->
-    <div class="text-center mb-8">
-        <span class="text-xs font-black tracking-widest text-sky-400 uppercase block mb-1.5">
-            {{ $selectedTeam ? 'TEAM SQUAD DIRECTORY' : 'CRICKET DIRECTORY' }}
-        </span>
+    <div class="text-center mb-6 sm:mb-8">
         <h1 class="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight m-0 mb-2">
             @if($selectedTeam)
                 🛡️ {{ $selectedTeam->name }} Squad

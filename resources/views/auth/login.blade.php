@@ -1,5 +1,41 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = 'Sign In to CricketKaScore — Live Scores, Local Scorer & Fan Account';
+    $metaDesc = 'Sign in to your CricketKaScore account to track live ball-by-ball cricket scores, manage local tournaments, vote on match predictions, and build cricket stats.';
+    $metaKeywords = 'cricket login, CricketKaScore sign in, cricket scorer login, local cricket tournament login, cricket fan account';
+    $canonicalUrl = route('login');
+
+    $loginSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'WebPage',
+        'name' => 'Sign In to CricketKaScore',
+        'description' => $metaDesc,
+        'url' => $canonicalUrl,
+        'publisher' => [
+            chr(64) . 'type' => 'SportsOrganization',
+            'name' => 'CricketKaScore',
+            'url' => url('/'),
+            'logo' => asset('images/logo.png')
+        ]
+    ];
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'website')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($loginSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="auth-page-wrapper">
     <div class="auth-card">

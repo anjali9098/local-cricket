@@ -83,9 +83,12 @@
                         <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">({{ $m->team2_overs }} ov)</span>
                     </div>
 
-                    <div style="font-size: 0.85rem; color: #475569; font-weight: 600;">
-                        {{ $m->custom_note && strlen($m->custom_note) < 60 ? $m->custom_note : 'Match currently in progress' }}
-                        @if($m->venue) &bull; 📍 {{ $m->venue->name }} @endif
+                    <div style="font-size: 0.85rem; color: #475569; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                        <span>{{ $m->custom_note && strlen($m->custom_note) < 60 ? $m->custom_note : 'Match currently in progress' }}</span>
+                        @if($m->venue) <span>&bull; 📍 {{ $m->venue->name }}</span> @endif
+                        @if(!empty($m->where_to_watch))
+                            <span style="font-size: 0.75rem; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px; font-weight: 700;">📺 {{ $m->where_to_watch }}</span>
+                        @endif
                     </div>
                 </div>
 
@@ -138,8 +141,11 @@
                         {{ $m->team1?->name ?? 'Team 1' }} <span style="color: #94a3b8; font-weight: 600; font-size: 0.9rem;">vs</span> {{ $m->team2?->name ?? 'Team 2' }}
                     </div>
 
-                    <div style="font-size: 0.82rem; color: #64748b;">
-                        Format: <strong>{{ $m->match_type }}</strong> &bull; Level: <strong>{{ $m->level_type ?? 'Global' }}</strong>
+                    <div style="font-size: 0.82rem; color: #64748b; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                        <span>Format: <strong>{{ $m->match_type }}</strong> &bull; Level: <strong>{{ $m->level_type ?? 'Global' }}</strong></span>
+                        @if(!empty($m->where_to_watch))
+                            <span style="font-size: 0.75rem; color: #0284c7; background: #e0f2fe; padding: 2px 7px; border-radius: 4px; font-weight: 700;">📺 {{ $m->where_to_watch }}</span>
+                        @endif
                     </div>
                 </div>
 
@@ -318,7 +324,15 @@
 
                     <div style="grid-column: span 2;">
                         <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">Venue / Stadium</label>
-                        <input type="text" name="venue" placeholder="" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="venue" placeholder="e.g. Wankhede Stadium, Mumbai" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    </div>
+
+                    <div style="grid-column: span 3;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">
+                            📺 Where to Watch (Broadcast TV &amp; Live Streaming Platforms)
+                        </label>
+                        <input type="text" name="where_to_watch" placeholder="e.g. Disney+ Hotstar, Star Sports 1 HD, JioCinema, Sony LIV" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <small style="color: #64748b; font-size: 0.8rem; margin-top: 5px; display: block;">Specify genuine TV and streaming broadcasters where fans can watch this match live (e.g. Disney+ Hotstar, Star Sports, JioCinema, Sony LIV).</small>
                     </div>
                 </div>
                 

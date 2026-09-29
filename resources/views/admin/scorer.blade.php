@@ -1,5 +1,118 @@
 @extends(isset($isLocal) && $isLocal ? 'layouts.local' : 'layouts.admin')
 
+{{-- SEO: Pre-compute all match variables so they are available in every section below. --}}
+@php
+    $_seoIsLocal     = isset($isLocal) && $isLocal;
+    $_maxOversForSeo = (int)($match->tournament->overs ?? ($match->match_type === 'T10' ? 10 : ($match->match_type === 'ODI' ? 50 : 20)));
+    if ($_maxOversForSeo <= 0) $_maxOversForSeo = 20;
+    $_team1          = $match->team1->name ?? 'Team 1';
+    $_team2          = $match->team2->name ?? 'Team 2';
+    $_tournamentName = $match->tournament->name ?? 'Local Tournament';
+    $_score1         = $match->team1_score ?? 0;
+    $_wkts1          = $match->team1_wickets ?? 0;
+    $_overs1         = $match->team1_overs ?? '0.0';
+    $_matchStatus    = $match->status ?? 'live';
+    $_statusLabel    = $_matchStatus === 'completed' ? 'Full Scorecard' : 'Live Score';
+
+    // Open Graph & JSON-LD helpers
+    $_jsonTeam1      = addslashes($_team1);
+    $_jsonTeam2      = addslashes($_team2);
+    $_jsonTournament = addslashes($_tournamentName);
+    $_jsonUrl        = $_seoIsLocal ? route('local.scorer', $match->id) : route('admin.scorer', $match->id);
+    $_jsonSiteUrl    = url('/');
+    $_jsonMatchDate  = $match->created_at ? $match->created_at->toIso8601String() : now()->toIso8601String();
+
+    // Pre-built strings for sections (avoids @if inside @section)
+    $_metaTitle = $_team1 . ' vs ' . $_team2 . ' — ' . $_statusLabel . ' | ' . $_tournamentName . ' | CricketKaScore';
+
+    if ($_matchStatus === 'completed') {
+        $_metaDesc  = $_team1 . ' vs ' . $_team2 . ' full scorecard — ' . $_tournamentName . ' (' . $_maxOversForSeo . ' Overs). Final score: ' . $_score1 . '/' . $_wkts1 . ' in ' . $_overs1 . ' overs. Ball-by-ball match details on CricketKaScore.';
+        $_ogTitle   = $_team1 . ' vs ' . $_team2 . ' — Scorecard | ' . $_tournamentName . ' | CricketKaScore';
+        $_ogDesc    = 'Full scorecard: ' . $_team1 . ' vs ' . $_team2 . ' — ' . $_tournamentName . '. Score: ' . $_score1 . '/' . $_wkts1 . ' in ' . $_overs1 . ' overs. View ball-by-ball details on CricketKaScore.';
+    } else {
+        $_metaDesc  = $_team1 . ' vs ' . $_team2 . ' live score — ' . $_tournamentName . ' (' . $_maxOversForSeo . ' Overs). Follow live ball-by-ball updates, run rates, wickets, and over summaries on CricketKaScore local cricket scorer.';
+        $_ogTitle   = '🏏 LIVE: ' . $_team1 . ' vs ' . $_team2 . ' — ' . $_tournamentName . ' | CricketKaScore';
+        $_ogDesc    = 'Live ball-by-ball score: ' . $_team1 . ' vs ' . $_team2 . ' | ' . $_tournamentName . ' | ' . $_maxOversForSeo . ' Overs. Follow runs, wickets & over summaries on CricketKaScore.';
+    }
+
+    $_metaKeywords = $_team1 . ' vs ' . $_team2 . ' live score, ' . $_tournamentName . ' scorecard, local cricket live score, ' . strtolower($_team1) . ' cricket, ' . strtolower($_team2) . ' cricket, ' . $_maxOversForSeo . ' overs match, gully cricket score, CricketKaScore live scorer, ball by ball cricket';
+@endphp
+
+{{-- ═══════════════════════════════════════════════════════════ --}}
+@section('pageTitle'){{ $_metaTitle }}@endsection
+@section('meta_description'){{ $_metaDesc }}@endsection
+@section('meta_keywords'){{ $_metaKeywords }}@endsection
+@section('canonical_url'){{ $_jsonUrl }}@endsection
+@section('og_type')article@endsection
+@section('og_title'){{ $_ogTitle }}@endsection
+@section('og_description'){{ $_ogDesc }}@endsection
+@section('og_url'){{ $_jsonUrl }}@endsection
+
+{{-- SEO: JSON-LD block echoed from raw PHP to prevent Blade from treating JSON-LD keys as template directives. --}}
+@section('additional_schema')
+@php
+    $_tourUrl = $_seoIsLocal && isset($match->tournament_id)
+        ? route('local.manage-tournament', $match->tournament_id)
+        : url('/');
+    $_jsonld = '{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SportsEvent",
+      "name": "' . e($_jsonTeam1) . ' vs ' . e($_jsonTeam2) . '",
+      "description": "' . e($_matchStatus === 'completed' ? 'Completed cricket match' : 'Live cricket match') . ' \u2014 ' . e($_jsonTournament) . ' (' . e($_maxOversForSeo) . ' Overs) on CricketKaScore.",
+      "url": "' . e($_jsonUrl) . '",
+      "startDate": "' . e($_jsonMatchDate) . '",
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+      "sport": "Cricket",
+      "organizer": {
+        "@type": "Organization",
+        "name": "' . e($_jsonTournament) . '",
+        "url": "' . e($_jsonSiteUrl) . '"
+      },
+      "competitor": [
+        { "@type": "SportsTeam", "name": "' . e($_jsonTeam1) . '", "sport": "Cricket" },
+        { "@type": "SportsTeam", "name": "' . e($_jsonTeam2) . '", "sport": "Cricket" }
+      ],
+      "location": { "@type": "VirtualLocation", "url": "' . e($_jsonUrl) . '" },
+      "publisher": {
+        "@type": "Organization",
+        "name": "CricketKaScore",
+        "url": "' . e($_jsonSiteUrl) . '",
+        "logo": { "@type": "ImageObject", "url": "' . e(asset('images/logo.png')) . '" }
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home",      "item": "' . e($_jsonSiteUrl) . '" },
+        { "@type": "ListItem", "position": 2, "name": "Dashboard", "item": "' . e(route('local.dashboard')) . '" },
+        { "@type": "ListItem", "position": 3, "name": "' . e($_jsonTournament) . '", "item": "' . e($_tourUrl) . '" },
+        { "@type": "ListItem", "position": 4, "name": "' . e($_jsonTeam1) . ' vs ' . e($_jsonTeam2) . ' \u2014 ' . e($_statusLabel) . '", "item": "' . e($_jsonUrl) . '" }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "name": "' . e($_jsonTeam1) . ' vs ' . e($_jsonTeam2) . ' ' . e($_statusLabel) . ' | CricketKaScore",
+      "url": "' . e($_jsonUrl) . '",
+      "description": "' . e($_matchStatus === 'completed' ? 'Full scorecard' : 'Live ball-by-ball score') . ' of ' . e($_jsonTeam1) . ' vs ' . e($_jsonTeam2) . ' in ' . e($_jsonTournament) . ' on CricketKaScore.",
+      "isPartOf": { "@type": "WebSite", "name": "CricketKaScore", "url": "' . e($_jsonSiteUrl) . '" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home",      "item": "' . e($_jsonSiteUrl) . '" },
+          { "@type": "ListItem", "position": 2, "name": "Dashboard", "item": "' . e(route('local.dashboard')) . '" },
+          { "@type": "ListItem", "position": 3, "name": "' . e($_jsonTeam1) . ' vs ' . e($_jsonTeam2) . '", "item": "' . e($_jsonUrl) . '" }
+        ]
+      }
+    }
+  ]
+}';
+    echo '<script type="application/ld+json">' . "\n" . $_jsonld . "\n" . '</script>';
+@endphp
+@endsection
+
 @section('content')
 @php
     $isLocalMode = isset($isLocal) && $isLocal;

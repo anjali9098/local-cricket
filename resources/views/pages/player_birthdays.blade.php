@@ -1,5 +1,64 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = "Cricket Player Birthdays Calendar — Today's Celebrations & Star Ages | CricketKaScore";
+    $metaDesc = "Discover today's cricket player birthday celebrations, upcoming cricketer birthdays, ages, and complete monthly birthday calendar of international and league players on CricketKaScore.";
+    $metaKeywords = 'cricket player birthdays, cricketer birthday today, who has birthday today in cricket, virat kohli birthday, rohit sharma birthday, cricket player age, CricketKaScore birthdays';
+    $canonicalUrl = route('player.birthdays');
+
+    $birthdaysSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'CollectionPage',
+        'name' => 'Cricket Player Birthdays Calendar',
+        'description' => $metaDesc,
+        'url' => $canonicalUrl,
+        'breadcrumb' => [
+            chr(64) . 'type' => 'BreadcrumbList',
+            'itemListElement' => [
+                [
+                    chr(64) . 'type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Home',
+                    'item' => url('/')
+                ],
+                [
+                    chr(64) . 'type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Players',
+                    'item' => route('players')
+                ],
+                [
+                    chr(64) . 'type' => 'ListItem',
+                    'position' => 3,
+                    'name' => 'Player Birthdays',
+                    'item' => $canonicalUrl
+                ]
+            ]
+        ],
+        'publisher' => [
+            chr(64) . 'type' => 'SportsOrganization',
+            'name' => 'CricketKaScore',
+            'url' => url('/'),
+            'logo' => asset('images/logo.png')
+        ]
+    ];
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'website')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($birthdaysSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container" style="padding: 40px 24px 80px; margin: 0 auto; font-family: var(--font-body, 'Inter', sans-serif);">
     

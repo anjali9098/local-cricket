@@ -1,5 +1,80 @@
 @extends('layouts.app')
 
+@php
+    $termName = trim($term->term);
+    $cleanDef = strip_tags($term->definition);
+    $metaDesc = !empty($cleanDef) ? \Illuminate\Support\Str::limit($cleanDef, 160) : "Learn the definition, rules, and meaning of {$termName} in cricket on CricketKaScore.";
+    $metaKeywords = !empty($term->keywords) ? $term->keywords : "{$termName}, {$termName} cricket meaning, {$termName} definition, cricket glossary, CricketKaScore";
+    $canonicalUrl = route('glossary.show', $term->id);
+
+    $ogImage = asset('images/logo.png');
+    if (!empty($term->poster_image) && !str_starts_with($term->poster_image, 'data:')) {
+        $ogImage = str_starts_with($term->poster_image, 'http') ? $term->poster_image : asset($term->poster_image);
+    }
+
+    $pageTitle = $termName . ' — Cricket Definition, Meaning & Rules | CricketKaScore Glossary';
+
+    $termSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'DefinedTerm',
+        'name' => $termName,
+        'description' => $metaDesc,
+        'url' => $canonicalUrl,
+        'inDefinedTermSet' => [
+            chr(64) . 'type' => 'DefinedTermSet',
+            'name' => 'Cricket Glossary',
+            'url' => route('glossary.all')
+        ]
+    ];
+    if (!empty($term->poster_image) && !str_starts_with($term->poster_image, 'data:')) {
+        $termSchema['image'] = $ogImage;
+    }
+
+    $breadcrumbSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Cricket Glossary',
+                'item' => route('glossary.all')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 3,
+                'name' => $termName,
+                'item' => $canonicalUrl
+            ]
+        ]
+    ];
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'article')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($termSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+<script type="application/ld+json">
+{!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container" style="padding: 40px 24px 80px; max-width: 860px; margin: 0 auto; font-family: var(--font-body, 'Inter', sans-serif);">
     

@@ -319,11 +319,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .section-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 20px;
+    text-align: left;
 }
 
 .section-title {
@@ -2157,6 +2158,45 @@ body.light-theme .rich-article-body blockquote strong,
 body.light-theme .rich-article-body blockquote b {
     color: #0369a1 !important;
     font-weight: 800 !important;
+}
+
+/* ========================================================
+   On-Page Searchable SEO Keyword Pills
+   ======================================================== */
+.seo-keyword-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    background: var(--bg-card-secondary, #161b22);
+    border: 1px solid var(--border-color, #30363d);
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-decoration: none;
+    line-height: 1.2;
+}
+
+.seo-keyword-pill:hover {
+    color: #ffffff;
+    background: rgba(37, 99, 235, 0.15);
+    border-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+body.light-theme .seo-keyword-pill, html.light-theme .seo-keyword-pill {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+body.light-theme .seo-keyword-pill:hover, html.light-theme .seo-keyword-pill:hover {
+    background: #e0f2fe;
+    border-color: #0284c7;
+    color: #0369a1;
 }
 
 

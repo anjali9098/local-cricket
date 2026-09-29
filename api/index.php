@@ -113,12 +113,6 @@ if (!empty($_SERVER['HTTP_HOST'])) {
     $_SERVER['APP_URL'] = 'https://' . $_SERVER['HTTP_HOST'];
 }
 
-if (empty($_ENV['CRICKETDATA_API_KEY']) && empty($_SERVER['CRICKETDATA_API_KEY'])) {
-    putenv('CRICKETDATA_API_KEY=c7d0228c-6e2b-49f4-a27d-7fe329dc9d39');
-    $_ENV['CRICKETDATA_API_KEY'] = 'c7d0228c-6e2b-49f4-a27d-7fe329dc9d39';
-    $_SERVER['CRICKETDATA_API_KEY'] = 'c7d0228c-6e2b-49f4-a27d-7fe329dc9d39';
-}
-
 if (empty($_ENV['DB_CONNECTION']) && empty($_SERVER['DB_CONNECTION'])) {
     putenv('DB_CONNECTION=mysql');
     $_ENV['DB_CONNECTION'] = 'mysql';
@@ -178,6 +172,49 @@ if (empty($_ENV['APP_MAINTENANCE_DRIVER']) && empty($_SERVER['APP_MAINTENANCE_DR
     putenv('APP_MAINTENANCE_DRIVER=file');
     $_ENV['APP_MAINTENANCE_DRIVER'] = 'file';
     $_SERVER['APP_MAINTENANCE_DRIVER'] = 'file';
+}
+
+if (empty($_ENV['MAIL_MAILER']) && empty($_SERVER['MAIL_MAILER'])) {
+    $m = getenv('MAIL_MAILER') ?: 'smtp';
+    putenv("MAIL_MAILER={$m}");
+    $_ENV['MAIL_MAILER'] = $m;
+    $_SERVER['MAIL_MAILER'] = $m;
+}
+if (empty($_ENV['MAIL_HOST']) && empty($_SERVER['MAIL_HOST'])) {
+    $h = getenv('MAIL_HOST') ?: 'smtp-relay.brevo.com';
+    putenv("MAIL_HOST={$h}");
+    $_ENV['MAIL_HOST'] = $h;
+    $_SERVER['MAIL_HOST'] = $h;
+}
+if (empty($_ENV['MAIL_PORT']) && empty($_SERVER['MAIL_PORT'])) {
+    $p = getenv('MAIL_PORT') ?: '587';
+    putenv("MAIL_PORT={$p}");
+    $_ENV['MAIL_PORT'] = $p;
+    $_SERVER['MAIL_PORT'] = $p;
+}
+if (empty($_ENV['MAIL_USERNAME']) && empty($_SERVER['MAIL_USERNAME']) && getenv('MAIL_USERNAME')) {
+    $_ENV['MAIL_USERNAME'] = getenv('MAIL_USERNAME');
+    $_SERVER['MAIL_USERNAME'] = getenv('MAIL_USERNAME');
+}
+if (empty($_ENV['MAIL_PASSWORD']) && empty($_SERVER['MAIL_PASSWORD']) && getenv('MAIL_PASSWORD')) {
+    $_ENV['MAIL_PASSWORD'] = getenv('MAIL_PASSWORD');
+    $_SERVER['MAIL_PASSWORD'] = getenv('MAIL_PASSWORD');
+}
+if (empty($_ENV['MAIL_ENCRYPTION']) && empty($_SERVER['MAIL_ENCRYPTION'])) {
+    $enc = getenv('MAIL_ENCRYPTION') ?: 'tls';
+    putenv("MAIL_ENCRYPTION={$enc}");
+    $_ENV['MAIL_ENCRYPTION'] = $enc;
+    $_SERVER['MAIL_ENCRYPTION'] = $enc;
+}
+if (empty($_ENV['MAIL_FROM_ADDRESS']) && empty($_SERVER['MAIL_FROM_ADDRESS']) && getenv('MAIL_FROM_ADDRESS')) {
+    $_ENV['MAIL_FROM_ADDRESS'] = getenv('MAIL_FROM_ADDRESS');
+    $_SERVER['MAIL_FROM_ADDRESS'] = getenv('MAIL_FROM_ADDRESS');
+}
+if (empty($_ENV['MAIL_FROM_NAME']) && empty($_SERVER['MAIL_FROM_NAME'])) {
+    $fn = getenv('MAIL_FROM_NAME') ?: 'CricketKaScore';
+    putenv("MAIL_FROM_NAME={$fn}");
+    $_ENV['MAIL_FROM_NAME'] = $fn;
+    $_SERVER['MAIL_FROM_NAME'] = $fn;
 }
 
 // 4. Create required /tmp directories for serverless runtime

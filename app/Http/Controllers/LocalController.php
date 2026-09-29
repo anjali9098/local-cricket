@@ -233,7 +233,7 @@ class LocalController extends Controller
             ->unique('name')
             ->values();
 
-        return view('local.dashboard', compact(
+        return response()->view('local.dashboard', compact(
             'myTournaments',
             'otherTournaments',
             'scheduledMatches',
@@ -254,7 +254,9 @@ class LocalController extends Controller
             'activeTab',
             'existingVenues',
             'existingSeriesTemplates'
-        ));
+        ))->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+          ->header('Pragma', 'no-cache')
+          ->header('Expires', '0');
     }
 
     public function manageTournament($id)
@@ -323,7 +325,10 @@ class LocalController extends Controller
         // 4. Fetch venues pool for match scheduling
         $existingVenues = Venue::orderBy('name', 'asc')->get();
 
-        return view('local.manage-tournament', compact('tournament', 'teams', 'players', 'matches', 'existingPlayers', 'livePlayerMap', 'existingTeams', 'existingVenues'));
+        return response()->view('local.manage-tournament', compact('tournament', 'teams', 'players', 'matches', 'existingPlayers', 'livePlayerMap', 'existingTeams', 'existingVenues'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function createTournament(Request $request)
@@ -937,7 +942,10 @@ class LocalController extends Controller
         usort($pointsTable, fn($a, $b) => $b['pts'] <=> $a['pts']);
 
         $isLocal = true;
-        return view('admin.tournament_preview', compact('tournament', 'teams', 'matches', 'pointsTable', 'isLocal'));
+        return response()->view('admin.tournament_preview', compact('tournament', 'teams', 'matches', 'pointsTable', 'isLocal'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function deleteMatch($id)

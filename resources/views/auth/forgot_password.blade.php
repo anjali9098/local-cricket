@@ -1,5 +1,21 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = 'Forgot Password — Reset Your CricketKaScore Account Password';
+    $metaDesc = 'Forgot your CricketKaScore account password? Enter your email address to receive a secure password reset link.';
+    $metaKeywords = 'forgot password, cricket account password reset, CricketKaScore reset password';
+    $canonicalUrl = route('password.forgot');
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'website')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
 @section('content')
 <main class="auth-page-wrapper">
     <div class="auth-card">

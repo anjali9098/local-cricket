@@ -4,7 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $pageTitle ?? 'Local Dashboard — CricketKaScore' }}</title>
+    <title>@yield('pageTitle', $pageTitle ?? 'Local Cricket Dashboard & Tournaments — CricketKaScore')</title>
+
+    <!-- Core SEO Meta Tags -->
+    <meta name="description" content="@yield('meta_description', 'Manage local cricket tournaments, schedule grassroots matches, track live scores, search by city and state, and view community cricket standings on CricketKaScore.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'local cricket, local cricket tournament, cricket scoring app, grassroots cricket, gully cricket score, local cricket matches, local tournament schedule, CricketKaScore local')">
+    <meta name="robots" content="@yield('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
+    <link rel="canonical" href="@yield('canonical_url', url()->current())">
+
+    <!-- Open Graph (Facebook / WhatsApp / Social Media) Meta Tags -->
+    <meta property="og:locale" content="en_US">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="CricketKaScore">
+    <meta property="og:title" content="@yield('og_title', $pageTitle ?? 'Local Cricket Dashboard & Tournaments | CricketKaScore')">
+    <meta property="og:description" content="@yield('og_description', 'Manage local cricket tournaments, schedule matches, track scores, search by city/state, and view community cricket on CricketKaScore.')">
+    <meta property="og:url" content="@yield('og_url', url()->current())">
+    <meta property="og:image" content="@yield('og_image', asset('images/logo.png'))">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('og_title', $pageTitle ?? 'Local Cricket Dashboard & Tournaments | CricketKaScore')">
+    <meta name="twitter:description" content="@yield('og_description', 'Manage local cricket tournaments, schedule matches, track scores, search by city/state, and view community cricket on CricketKaScore.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))">
+
+    @yield('additional_schema')
+
     <!-- Favicon Icon -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('images/favicon.png') }}">

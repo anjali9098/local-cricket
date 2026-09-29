@@ -16,12 +16,13 @@
     <section id="matches" class="matches-carousel-section">
         <div class="container">
             <div class="section-header">
-                <div class="section-title">
-                    <span>LIVE & UPCOMING MATCHES</span>
+                <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
+                    <span class="section-title-icon">⚡</span>
+                    <span>LIVE &amp; UPCOMING MATCHES</span>
                     @if($allMatches->where('status', 'live')->count() > 0)
                         <span class="badge-live">LIVE</span>
                     @endif
-                </div>
+                </h2>
                 <a href="{{ route('matches') }}" class="view-all-link">FULL SCHEDULE &rarr;</a>
             </div>
 
@@ -97,7 +98,7 @@
             <div class="section-header">
                 <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                     <span class="section-title-icon">🏆</span>
-                    <span>CRICKET SERIES &amp; TOURNAMENTS</span>
+                    <span>SERIES</span>
                 </h2>
                 <a href="{{ route('tournaments') }}" class="view-all-link">ALL SERIES &rarr;</a>
             </div>
@@ -159,7 +160,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h3 class="series-title">{{ $s->name }}</h3>
+                            <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -190,7 +191,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h3 class="series-title">{{ $s->name }}</h3>
+                            <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -222,7 +223,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h3 class="series-title">{{ $s->name }}</h3>
+                            <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -254,7 +255,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h3 class="series-title">{{ $s->name }}</h3>
+                            <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -286,7 +287,7 @@
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
-                            <h3 class="series-title">{{ $s->name }}</h3>
+                            <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
@@ -325,9 +326,9 @@
                     <div class="section-header">
                         <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                             <span class="section-title-icon">🎯</span>
-                            <span>TODAY MATCH PREDICTIONS</span>
+                            <span>MATCH PREDICTIONS</span>
                         </h2>
-                        <a href="{{ route('news', ['type' => 'prediction']) }}" class="view-all-link">ALL PREDICTIONS &rarr;</a>
+                        <a href="{{ route('predictions') }}" class="view-all-link">ALL PREDICTIONS &rarr;</a>
                     </div>
                     @forelse($predictions->take(6) as $p)
                         <a href="{{ route('prediction.show', $p->id) }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #f97316; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
@@ -357,7 +358,7 @@
                             <span class="section-title-icon">⭐</span>
                             <span>FANTASY CRICKET TIPS</span>
                         </h2>
-                        <a href="{{ route('news', ['type' => 'fantasy']) }}" class="view-all-link">ALL FANTASY TIPS &rarr;</a>
+                        <a href="{{ route('fantasy') }}" class="view-all-link">ALL FANTASY TIPS &rarr;</a>
                     </div>
                     @forelse($fantasyTips->take(6) as $f)
                         <a href="{{ route('fantasy.show', $f->id) }}" class="fantasy-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #22c55e; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
@@ -393,7 +394,7 @@
                     <span class="section-title-icon">⚡</span>
                     <span>CRICKET MATCH PREVIEWS</span>
                 </h2>
-                <a href="{{ route('news', ['type' => 'preview']) }}" class="view-all-link">ALL MATCH PREVIEWS &rarr;</a>
+                <a href="{{ route('previews') }}" class="view-all-link">ALL MATCH PREVIEWS &rarr;</a>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
@@ -435,7 +436,7 @@
                 <div class="section-title">
                     <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">LATEST CRICKET ARTICLES</h2>
                 </div>
-                <a href="{{ route('news', ['type' => 'article']) }}" class="view-all-link">ALL ARTICLES &rarr;</a>
+                <a href="{{ route('articles') }}" class="view-all-link">ALL ARTICLES &rarr;</a>
             </div>
 
             <div class="articles-grid">

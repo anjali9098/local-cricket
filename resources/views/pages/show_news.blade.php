@@ -1,12 +1,31 @@
 @extends('layouts.app')
 
+@php
+    $newsTitle = trim($news->h1_heading ?: $news->title);
+    $pageTitle = $newsTitle . ' — CricketKaScore';
+    $metaDesc = trim($news->meta_description ?: ($news->summary ? \Illuminate\Support\Str::limit(strip_tags($news->summary), 160) : 'Read latest cricket news updates and breaking stories on CricketKaScore.'));
+    $metaKeywords = $news->keywords ?: ($newsTitle . ', cricket news, latest cricket news, CricketKaScore');
+    $canonicalUrl = route('news.show', $news->id);
+    $ogImage = $news->image_url ?: asset('images/logo.png');
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'article')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
 @section('content')
 <main class="container" style="padding: 40px 20px 80px; max-width: 1240px; margin: 0 auto;">
 
     <!-- Back Navigation -->
     <div style="margin-bottom: 24px;">
         <a href="{{ route('news') }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-text, #38bdf8); font-weight: 700; text-decoration: none; font-size: 0.9rem;">
-            &larr; Back to All News &amp; Articles
+            &larr; Back to All News
         </a>
     </div>
 
@@ -107,7 +126,7 @@
                         <span>🔴 Live Scores &amp; Matches</span>
                         <span>&rarr;</span>
                     </a>
-                    <a href="{{ route('news', ['type' => 'article']) }}" class="sidebar-quick-link">
+                    <a href="{{ route('articles') }}" class="sidebar-quick-link">
                         <span>📝 Cricket Analysis &amp; Articles</span>
                         <span>&rarr;</span>
                     </a>

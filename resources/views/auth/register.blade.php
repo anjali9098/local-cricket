@@ -1,5 +1,41 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = 'Create CricketKaScore Account — Register for Live Cricket & Local Scoring';
+    $metaDesc = 'Create a free CricketKaScore account to score local gully & club cricket matches ball-by-ball, participate in match predictions, and join the grassroots cricket community.';
+    $metaKeywords = 'cricket register, CricketKaScore signup, create cricket account, local cricket scorer registration, cricket app register';
+    $canonicalUrl = route('register');
+
+    $registerSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'WebPage',
+        'name' => 'Create CricketKaScore Account',
+        'description' => $metaDesc,
+        'url' => $canonicalUrl,
+        'publisher' => [
+            chr(64) . 'type' => 'SportsOrganization',
+            'name' => 'CricketKaScore',
+            'url' => url('/'),
+            'logo' => asset('images/logo.png')
+        ]
+    ];
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'website')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($registerSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="auth-page-wrapper">
     <div class="auth-card">
@@ -78,10 +114,18 @@
                 </div>
             </div>
 
+            <div class="auth-input-group" style="display: flex; flex-direction: column; align-items: center; margin: 18px 0 10px 0;">
+                <div class="g-recaptcha" data-sitekey="{{ \App\Services\RecaptchaService::getSiteKey() }}"></div>
+                @error('recaptcha')
+                    <span style="color: #ef4444; font-size: 0.85rem; margin-top: 6px;">{{ $message }}</span>
+                @enderror
+            </div>
+
             <button type="submit" class="auth-btn-primary">
-                Create Account
+                Create Account & Verify
             </button>
         </form>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
         <p class="auth-footer-text">
             Already have an account? 

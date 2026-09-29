@@ -1,11 +1,94 @@
 @extends('layouts.app')
 
+@php
+    $cleanTitle = trim($tip->h1_heading ?: $tip->title);
+    $pageTitle = $cleanTitle . ' — Fantasy Cricket Tips, Dream Team & Strategy | CricketKaScore';
+    $metaDesc = trim($tip->meta_description ?: ($tip->summary ? \Illuminate\Support\Str::limit(strip_tags($tip->summary), 160) : 'Get latest fantasy cricket tips, playing XI predictions, captain and vice-captain choices, pitch reports, and match strategy on CricketKaScore.'));
+    $metaKeywords = $tip->keywords ?: ($cleanTitle . ', fantasy cricket tips, today dream11 prediction, cricket fantasy team, fantasy captain pick, pitch report, match strategy, CricketKaScore fantasy');
+    $canonicalUrl = route('fantasy.show', $tip->id);
+
+    // Image resolution: priority is poster_image, then image_url, then default match photo
+    $fallbackImage = asset('images/articles/1788433528_India.jpg');
+    $posterImg = $tip->poster_image ?: ($tip->image_url ?: null);
+    if (empty($posterImg)) {
+        $posterImg = asset('uploads/predictions/repaired_1789022057_CYsotwvY.webp');
+    }
+    $ogImage = $posterImg ?: $fallbackImage;
+    $publishedTime = $tip->created_at ? \Carbon\Carbon::parse($tip->created_at)->toIso8601String() : now()->toIso8601String();
+    $modifiedTime = $tip->updated_at ? \Carbon\Carbon::parse($tip->updated_at)->toIso8601String() : $publishedTime;
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'article')
+@section('og_title', $cleanTitle . ' — Fantasy Cricket Tips & Dream Team | CricketKaScore')
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'type' => 'NewsArticle',
+    'headline' => $cleanTitle,
+    'description' => $metaDesc,
+    'image' => [$ogImage],
+    'datePublished' => $publishedTime,
+    'dateModified' => $modifiedTime,
+    'mainEntityOfPage' => [
+        chr(64) . 'type' => 'WebPage',
+        chr(64) . 'id' => $canonicalUrl
+    ],
+    'author' => [
+        chr(64) . 'type' => 'Organization',
+        'name' => 'CricketKaScore Fantasy Team',
+        'url' => url('/')
+    ],
+    'publisher' => [
+        chr(64) . 'type' => 'SportsOrganization',
+        'name' => 'CricketKaScore',
+        'url' => url('/'),
+        'logo' => [
+            chr(64) . 'type' => 'ImageObject',
+            'url' => asset('images/logo.png')
+        ]
+    ],
+    'breadcrumb' => [
+        chr(64) . 'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Fantasy Cricket Tips',
+                'item' => route('fantasy')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 3,
+                'name' => $cleanTitle,
+                'item' => $canonicalUrl
+            ]
+        ]
+    ]
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container" style="padding: 40px 24px 80px; max-width: 900px; margin: 0 auto;">
 
     <!-- Back Navigation -->
     <div style="margin-bottom: 24px;">
-        <a href="{{ route('news', ['type' => 'fantasy']) }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-text, #38bdf8); font-weight: 700; text-decoration: none; font-size: 0.9rem;">
+        <a href="{{ route('fantasy') }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-text, #38bdf8); font-weight: 700; text-decoration: none; font-size: 0.9rem;">
             &larr; Back to All Fantasy Tips
         </a>
     </div>
@@ -25,7 +108,7 @@
 
         <!-- Title -->
         <h1 style="font-size: 2.2rem; font-weight: 900; color: var(--text-main); line-height: 1.3; margin: 0 0 16px 0; letter-spacing: -0.02em;">
-            {{ $tip->h1_heading ?: $tip->title }}
+            {{ $cleanTitle }}
         </h1>
 
         <!-- Short Summary / Meta description Highlight Box -->
@@ -36,14 +119,8 @@
         @endif
 
         <!-- Poster Banner Image -->
-        @php
-            $posterImg = $tip->poster_image ?: $tip->image_url;
-            if (empty($posterImg)) {
-                $posterImg = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1000&auto=format&fit=crop&q=80';
-            }
-        @endphp
-        <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary);">
-            <img src="{{ $posterImg }}" alt="{{ $tip->title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
+        <div style="width: 100%; max-height: 440px; border-radius: 12px; overflow: hidden; margin-bottom: 28px; background: var(--bg-card-secondary); box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+            <img src="{{ $posterImg }}" alt="{{ $cleanTitle }}" style="width: 100%; height: 100%; max-height: 440px; object-fit: cover; display: block;" onerror="if (this.src !== '{{ $fallbackImage }}') { this.src = '{{ $fallbackImage }}'; } else { this.parentElement.style.display = 'none'; }">
         </div>
 
         <!-- Full Content Body -->

@@ -1,5 +1,63 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = 'Visual Cricket Web Stories — Top Highlights, Player Stories & Moments | CricketKaScore';
+    $metaDesc = 'Browse visual cricket web stories, top match highlights, player biographies, cricket stats, and unforgettable tournament moments in tap-friendly mobile format on CricketKaScore.';
+    $metaKeywords = 'cricket web stories, cricket visual stories, web stories cricket, virat kohli web story, cricket highlights story, T20 world cup stories, CricketKaScore';
+    $canonicalUrl = route('webstories.all');
+
+    $collectionSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'CollectionPage',
+        'name' => 'Visual Cricket Web Stories',
+        'description' => $metaDesc,
+        'url' => $canonicalUrl,
+        'publisher' => [
+            chr(64) . 'type' => 'SportsOrganization',
+            'name' => 'CricketKaScore',
+            'url' => url('/'),
+            'logo' => asset('images/logo.png')
+        ]
+    ];
+
+    if ($webStories->isNotEmpty()) {
+        $itemListElements = [];
+        foreach ($webStories->take(12) as $index => $s) {
+            $storyImg = asset('images/logo.png');
+            $candidate = $s->image_url ?: ($s->slides[0]['image'] ?? '');
+            if (!empty($candidate) && !str_starts_with($candidate, 'data:')) {
+                $storyImg = str_starts_with($candidate, 'http') ? $candidate : asset($candidate);
+            }
+            $itemListElements[] = [
+                chr(64) . 'type' => 'ListItem',
+                'position' => $index + 1,
+                'url' => route('webstories.show', $s->id),
+                'name' => $s->title,
+                'image' => $storyImg
+            ];
+        }
+        $collectionSchema['mainEntity'] = [
+            chr(64) . 'type' => 'ItemList',
+            'itemListElement' => $itemListElements
+        ];
+    }
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'website')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($collectionSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container" style="padding: 40px 24px 80px; margin: 0 auto;">
     <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px; margin-bottom: 32px;">

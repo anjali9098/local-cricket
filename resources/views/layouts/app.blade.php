@@ -180,9 +180,9 @@
         
         <!-- Drawer Header -->
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px 28px 18px; border-bottom: 1px solid var(--border-color);">
-            <h2 style="font-size: 1.4rem; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.02em;">
+            <div style="font-size: 1.4rem; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.02em;">
                 Menu
-            </h2>
+            </div>
             <button type="button" onclick="closeSideMenu()" style="background: none; border: none; font-size: 1.6rem; color: var(--text-muted); cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: 6px; transition: color 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'" title="Close Menu">&times;</button>
         </div>
 
@@ -197,19 +197,19 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px;">
-                    <a href="{{ route('news', ['type' => 'fantasy']) }}" class="side-menu-link">
+                    <a href="{{ route('fantasy') }}" class="side-menu-link">
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Fantasy Tips</span>
                     </a>
-                    <a href="{{ route('news', ['type' => 'prediction']) }}" class="side-menu-link">
+                    <a href="{{ route('predictions') }}" class="side-menu-link">
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Match Predictions</span>
                     </a>
-                    <a href="{{ route('news', ['type' => 'preview']) }}" class="side-menu-link">
+                    <a href="{{ route('previews') }}" class="side-menu-link">
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Match Previews</span>
                     </a>
-                    <a href="{{ route('news', ['type' => 'article']) }}" class="side-menu-link">
+                    <a href="{{ route('articles') }}" class="side-menu-link">
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Latest Articles</span>
                     </a>
@@ -244,77 +244,6 @@
                 </div>
             </div>
 
-            <div style="height: 1px; background: var(--border-color); border: none; margin: 0; opacity: 0.6;"></div>
-
-            <!-- 📄 PAGES (2-Column Grid as in Screenshot 1) -->
-            <div>
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    <span>PAGES</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px;">
-                    <a href="{{ route('home') }}" class="side-menu-link">
-                        <span style="font-size: 0.95rem;">ⓘ</span>
-                        <span>About Us</span>
-                    </a>
-                    <a href="{{ route('home') }}" class="side-menu-link">
-                        <span style="font-size: 0.95rem;">📞</span>
-                        <span>Contact Us</span>
-                    </a>
-                    <a href="{{ route('home') }}" class="side-menu-link">
-                        <span style="font-size: 0.95rem;">🛡️</span>
-                        <span>Privacy Policy</span>
-                    </a>
-                    <a href="{{ route('home') }}" class="side-menu-link">
-                        <span style="font-size: 0.95rem;">📜</span>
-                        <span>Terms &amp; Cond.</span>
-                    </a>
-                </div>
-            </div>
-
-            <div style="height: 1px; background: var(--border-color); border: none; margin: 0; opacity: 0.6;"></div>
-
-            <!-- 🌐 FOLLOW US (Social Circles as in Screenshot 1) -->
-            <div>
-                <div style="font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px;">
-                    FOLLOW US
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <a href="#" class="side-social-icon" title="Facebook">FB</a>
-                    <a href="#" class="side-social-icon" title="Twitter / X">X</a>
-                    <a href="#" class="side-social-icon" title="Instagram">IG</a>
-                    <a href="#" class="side-social-icon" title="YouTube">YT</a>
-                </div>
-            </div>
-
-            <div style="height: 1px; background: var(--border-color); border: none; margin: 0; opacity: 0.6;"></div>
-
-            <!-- 👤 ACCOUNT / LOGOUT IN SIDE MENU -->
-            @auth
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-card-secondary); border-radius: 10px; border: 1px solid var(--border-color);">
-                        <div class="user-avatar-img" style="width: 34px; height: 34px; font-size: 0.95rem;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
-                        <div style="min-width: 0; flex: 1;">
-                            <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ Auth::user()->name }}</div>
-                            <div style="font-size: 0.72rem; color: var(--text-dim);">Logged in User</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <a href="{{ route('local.dashboard') }}" style="flex: 1; padding: 9px 12px; background: #2563eb; color: white; border-radius: 8px; font-weight: 700; font-size: 0.82rem; text-align: center; text-decoration: none;">Local Dashboard</a>
-                        <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                            @csrf
-                            <button type="submit" style="padding: 9px 16px; background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">Logout</button>
-                        </form>
-                    </div>
-                </div>
-            @else
-                <div style="display: flex; gap: 8px;">
-                    <a href="{{ route('login') }}" style="flex: 1; padding: 10px; background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 700; font-size: 0.85rem; text-align: center; text-decoration: none;">Sign In</a>
-                    <a href="{{ route('register') }}" style="flex: 1; padding: 10px; background: #2563eb; color: white; border-radius: 8px; font-weight: 700; font-size: 0.85rem; text-align: center; text-decoration: none;">Register</a>
-                </div>
-            @endauth
-
         </div>
     </div>
 
@@ -326,9 +255,9 @@
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span style="font-size:1.3rem;">🔍</span>
-                    <h3 style="font-size:1.1rem; font-weight:900; color:var(--text-main); margin:0; letter-spacing:-0.01em;">
+                    <div style="font-size:1.1rem; font-weight:900; color:var(--text-main); margin:0; letter-spacing:-0.01em;">
                         Universal Cricket Search
-                    </h3>
+                    </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <kbd style="font-size:0.7rem; font-weight:800; background:var(--bg-card-secondary); color:var(--text-dim); padding:3px 7px; border-radius:5px; border:1px solid var(--border-color);">ESC</kbd>
@@ -411,7 +340,7 @@
                 </div>
 
                 <div>
-                    <h4 class="footer-heading">Cricket Hub</h4>
+                    <div class="footer-heading">Cricket Hub</div>
                     <ul class="footer-links">
                         <li><a href="{{ route('players') }}">Popular Players</a></li>
                         <li><a href="{{ route('teams') }}">Popular Teams</a></li>
@@ -422,17 +351,17 @@
                 </div>
 
                 <div>
-                    <h4 class="footer-heading">Features</h4>
+                    <div class="footer-heading">Features</div>
                     <ul class="footer-links">
                         <li><a href="{{ route('local.dashboard') }}">CrickArena Local Hub</a></li>
                         <li><a href="{{ route('stats') }}">Rankings & Stats</a></li>
-                        <li><a href="{{ route('news') }}">Predictions & Fantasy</a></li>
+                        <li><a href="{{ route('predictions') }}">Predictions & Fantasy</a></li>
                         <li><a href="{{ route('compare') }}">Compare Players ⚡</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="footer-heading">Account & Admin</h4>
+                    <div class="footer-heading">Account & Admin</div>
                     <ul class="footer-links">
                         <li><a href="{{ route('local.dashboard') }}">My Tournaments</a></li>
                         <li><a href="{{ route('login') }}">Sign In / Register</a></li>

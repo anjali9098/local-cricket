@@ -1,0 +1,36 @@
+﻿Report Name,Mahaswayam Udyog Portal Dashboard Summary
+Portal URL,https://udyog.mahaswayam.gov.in/#/user-dashboard
+Data Type,Live Official Real-time Production Data
+
+=== 1. SCHEME LEVEL STAGE-WISE BIFURCATION ===
+Scheme ID,Scheme Name,Total Applied,LOI Generated,Sanction Approved,Claim Application Count
+10,IR-I: Individual Loan Interest Refund,428198,215349,180907,175348
+11,IR-II: Group Loan Interest Refund,3052,1669,1499,1477
+
+=== 2. DIVISION-WISE BREAKDOWN (IR-I Individual) ===
+Division,LOI Generated,Sanction Approved,Claim Applications
+Amravati,6111,5322,5210
+Chhatrapati Sambhajinagar,58643,48671,47129
+Konkan Division,5414,4560,4490
+Nagpur,455,435,430
+Nashik,51738,44292,43032
+Pune,92888,77073,75047
+
+=== 3. DIVISION-WISE BREAKDOWN (IR-II Group) ===
+Division,LOI Generated,Sanction Approved,Claim Applications
+Amravati,10,9,9
+Chhatrapati Sambhajinagar,354,326,323
+Konkan Division,46,44,44
+Nagpur,2,2,2
+Nashik,167,151,149
+Pune,1090,965,950
+
+=== 4. BUSINESS-WISE BENEFICIARIES ===
+Category,Beneficiary Count
+TOTAL BENEFICIARY,182406
+AGRICUTURE ALIED BUSINESS,102060
+FOODS BUSINESS,4906
+MANUFACTURING,4859
+OTHER,378
+SERVICE INDUSTRIES,52497
+TRADING,17581

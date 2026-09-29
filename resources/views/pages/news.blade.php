@@ -1,50 +1,145 @@
 @extends('layouts.app')
 
-@section('content')
-<main class="container" style="padding: 40px 24px 80px; margin: 0 auto;">
+@php
+    $activeTypeVal = $activeType ?? 'news';
+    $catVal = request('cat', '');
 
-    <!-- Newsroom Header -->
-    <div style="margin-bottom: 24px;">
-        <span style="font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; color: var(--primary-text, #38bdf8); text-transform: uppercase; display: block; margin-bottom: 4px;">NEWSROOM</span>
-        <h1 style="font-size: 2.2rem; font-weight: 900; color: var(--text-main); letter-spacing: -0.02em; margin: 0 0 4px 0;">
-            @if(($activeType ?? 'news') === 'article')
-                CRICKET ARTICLES
-            @elseif(($activeType ?? 'news') === 'prediction')
-                MATCH PREDICTIONS
-            @elseif(($activeType ?? 'news') === 'fantasy')
-                FANTASY CRICKET TIPS
-            @elseif(($activeType ?? 'news') === 'preview')
-                MATCH PREVIEWS
-            @else
-                CRICKET NEWS
-            @endif
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
-            @if(($activeType ?? 'news') === 'article')
-                In-depth cricket analysis, feature stories, and editorial columns.
-            @elseif(($activeType ?? 'news') === 'prediction')
-                Expert cricket match forecasts, pitch reports, and probability analysis.
-            @elseif(($activeType ?? 'news') === 'fantasy')
-                Captaincy picks, player form guide, and winning fantasy combinations.
-            @elseif(($activeType ?? 'news') === 'preview')
-                Upcoming fixture breakdowns, team news, and head-to-head records.
-            @else
-                Latest cricket news, breaking headlines, match reports, and updates.
-            @endif
-        </p>
+    // Map active type to dedicated route name
+    $baseRoute = match($activeTypeVal) {
+        'prediction', 'predictions' => 'predictions',
+        'fantasy', 'fantasy_tips'   => 'fantasy',
+        'preview', 'previews'       => 'previews',
+        'article', 'articles'       => 'articles',
+        default                     => 'news',
+    };
+
+    if ($activeTypeVal === 'article' || $activeTypeVal === 'articles') {
+        $seoTitle     = 'Cricket Articles — In-Depth Analysis, Features & Columns | CricketKaScore';
+        $seoDesc      = 'Read in-depth cricket articles, editorial columns, feature stories, player profiles, and expert cricket analysis on CricketKaScore.';
+        $seoKeywords  = 'cricket articles, cricket analysis, cricket editorial, cricket features, cricket columns, player profiles, cricket opinion, CricketKaScore articles';
+        $h1Text       = 'CRICKET ARTICLES';
+    } elseif ($activeTypeVal === 'prediction' || $activeTypeVal === 'predictions') {
+        $seoTitle     = 'Match Predictions — Today Cricket Forecast, Pitch Reports & Probability | CricketKaScore';
+        $seoDesc      = 'Expert cricket match predictions, today match forecasts, pitch reports, toss analysis, and win probability for all cricket matches on CricketKaScore.';
+        $seoKeywords  = 'cricket match prediction, today match prediction, cricket forecast, pitch report, toss prediction, win probability, dream11 prediction, CricketKaScore predictions';
+        $h1Text       = 'MATCH PREDICTIONS';
+    } elseif ($activeTypeVal === 'fantasy' || $activeTypeVal === 'fantasy_tips') {
+        $seoTitle     = 'Fantasy Cricket Tips — Dream11 Picks, Captaincy & Best XI | CricketKaScore';
+        $seoDesc      = 'Get expert fantasy cricket tips, Dream11 team suggestions, best captaincy picks, player form guide, and winning fantasy XI combinations on CricketKaScore.';
+        $seoKeywords  = 'fantasy cricket tips, dream11 tips, dream11 team today, best captain pick, fantasy XI, fantasy cricket strategy, player form, CricketKaScore fantasy';
+        $h1Text       = 'FANTASY CRICKET TIPS';
+    } elseif ($activeTypeVal === 'preview' || $activeTypeVal === 'previews') {
+        $seoTitle     = 'Match Previews — Upcoming Fixtures, Team News & Head-to-Head Records | CricketKaScore';
+        $seoDesc      = 'Upcoming cricket match previews featuring fixture breakdowns, team news, head-to-head records, venue conditions, and key player battles on CricketKaScore.';
+        $seoKeywords  = 'cricket match preview, upcoming match preview, team news, head to head cricket, venue conditions, key players, cricket fixture, CricketKaScore previews';
+        $h1Text       = 'MATCH PREVIEWS';
+    } else {
+        $seoTitle     = 'Cricket News — Breaking Headlines, Match Reports & Latest Updates | CricketKaScore';
+        $seoDesc      = 'Stay updated with the latest cricket news, breaking headlines, match reports, player transfers, series announcements, and cricket updates from around the world on CricketKaScore.';
+        $seoKeywords  = 'cricket news, latest cricket news, cricket breaking news, match report, cricket updates, cricket headlines, IPL news, international cricket news, CricketKaScore news';
+        $h1Text       = 'CRICKET NEWS';
+    }
+
+    if ($catVal === 'INTERNATIONAL') {
+        $seoTitle = 'International Cricket ' . ucfirst($activeTypeVal) . ' — Latest Updates | CricketKaScore';
+        $seoDesc  = 'International cricket ' . strtolower($activeTypeVal) . ', match results, series updates, player news and analysis from Test, ODI, and T20 International cricket on CricketKaScore.';
+    } elseif ($catVal === 'IPL') {
+        $seoTitle = 'IPL ' . ucfirst($activeTypeVal) . ' — Indian Premier League Updates & Analysis | CricketKaScore';
+        $seoDesc  = 'IPL ' . strtolower($activeTypeVal) . ', Indian Premier League match results, team updates, player transfers, auction news, and analysis on CricketKaScore.';
+    } elseif ($catVal === 'DOMESTIC') {
+        $seoTitle = 'Domestic Cricket ' . ucfirst($activeTypeVal) . ' — Ranji Trophy, Vijay Hazare & More | CricketKaScore';
+        $seoDesc  = 'Domestic cricket ' . strtolower($activeTypeVal) . ' covering Ranji Trophy, Vijay Hazare Trophy, Syed Mushtaq Ali, and other domestic cricket tournaments on CricketKaScore.';
+    } elseif ($catVal === 'LOCAL') {
+        $seoTitle = 'Local Cricket ' . ucfirst($activeTypeVal) . ' — Grassroots Tournaments & Club Cricket | CricketKaScore';
+        $seoDesc  = 'Local cricket ' . strtolower($activeTypeVal) . ', grassroots tournament results, club cricket scores, and community cricket updates on CricketKaScore.';
+    }
+
+    $canonicalUrl = $catVal ? route($baseRoute, ['cat' => $catVal]) : route($baseRoute);
+@endphp
+
+@section('pageTitle', $seoTitle)
+@section('meta_description', $seoDesc)
+@section('meta_keywords', $seoKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_title', $seoTitle)
+@section('og_description', $seoDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'graph' => [
+        [
+            chr(64) . 'type' => 'CollectionPage',
+            chr(64) . 'id' => $canonicalUrl . '#webpage',
+            'url' => $canonicalUrl,
+            'name' => $seoTitle,
+            'description' => $seoDesc,
+            'isPartOf' => [
+                chr(64) . 'id' => url('/') . '/#website'
+            ],
+            'breadcrumb' => [
+                chr(64) . 'type' => 'BreadcrumbList',
+                'itemListElement' => [
+                    [
+                        chr(64) . 'type' => 'ListItem',
+                        'position' => 1,
+                        'name' => 'Home',
+                        'item' => url('/')
+                    ],
+                    [
+                        chr(64) . 'type' => 'ListItem',
+                        'position' => 2,
+                        'name' => $h1Text,
+                        'item' => $canonicalUrl
+                    ]
+                ]
+            ]
+        ]
+    ]
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
+@section('content')
+<main class="container py-6 sm:py-8">
+
+    <!-- News Header -->
+    <div class="section-header mb-5 flex flex-col gap-3 pb-4 border-b w-full" style="border-color: var(--border-color); align-items: flex-start !important; text-align: left !important;">
+        <div style="text-align: left !important;">
+            <h1 class="text-xl sm:text-2xl font-black uppercase tracking-tight m-0" style="color: var(--text-main); text-align: left !important;">
+                {{ $h1Text }}
+            </h1>
+            <p class="mt-2 leading-relaxed" style="color: var(--text-muted); font-size: 0.875rem; max-width: 840px; margin: 6px 0 0 0; text-align: left !important;">
+                {{ $seoDesc }}
+            </p>
+        </div>
     </div>
 
     <!-- Category Filter Tabs -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px;">
-        <a href="{{ route('news', array_filter(['type' => ($activeType ?? 'news') !== 'news' ? $activeType : null])) }}" class="series-tab {{ empty(request('cat')) ? 'active' : '' }}">All Categories</a>
-        <a href="{{ route('news', array_filter(['type' => ($activeType ?? 'news') !== 'news' ? $activeType : null, 'cat' => 'INTERNATIONAL'])) }}" class="series-tab {{ request('cat') === 'INTERNATIONAL' ? 'active' : '' }}">International</a>
-        <a href="{{ route('news', array_filter(['type' => ($activeType ?? 'news') !== 'news' ? $activeType : null, 'cat' => 'IPL'])) }}" class="series-tab {{ request('cat') === 'IPL' ? 'active' : '' }}">IPL</a>
-        <a href="{{ route('news', array_filter(['type' => ($activeType ?? 'news') !== 'news' ? $activeType : null, 'cat' => 'DOMESTIC'])) }}" class="series-tab {{ request('cat') === 'DOMESTIC' ? 'active' : '' }}">Domestic</a>
-        <a href="{{ route('news', array_filter(['type' => ($activeType ?? 'news') !== 'news' ? $activeType : null, 'cat' => 'LOCAL'])) }}" class="series-tab {{ request('cat') === 'LOCAL' ? 'active' : '' }}">Local</a>
+        <a href="{{ route($baseRoute) }}" class="series-tab {{ empty(request('cat')) ? 'active' : '' }}">All Categories</a>
+        <a href="{{ route($baseRoute, ['cat' => 'INTERNATIONAL']) }}" class="series-tab {{ request('cat') === 'INTERNATIONAL' ? 'active' : '' }}">International</a>
+        <a href="{{ route($baseRoute, ['cat' => 'IPL']) }}" class="series-tab {{ request('cat') === 'IPL' ? 'active' : '' }}">IPL</a>
+        <a href="{{ route($baseRoute, ['cat' => 'DOMESTIC']) }}" class="series-tab {{ request('cat') === 'DOMESTIC' ? 'active' : '' }}">Domestic</a>
+        <a href="{{ route($baseRoute, ['cat' => 'LOCAL']) }}" class="series-tab {{ request('cat') === 'LOCAL' ? 'active' : '' }}">Local</a>
     </div>
+
+    <!-- Semantic H2 for SEO - visually hidden but helps search engines -->
+    @php
+        $h2Text = 'Latest Cricket News, Breaking Headlines & Match Reports';
+        if ($activeTypeVal === 'article') $h2Text = 'Latest Cricket Articles, Analysis & Editorial Features';
+        elseif ($activeTypeVal === 'prediction') $h2Text = 'Latest Match Predictions, Pitch Reports & Cricket Forecasts';
+        elseif ($activeTypeVal === 'fantasy') $h2Text = 'Latest Fantasy Cricket Tips, Dream11 Picks & Best XI Suggestions';
+        elseif ($activeTypeVal === 'preview') $h2Text = 'Latest Match Previews, Team News & Head-to-Head Analysis';
+    @endphp
+    <h2 style="font-size: 0; height: 0; margin: 0; overflow: hidden; position: absolute;">{{ $h2Text }}</h2>
+
 
     <!-- 2-Column News & Articles Grid -->
     <div class="news-grid-2col" style="gap: 20px;">
+
         @forelse($allNewsItems as $item)
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg, 14px); padding: 22px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; transition: transform 0.2s, box-shadow 0.2s;"
                 onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">

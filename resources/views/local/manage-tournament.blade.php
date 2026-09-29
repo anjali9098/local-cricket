@@ -1,5 +1,49 @@
 @extends('layouts.local')
 
+@php
+    $seoName     = $tournament->name ?? 'Local Cricket Tournament';
+    $seoCity     = $tournament->city ?? '';
+    $seoState    = $tournament->state ?? '';
+    $seoFormat   = $tournament->format ?? 'T20';
+    $seoStatus   = ucfirst($tournament->status ?? 'ongoing');
+    $seoLocation = trim(implode(', ', array_filter([$seoCity, $seoState])));
+    $teamCount   = $teams->count();
+    $matchCount  = $matches->count();
+
+    $pageTitle  = 'Manage: ' . $seoName . ($seoLocation ? ' — ' . $seoLocation : '') . ' | ' . $seoFormat . ' | CricketKaScore';
+    $metaDesc   = 'Manage teams, players and match schedule for ' . $seoName
+                . ($seoLocation ? ' in ' . $seoLocation : '')
+                . ' — a ' . $seoFormat . ' local cricket tournament on CricketKaScore.'
+                . ' ' . $teamCount . ' teams, ' . $matchCount . ' matches.';
+    $canonicalUrl = route('local.manage-tournament', $tournament->id);
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $seoName . ', manage cricket tournament, local cricket admin, ' . $seoFormat . ' cricket' . ($seoCity ? ', ' . $seoCity . ' cricket' : '') . ', CricketKaScore')
+@section('canonical_url', $canonicalUrl)
+@section('og_title', 'Manage: ' . $seoName . ' | CricketKaScore')
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
+{{-- Manage page = private panel: tell search engines NOT to index it --}}
+@section('robots', 'noindex, nofollow')
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    '@context'   => 'https://schema.org',
+    '@type'      => 'BreadcrumbList',
+    'itemListElement' => [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home',            'item' => url('/')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Local Dashboard', 'item' => route('local.dashboard')],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => $seoName,          'item' => route('local.tournament.preview', $tournament->id)],
+        ['@type' => 'ListItem', 'position' => 4, 'name' => 'Manage',          'item' => $canonicalUrl],
+    ],
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-28">
 

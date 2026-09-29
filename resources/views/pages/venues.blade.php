@@ -1,5 +1,20 @@
 @extends('layouts.app')
 
+@php
+    $pageTitle = 'Cricket Venues & Stadiums Directory — Locations, Capacity & Pitch Info | CricketKaScore';
+    $metaDesc = 'Explore international, domestic, and league cricket stadiums across the world on CricketKaScore. View stadium seating capacity, city locations, pitch reports, and match histories.';
+    $metaKeywords = "cricket venues, cricket stadiums, stadium capacity, cricket grounds, Narendra Modi Stadium, Eden Gardens, Lord's, CricketKaScore";
+    $canonicalUrl = route('venues');
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+
 @section('content')
 <main class="container" style="margin: 0 auto; padding: 40px 24px 80px; font-family: var(--font-body, 'Inter', sans-serif);">
 

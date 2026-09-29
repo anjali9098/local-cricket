@@ -1,5 +1,90 @@
 @extends('layouts.local')
 
+@section('pageTitle', 'Local Cricket Portal — Tournaments, Fixtures & Grassroots Matches | CricketKaScore')
+@section('meta_description', 'Manage local cricket tournaments, schedule matches, track grassroots live scores, search fixtures by city and state, and view community cricket standings on CricketKaScore.')
+@section('meta_keywords', 'local cricket, local cricket tournament, grassroots cricket score, gully cricket matches, local cricket fixtures, city cricket tournaments, local cricket dashboard, CricketKaScore local')
+@section('canonical_url', route('local.dashboard'))
+@section('og_title', 'Local Cricket Portal — Tournaments, Fixtures & Grassroots Matches | CricketKaScore')
+@section('og_description', 'Manage local cricket tournaments, schedule matches, track grassroots live scores, and search fixtures by city/state on CricketKaScore.')
+@section('og_url', route('local.dashboard'))
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'type' => 'CollectionPage',
+    'name' => 'Local Cricket Portal — Tournaments, Fixtures & Grassroots Matches',
+    'url' => route('local.dashboard'),
+    'description' => 'Manage local cricket tournaments, schedule matches, track grassroots live scores, and search fixtures by city/state on CricketKaScore.',
+    'breadcrumb' => [
+        chr(64) . 'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Local Cricket Portal',
+                'item' => route('local.dashboard')
+            ]
+        ]
+    ]
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'type' => 'FAQPage',
+    'mainEntity' => [
+        [
+            chr(64) . 'type' => 'Question',
+            'name' => 'How do I create a local cricket tournament on CricketKaScore?',
+            'acceptedAnswer' => [
+                chr(64) . 'type' => 'Answer',
+                'text' => 'Click the "Create Tournament" button on the Local Cricket Portal dashboard. Fill in the tournament name, city, state, venue, format (T20/ODI/Test/T10), overs, and type (Knockout/League). Once created, you can add teams, players, and schedule matches.'
+            ]
+        ],
+        [
+            chr(64) . 'type' => 'Question',
+            'name' => 'Can I track live scores for grassroots cricket matches?',
+            'acceptedAnswer' => [
+                chr(64) . 'type' => 'Answer',
+                'text' => 'Yes. CricketKaScore provides a ball-by-ball live scoring console for local and grassroots cricket matches. You can record runs, wickets, extras, boundaries, and track run rates in real-time.'
+            ]
+        ],
+        [
+            chr(64) . 'type' => 'Question',
+            'name' => 'Can I search for cricket tournaments by city or state?',
+            'acceptedAnswer' => [
+                chr(64) . 'type' => 'Answer',
+                'text' => 'Yes. The Local Cricket Portal has city and state filters that let you search for tournaments and matches in cities like Indore, Bhopal, Mumbai, Delhi, Bangalore, Jaipur, Pune, and more across all Indian states.'
+            ]
+        ],
+        [
+            chr(64) . 'type' => 'Question',
+            'name' => 'What cricket formats are supported for local tournaments?',
+            'acceptedAnswer' => [
+                chr(64) . 'type' => 'Answer',
+                'text' => 'CricketKaScore supports T20, T10, ODI, and Test formats for local and grassroots tournaments. You can configure custom overs, Knockout or League (round-robin) tournament types, and points tables.'
+            ]
+        ],
+        [
+            chr(64) . 'type' => 'Question',
+            'name' => 'Is CricketKaScore free to use for local cricket organizers?',
+            'acceptedAnswer' => [
+                chr(64) . 'type' => 'Answer',
+                'text' => 'Yes. CricketKaScore is free for local cricket organizers. You can register, create tournaments, add teams and players, score matches ball-by-ball, and share live scorecard links with your community.'
+            ]
+        ]
+    ]
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-28">
 
@@ -10,7 +95,8 @@
                 <span class="bg-blue-600/20 text-blue-400 border border-blue-500/40 text-[11px] font-black px-2.5 py-0.5 rounded uppercase tracking-wider">LOCAL CRICKET</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-black tracking-tight uppercase m-0" style="color: var(--text-main);">LOCAL CRICKET PORTAL</h1>
-            <p class="text-xs sm:text-sm mt-1" style="color: var(--text-dim);">Manage your own tournaments, schedule matches, search by city/state & explore grassroots cricket</p>
+            <h2 style="font-size:0; height:0; margin:0; overflow:hidden; position:absolute;">Grassroots Local Cricket Tournaments, Fixtures &amp; Community Scoring</h2>
+            <p class="text-xs sm:text-sm mt-1" style="color: var(--text-dim);">Manage your own tournaments, schedule matches, search by city/state &amp; explore grassroots cricket</p>
         </div>
 
         <button type="button" onclick="openCreateModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20 flex-shrink-0">
@@ -457,6 +543,8 @@
             </div>
         @endif
     </div>
+
+
 
 </main>
 

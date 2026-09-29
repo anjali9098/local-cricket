@@ -1,0 +1,293 @@
+{
+  "schemes": [
+    {
+      "id": "10",
+      "title": "IR-I",
+      "scheme_name": "Individual Interest Reimbursement",
+      "scheme_no": "SU9",
+      "discription": "Individual Interest Reimbursement",
+      "loi_generated": "34939",
+      "sanction_approved": "180758",
+      "claim_applied": "427308"
+    }
+  ],
+  "schemeCounts": {
+    "10": {
+      "id": "10",
+      "loi_generated": 34939,
+      "sanction_approved": 180758
+    }
+  },
+  "beneficiary_count": [
+    {
+      "total_candidate": 182406,
+      "category_name": "TOTAL BENEFICIARY"
+    },
+    {
+      "total_candidate": 102060,
+      "category_name": "AGRICUTURE ALIED BUSINESS"
+    },
+    {
+      "total_candidate": 4906,
+      "category_name": "FOODS BUSINESS"
+    },
+    {
+      "total_candidate": 4859,
+      "category_name": "MANUFACTURING"
+    },
+    {
+      "total_candidate": 378,
+      "category_name": "OTHER"
+    },
+    {
+      "total_candidate": 52497,
+      "category_name": "SERVICE INDUSTRIES"
+    },
+    {
+      "total_candidate": 17581,
+      "category_name": "TRADING"
+    }
+  ],
+  "total_beneficiary_count": 182406,
+  "chartData": {
+    "10": {
+      "loi": {
+        "categories": [
+          "Amravati",
+          "Chhatrapati Sambhajinagar",
+          "Konkan Division",
+          "Nagpur",
+          "Nashik",
+          "Pune"
+        ],
+        "series": [
+          {
+            "data": [
+              6111,
+              58643,
+              5414,
+              455,
+              51738,
+              92888
+            ]
+          }
+        ]
+      },
+      "sanction": {
+        "categories": [
+          "Amravati",
+          "Chhatrapati Sambhajinagar",
+          "Konkan Division",
+          "Nagpur",
+          "Nashik",
+          "Pune"
+        ],
+        "series": [
+          {
+            "data": [
+              5322,
+              48671,
+              4560,
+              435,
+              44292,
+              77073
+            ]
+          }
+        ]
+      },
+      "claim": {
+        "categories": [
+          "Amravati",
+          "Chhatrapati Sambhajinagar",
+          "Konkan Division",
+          "Nagpur",
+          "Nashik",
+          "Pune"
+        ],
+        "series": [
+          {
+            "data": [
+              5210,
+              47129,
+              4490,
+              430,
+              43032,
+              75047
+            ]
+          }
+        ]
+      }
+    },
+    "11": {
+      "loi": {
+        "categories": [
+          "Amravati",
+          "Chhatrapati Sambhajinagar",
+          "Konkan Division",
+          "Nagpur",
+          "Nashik",
+          "Pune"
+        ],
+        "series": [
+          {
+            "data": [
+              10,
+              354,
+              46,
+              2,
+              167,
+              1090
+            ]
+          }
+        ]
+      },
+      "sanction": {
+        "categories": [
+          "Amravati",
+          "Chhatrapati Sambhajinagar",
+          "Konkan Division",
+          "Nagpur",
+          "Nashik",
+          "Pune"
+        ],
+        "series": [
+          {
+            "data": [
+              9,
+              326,
+              44,
+              2,
+              151,
+              965
+            ]
+          }
+        ]
+      },
+      "claim": {
+        "categories": [
+          "Amravati",
+          "Chhatrapati Sambhajinagar",
+          "Konkan Division",
+          "Nagpur",
+          "Nashik",
+          "Pune"
+        ],
+        "series": [
+          {
+            "data": [
+              9,
+              323,
+              44,
+              2,
+              149,
+              950
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "maxChartVal": {
+    "10": 92888,
+    "11": 1090
+  },
+  "divisions": [
+    {
+      "id": 4,
+      "name": "Amravati"
+    },
+    {
+      "id": 5,
+      "name": "Chhatrapati Sambhajinagar"
+    },
+    {
+      "id": 1,
+      "name": "Konkan Division"
+    },
+    {
+      "id": 6,
+      "name": "Nagpur"
+    },
+    {
+      "id": 3,
+      "name": "Nashik"
+    },
+    {
+      "id": 7,
+      "name": "Pune"
+    }
+  ],
+  "categories": [
+    {
+      "id": 2,
+      "category_name": "AGRICUTURE ALIED BUSINESS"
+    },
+    {
+      "id": 4,
+      "category_name": "FOODS BUSINESS"
+    },
+    {
+      "id": 1,
+      "category_name": "MANUFACTURING"
+    },
+    {
+      "id": 6,
+      "category_name": "OTHER"
+    },
+    {
+      "id": 3,
+      "category_name": "SERVICE INDUSTRIES"
+    },
+    {
+      "id": 5,
+      "category_name": "TRADING"
+    }
+  ],
+  "applicationCountsData": {
+    "10": {
+      "total_application": 428198,
+      "loi_generated": 215349,
+      "sanction_approved": 180907,
+      "claim_applied": 175348,
+      "scheme_id": 10
+    },
+    "11": {
+      "total_application": 3052,
+      "loi_generated": 1669,
+      "sanction_approved": 1499,
+      "claim_applied": 1477,
+      "scheme_id": 11
+    }
+  },
+  "search": null,
+  "busCatIcons": {
+    "AGRICUTURE ALIED BUSINESS": {
+      "image": "<svg id=\"Icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"30.156\" height=\"30.068\"\n                            viewBox=\"0 0 30.156 30.068\">\n                                <path id=\"Path_44647\" data-name=\"Path 44647\"\n                                    d=\"M5.988,23.5a9.821,9.821,0,0,1,18.324,0,1.052,1.052,0,0,1-.982,1.431H6.97A1.052,1.052,0,0,1,5.988,23.5Z\"\n                                    transform=\"translate(0.629 5.134)\" fill=\"#fff\" fill-rule=\"evenodd\" />\n                                <path id=\"Path_44648\" data-name=\"Path 44648\"\n                                    d=\"M14.939,23.533a1.052,1.052,0,0,1-2.053-.457,23.169,23.169,0,0,0,0-8.79,11.077,11.077,0,0,0-5.112-7.6,1.052,1.052,0,1,1,1.06-1.818,13.138,13.138,0,0,1,6.108,8.979,25.515,25.515,0,0,1,0,9.691Z\"\n                                    transform=\"translate(1.166 0.101)\" fill=\"#fff\" fill-rule=\"evenodd\" />\n                                <path id=\"Path_44649\" data-name=\"Path 44649\"\n                                    d=\"M13.653,15.889a1.052,1.052,0,0,1-2.062-.415s.44-2.45,3.63-5.466a1.052,1.052,0,0,1,1.446,1.529,9.93,9.93,0,0,0-3.014,4.352Z\"\n                                    transform=\"translate(2.905 2.114)\" fill=\"#fff\" fill-rule=\"evenodd\" />\n                                <path id=\"Path_44650\" data-name=\"Path 44650\"\n                                    d=\"M14.424,14.066a8.272,8.272,0,0,1-.484-2.519A4.453,4.453,0,0,1,16.35,7.2a8.458,8.458,0,0,1,9.689,1.649,1.053,1.053,0,0,1-.461,1.689,5.968,5.968,0,0,0-2.9,2.978,6.184,6.184,0,0,1-3.638,2.836,3.989,3.989,0,0,1-2.551-.087,3.36,3.36,0,0,1-.785-.446A14.752,14.752,0,0,1,17.116,14.3a1.052,1.052,0,0,0-1.446-1.529,17.487,17.487,0,0,0-1.246,1.3Z\"\n                                    transform=\"translate(3.859 0.757)\" fill=\"#fff\" fill-rule=\"evenodd\" />\n                                <path id=\"Path_44651\" data-name=\"Path 44651\"\n                                    d=\"M12.5,14.055a4.22,4.22,0,0,1-1.557.377A5.1,5.1,0,0,1,7.03,12.474,14.541,14.541,0,0,1,4.855,9.027a25,25,0,0,0-3.335-4.65,1.053,1.053,0,0,1,.359-1.666c4.111-1.8,9.1-2.279,13,.844a4.671,4.671,0,0,1,1.665,5.007,11.216,11.216,0,0,1-2.234,4.223l-.039.042a12.271,12.271,0,0,0-5.129-5.88,1.052,1.052,0,1,0-1.06,1.818A10.3,10.3,0,0,1,12.5,14.055Z\"\n                                    transform=\"translate(-1.25 -1.283)\" fill=\"#fff\" fill-rule=\"evenodd\" />\n                                </svg>",
+      "class": "agriculture"
+    },
+    "FOODS BUSINESS": {
+      "image": "<svg id=\"Group_4079\" data-name=\"Group 4079\" xmlns=\"http://www.w3.org/2000/svg\" width=\"22.652\"\n                                height=\"30.203\" viewBox=\"0 0 22.652 30.203\">\n                                <g id=\"Group_4076\" data-name=\"Group 4076\" transform=\"translate(0)\">\n                                    <g id=\"Group_4075\" data-name=\"Group 4075\" transform=\"translate(0)\">\n                                    <path id=\"Path_44656\" data-name=\"Path 44656\"\n                                        d=\"M62.526,10.068C62.526,4.508,59.988,0,56.863,0S51.2,4.508,51.2,10.068a5.65,5.65,0,0,0,3.66,5.28l-.514,12.339a2.517,2.517,0,1,0,5.034,0l-.514-12.338A5.65,5.65,0,0,0,62.526,10.068Z\"\n                                        transform=\"translate(-51.2 0)\" fill=\"#fff\" />\n                                    </g>\n                                </g>\n                                <g id=\"Group_4078\" data-name=\"Group 4078\" transform=\"translate(13.214)\">\n                                    <g id=\"Group_4077\" data-name=\"Group 4077\">\n                                    <path id=\"Path_44657\" data-name=\"Path 44657\"\n                                        d=\"M239.839,9.124,239.524,0h-1.573l-.314,9.124h-1.259L236.063,0h-1.888l-.314,9.124H232.6L232.288,0h-1.573L230.4,9.124a4.713,4.713,0,0,0,2.8,4.3l-.6,14.261a2.517,2.517,0,1,0,5.034,0l-.6-14.261A4.713,4.713,0,0,0,239.839,9.124Z\"\n                                        transform=\"translate(-230.4)\" fill=\"#fff\" />\n                                    </g>\n                                </g>\n                                </svg>",
+      "class": "foods"
+    },
+    "MANUFACTURING": {
+      "image": "<svg id=\"Group_4080\" data-name=\"Group 4080\" xmlns=\"http://www.w3.org/2000/svg\" width=\"26.524\"\n                                height=\"26.524\" viewBox=\"0 0 26.524 26.524\">\n                                <path id=\"Path_44658\" data-name=\"Path 44658\"\n                                    d=\"M22.855,2V3.895h2.45L15.277,13.922l-3.789-3.789-9.2,9.2,1.339,1.339,7.856-7.856L15.277,16.6,26.644,5.234v2.45h1.895V2Z\"\n                                    transform=\"translate(-2.015 -2)\" fill=\"#fff\" />\n                                <path id=\"Path_44659\" data-name=\"Path 44659\" d=\"M8.076,23H3.5L2,24.5v5.129H9.578V24.5Z\"\n                                    transform=\"translate(-2 -3.107)\" fill=\"#fff\" />\n                                <path id=\"Path_44660\" data-name=\"Path 44660\"\n                                    d=\"M13.506,19,12,20.506V29.42h7.578V20.506L18.072,19Z\" transform=\"translate(-2.527 -2.896)\"\n                                    fill=\"#fff\" />\n                                <path id=\"Path_44661\" data-name=\"Path 44661\" d=\"M23.506,13,22,14.506V29.1h7.578v-14.6L28.072,13Z\"\n                                    transform=\"translate(-3.055 -2.58)\" fill=\"#fff\" />\n                                </svg>",
+      "class": "trading"
+    },
+    "OTHER": {
+      "image": "<svg id=\"Layer_2\" data-name=\"Layer 2\" xmlns=\"http://www.w3.org/2000/svg\" width=\"21.779\"\n                                height=\"21.778\" viewBox=\"0 0 21.779 21.778\">\n                                <rect id=\"Rectangle_2053\" data-name=\"Rectangle 2053\" width=\"9.406\" height=\"9.406\" rx=\"1.75\"\n                                    transform=\"translate(11.882 0)\" fill=\"#fff\" />\n                                <path id=\"Path_44662\" data-name=\"Path 44662\"\n                                    d=\"M22.635,16.723l-3.462-3.462a1.736,1.736,0,0,0-2.45,0l-3.462,3.462a1.735,1.735,0,0,0,0,2.45l3.462,3.462a1.734,1.734,0,0,0,2.45,0l3.462-3.462A1.734,1.734,0,0,0,22.635,16.723Z\"\n                                    transform=\"translate(-1.363 -1.363)\" fill=\"#fff\" />\n                                <rect id=\"Rectangle_2054\" data-name=\"Rectangle 2054\" width=\"9.406\" height=\"9.406\" rx=\"1.75\"\n                                    transform=\"translate(0 0)\" fill=\"#fff\" />\n                                <rect id=\"Rectangle_2055\" data-name=\"Rectangle 2055\" width=\"9.406\" height=\"9.406\" rx=\"1.75\"\n                                    transform=\"translate(0 11.882)\" fill=\"#fff\" />\n                                </svg>",
+      "class": "other"
+    },
+    "SERVICE INDUSTRIES": {
+      "image": "<svg id=\"Group_4074\" data-name=\"Group 4074\" xmlns=\"http://www.w3.org/2000/svg\" width=\"33.332\"\n                                height=\"33.336\" viewBox=\"0 0 33.332 33.336\">\n                                <g id=\"Group_4067\" data-name=\"Group 4067\" transform=\"translate(13.673)\">\n                                    <g id=\"Group_4066\" data-name=\"Group 4066\">\n                                    <path id=\"Path_44652\" data-name=\"Path 44652\"\n                                        d=\"M214,0a4.023,4.023,0,0,0-3.972,3.972A4.023,4.023,0,0,0,214,7.943,3.972,3.972,0,0,0,214,0Z\"\n                                        transform=\"translate(-210.029)\" fill=\"#fff\" />\n                                    </g>\n                                </g>\n                                <g id=\"Group_4069\" data-name=\"Group 4069\" transform=\"translate(11.72 7.943)\">\n                                    <g id=\"Group_4068\" data-name=\"Group 4068\">\n                                    <path id=\"Path_44653\" data-name=\"Path 44653\"\n                                        d=\"M190.29,122a5.824,5.824,0,0,1-4.336,1.953,5.967,5.967,0,0,1-4.4-1.953,5.815,5.815,0,0,0-1.524,3.906v.977a.976.976,0,0,0,.977.977h9.831a.976.976,0,0,0,.977-.977v-.977A5.815,5.815,0,0,0,190.29,122Z\"\n                                        transform=\"translate(-180.029 -122)\" fill=\"#fff\" />\n                                    </g>\n                                </g>\n                                <g id=\"Group_4071\" data-name=\"Group 4071\" transform=\"translate(0 18.916)\">\n                                    <g id=\"Group_4070\" data-name=\"Group 4070\">\n                                    <path id=\"Path_44654\" data-name=\"Path 44654\"\n                                        d=\"M9.46,301.592l-4.977-9.978a1.953,1.953,0,0,0-2.615-.878l-1.3.644a.977.977,0,0,0-.44,1.312l5.86,11.72a.978.978,0,0,0,1.308.439l1.284-.636A1.953,1.953,0,0,0,9.46,301.592Z\"\n                                        transform=\"translate(-0.024 -290.532)\" fill=\"#fff\" />\n                                    </g>\n                                </g>\n                                <g id=\"Group_4073\" data-name=\"Group 4073\" transform=\"translate(5.794 15.397)\">\n                                    <g id=\"Group_4072\" data-name=\"Group 4072\">\n                                    <path id=\"Path_44655\" data-name=\"Path 44655\"\n                                        d=\"M115.757,237.209a1.947,1.947,0,0,0-2.578.254l-5.339,6.563a2.361,2.361,0,0,1-1.445.625h-4.551a.977.977,0,1,1,0-1.953h3.907a1.953,1.953,0,0,0,0-3.907h-5.118c-.487,0-.729-.309-1.113-.645a6.8,6.8,0,0,0-6.063-1.484,7.125,7.125,0,0,0-3,1.5l-.029-.023-1.413,1.243,5.551,11.132H105.75a5.884,5.884,0,0,0,4.688-2.344l5.729-8.2A1.968,1.968,0,0,0,115.757,237.209Z\"\n                                        transform=\"translate(-89.016 -236.479)\" fill=\"#fff\" />\n                                    </g>\n                                </g>\n                                </svg>",
+      "class": "service"
+    },
+    "TRADING": {
+      "image": "<svg id=\"Group_4080\" data-name=\"Group 4080\" xmlns=\"http://www.w3.org/2000/svg\" width=\"26.524\"\n                                height=\"26.524\" viewBox=\"0 0 26.524 26.524\">\n                                <path id=\"Path_44658\" data-name=\"Path 44658\"\n                                    d=\"M22.855,2V3.895h2.45L15.277,13.922l-3.789-3.789-9.2,9.2,1.339,1.339,7.856-7.856L15.277,16.6,26.644,5.234v2.45h1.895V2Z\"\n                                    transform=\"translate(-2.015 -2)\" fill=\"#fff\" />\n                                <path id=\"Path_44659\" data-name=\"Path 44659\" d=\"M8.076,23H3.5L2,24.5v5.129H9.578V24.5Z\"\n                                    transform=\"translate(-2 -3.107)\" fill=\"#fff\" />\n                                <path id=\"Path_44660\" data-name=\"Path 44660\"\n                                    d=\"M13.506,19,12,20.506V29.42h7.578V20.506L18.072,19Z\" transform=\"translate(-2.527 -2.896)\"\n                                    fill=\"#fff\" />\n                                <path id=\"Path_44661\" data-name=\"Path 44661\" d=\"M23.506,13,22,14.506V29.1h7.578v-14.6L28.072,13Z\"\n                                    transform=\"translate(-3.055 -2.58)\" fill=\"#fff\" />\n                                </svg>",
+      "class": "trading"
+    },
+    "TOTAL BENEFICIARY": {
+      "image": "<svg id=\"Group_110925\" data-name=\"Group 110925\" xmlns=\"http://www.w3.org/2000/svg\" width=\"32.5\"\n                                height=\"26.466\" viewBox=\"0 0 32.5 26.466\">\n                                <path id=\"Path_44443\" data-name=\"Path 44443\"\n                                    d=\"M11.905,16.953a6.191,6.191,0,1,0-6.191-6.191A6.191,6.191,0,0,0,11.905,16.953Z\"\n                                    transform=\"translate(-0.607 -4.57)\" fill=\"#fff\" />\n                                <path id=\"Path_44444\" data-name=\"Path 44444\"\n                                    d=\"M20.4,20.984A11.3,11.3,0,0,0,1,28.869a1.083,1.083,0,0,0,1.083,1.083H22.515A1.083,1.083,0,0,0,23.6,28.869a10.906,10.906,0,0,0-.525-3.384A11.223,11.223,0,0,0,20.4,20.984Z\"\n                                    transform=\"translate(-1 -3.487)\" fill=\"#fff\" />\n                                <circle id=\"Ellipse_86\" data-name=\"Ellipse 86\" cx=\"4.604\" cy=\"4.604\" r=\"4.604\"\n                                    transform=\"translate(19.771 3.716)\" fill=\"#fff\" />\n                                <path id=\"Path_44445\" data-name=\"Path 44445\"\n                                    d=\"M23.817,17.67a8.105,8.105,0,0,0-4.123,1.145c.235.21.472.417.694.645a13.42,13.42,0,0,1,3.2,5.38,12.445,12.445,0,0,1,.473,2.039h6.8a1.083,1.083,0,0,0,1.083-1.083,8.134,8.134,0,0,0-8.125-8.125Z\"\n                                    transform=\"translate(0.558 -3.478)\" fill=\"#fff\" />\n                                </svg>",
+      "class": "total-beneficiary"
+    }
+  }
+}

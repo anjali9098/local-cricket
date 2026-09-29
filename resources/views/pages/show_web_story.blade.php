@@ -1,5 +1,101 @@
 @extends('layouts.app')
 
+@php
+    $storyTitle = trim($story->title);
+    $storyAuthor = !empty($story->author) ? $story->author : (!empty($story->author_name) ? $story->author_name : 'CricketKaScore Editorial Team');
+    $storyCategory = $story->category ?: ($story->tag ?: 'Cricket');
+    
+    // First slide description or meta description fallback
+    $firstSlideDesc = !empty($slides[0]['description']) ? strip_tags($slides[0]['description']) : '';
+    $metaDesc = !empty($story->meta_description) ? $story->meta_description : (!empty($firstSlideDesc) ? \Illuminate\Support\Str::limit($firstSlideDesc, 155) : "Watch {$storyTitle} visual web story with highlights, player stats, photos and facts on CricketKaScore.");
+    $metaKeywords = !empty($story->keywords) ? $story->keywords : "{$storyTitle}, {$storyCategory} web story, cricket visual story, cricket highlights, {$storyAuthor}, CricketKaScore";
+    
+    $canonicalUrl = route('webstories.show', $story->id);
+    
+    // Find best representative cover image
+    $ogImage = asset('images/logo.png');
+    $candidateImg = !empty($story->image_url) ? $story->image_url : (!empty($slides[0]['image']) ? $slides[0]['image'] : '');
+    if (!empty($candidateImg) && !str_starts_with($candidateImg, 'data:')) {
+        $ogImage = str_starts_with($candidateImg, 'http') ? $candidateImg : asset($candidateImg);
+    }
+    
+    $publishedDate = $story->created_at ? $story->created_at->toIso8601String() : now()->toIso8601String();
+    $modifiedDate = $story->updated_at ? $story->updated_at->toIso8601String() : $publishedDate;
+    
+    $pageTitle = $storyTitle . ' — Visual Web Story | CricketKaScore';
+
+    $storySchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'NewsArticle',
+        'mainEntityOfPage' => [
+            chr(64) . 'type' => 'WebPage',
+            chr(64) . 'id' => $canonicalUrl
+        ],
+        'headline' => $storyTitle,
+        'description' => $metaDesc,
+        'image' => [$ogImage],
+        'datePublished' => $publishedDate,
+        'dateModified' => $modifiedDate,
+        'author' => [
+            chr(64) . 'type' => 'Person',
+            'name' => $storyAuthor
+        ],
+        'publisher' => [
+            chr(64) . 'type' => 'SportsOrganization',
+            'name' => 'CricketKaScore',
+            'url' => url('/'),
+            'logo' => [
+                chr(64) . 'type' => 'ImageObject',
+                'url' => asset('images/logo.png')
+            ]
+        ]
+    ];
+
+    $breadcrumbSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Web Stories',
+                'item' => route('webstories.all')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 3,
+                'name' => $storyTitle,
+                'item' => $canonicalUrl
+            ]
+        ]
+    ];
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'article')
+@section('og_title', $pageTitle)
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($storySchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+<script type="application/ld+json">
+{!! json_encode($breadcrumbSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <style>
     :root {

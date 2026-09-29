@@ -21,55 +21,51 @@ use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
-    public function live()
+    public function live(Request $request)
     {
         $todayDate = \Carbon\Carbon::today()->toDateString();
-        $testStartLimit = \Carbon\Carbon::parse($todayDate)->subDays(4)->toDateString();
 
-        $liveMatches = CricketMatch::approved()
+        $allMatches = CricketMatch::approved()
             ->has('team1')->has('team2')
-            ->with(['team1', 'team2', 'venue'])
-            ->where('status', 'live')
-            ->where(function($dateCond) use ($todayDate, $testStartLimit) {
-                // Multi-day match (Test spans up to 5 days: starts on or before today, within last 4 days)
-                $dateCond->where(function($testQ) use ($todayDate, $testStartLimit) {
-                    $testQ->where('match_type', 'Test')
-                          ->whereDate('match_date', '<=', $todayDate)
-                          ->whereDate('match_date', '>=', $testStartLimit);
-                })
-                // Single-day match (T20, T10, ODI, Local, etc.): ONLY active if match_date is today
-                ->orWhere(function($singleQ) use ($todayDate) {
-                    $singleQ->where(function($mtype) {
-                        $mtype->whereNull('match_type')->orWhere('match_type', '!=', 'Test');
-                    })
-                    ->whereDate('match_date', $todayDate);
-                });
-            })
+            ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where(function($q) {
                 $q->whereNull('tournament_id')
                   ->orWhereHas('tournament', function($tq) {
                       $tq->where('is_approved', true);
                   });
             })
-            ->orderBy('id', 'desc')
             ->get();
 
-        $upcomingMatches = CricketMatch::approved()
-            ->has('team1')->has('team2')
-            ->with(['team1', 'team2', 'venue'])
-            ->whereIn('status', ['upcoming', 'scheduled'])
-            ->whereDate('match_date', '>=', $todayDate)
-            ->where(function($q) {
-                $q->whereNull('tournament_id')
-                  ->orWhereHas('tournament', function($tq) {
-                      $tq->where('is_approved', true);
-                  });
-            })
-            ->orderBy('match_date', 'asc')
-            ->take(6)
-            ->get();
+        // 1. Upcoming Matches (Future scheduled fixtures, excluding today)
+        $upcomingMatches = $allMatches->filter(function($m) use ($todayDate) {
+            if ($m->effective_status === 'completed') {
+                return false;
+            }
+            $mDate = !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->toDateString() : null;
+            if ($mDate === $todayDate) {
+                return false; // Belongs strictly to Today's tab
+            }
+            return in_array($m->effective_status, ['upcoming', 'scheduled']) || ($mDate && $mDate > $todayDate);
+        })->sortBy('match_date')->values();
 
-        return view('pages.live', compact('liveMatches', 'upcomingMatches'));
+        // 2. Today's Matches (STRICTLY matches occurring on CURRENT DATE)
+        $todayMatches = $allMatches->filter(function($m) use ($todayDate) {
+            return !empty($m->match_date) && \Carbon\Carbon::parse($m->match_date)->toDateString() === $todayDate;
+        })->sortBy(function($m) {
+            return $m->effective_status === 'live' ? 1 : 2;
+        })->values();
+
+        // 3. Completed Matches (Finished / Result scorecards)
+        $completedMatches = $allMatches->filter(function($m) {
+            return $m->effective_status === 'completed';
+        })->sortByDesc('match_date')->values();
+
+        $activeTab = $request->query('tab', 'today');
+        if (!in_array($activeTab, ['upcoming', 'today', 'completed'])) {
+            $activeTab = 'today';
+        }
+
+        return view('pages.live', compact('upcomingMatches', 'todayMatches', 'completedMatches', 'activeTab'));
     }
 
     public function matches(Request $request)
@@ -155,8 +151,44 @@ class PageController extends Controller
     public function stats()
     {
         $teamRankings = TeamRanking::orderBy('rank_num', 'asc')->take(10)->get();
-        $battingRankings = PlayerRanking::where('type', 'batting')->orderBy('rank_num', 'asc')->take(10)->get();
-        $bowlingRankings = PlayerRanking::where('type', 'bowling')->orderBy('rank_num', 'asc')->take(10)->get();
+
+        // 100% Dynamic Real Batting Rankings from match batting scores
+        $battingRankings = \Illuminate\Support\Facades\DB::table('player_batting_stats')
+            ->select('player_name', \Illuminate\Support\Facades\DB::raw('SUM(runs) as stat_value'))
+            ->groupBy('player_name')
+            ->orderByDesc('stat_value')
+            ->take(10)
+            ->get()
+            ->map(function($item, $index) {
+                $item->rank_num = $index + 1;
+                $cleanName = preg_replace('/[^A-Za-z]/', '', $item->player_name);
+                $item->badge_text = strtoupper(substr($cleanName, 0, 3));
+                return $item;
+            });
+
+        if ($battingRankings->isEmpty()) {
+            $battingRankings = PlayerRanking::where('type', 'batting')->orderBy('rank_num', 'asc')->take(10)->get();
+        }
+
+        // 100% Dynamic Real Bowling Rankings from match bowling scores
+        $bowlingRankings = \Illuminate\Support\Facades\DB::table('player_bowling_stats')
+            ->select('player_name', \Illuminate\Support\Facades\DB::raw('SUM(wickets) as stat_value'), \Illuminate\Support\Facades\DB::raw('SUM(runs) as runs_conceded'))
+            ->groupBy('player_name')
+            ->orderByDesc('stat_value')
+            ->orderBy('runs_conceded', 'asc')
+            ->take(10)
+            ->get()
+            ->map(function($item, $index) {
+                $item->rank_num = $index + 1;
+                $cleanName = preg_replace('/[^A-Za-z]/', '', $item->player_name);
+                $item->badge_text = strtoupper(substr($cleanName, 0, 3));
+                return $item;
+            });
+
+        if ($bowlingRankings->isEmpty()) {
+            $bowlingRankings = PlayerRanking::where('type', 'bowling')->orderBy('rank_num', 'asc')->take(10)->get();
+        }
+
         $playerBirthdays = $this->getProcessedPlayerBirthdays();
 
         return view('pages.stats', compact('teamRankings', 'battingRankings', 'bowlingRankings', 'playerBirthdays'));
@@ -408,14 +440,50 @@ class PageController extends Controller
         return view('pages.tournaments', compact('ongoingSeries', 'upcomingSeries', 'completedSeries', 'search', 'type', 'statusFilter'));
     }
 
+    public function predictions(Request $request)
+    {
+        return $this->renderContentHub($request, 'prediction');
+    }
+
+    public function fantasyTips(Request $request)
+    {
+        return $this->renderContentHub($request, 'fantasy');
+    }
+
+    public function matchPreviews(Request $request)
+    {
+        return $this->renderContentHub($request, 'preview');
+    }
+
+    public function articles(Request $request)
+    {
+        return $this->renderContentHub($request, 'article');
+    }
+
     public function news(Request $request)
     {
         $cat = $request->query('cat');
         $type = strtolower($request->query('type', 'news'));
-        if ($type === 'all') {
-            $type = 'news';
+
+        if (in_array($type, ['prediction', 'predictions'])) {
+            return redirect()->route('predictions', array_filter(['cat' => $cat]), 301);
+        }
+        if (in_array($type, ['fantasy', 'fantasy_tips'])) {
+            return redirect()->route('fantasy', array_filter(['cat' => $cat]), 301);
+        }
+        if (in_array($type, ['preview', 'previews', 'match_preview'])) {
+            return redirect()->route('previews', array_filter(['cat' => $cat]), 301);
+        }
+        if (in_array($type, ['article', 'articles'])) {
+            return redirect()->route('articles', array_filter(['cat' => $cat]), 301);
         }
 
+        return $this->renderContentHub($request, 'news');
+    }
+
+    private function renderContentHub(Request $request, string $type)
+    {
+        $cat = $request->query('cat');
         $items = collect();
 
         // 1. Fetch News (Default)
@@ -451,6 +519,11 @@ class PageController extends Controller
         // 3. Fetch Match Predictions
         if ($type === 'prediction' || $type === 'predictions') {
             $predQuery = Prediction::where('tag', '!=', 'MATCH PREVIEW')->orderBy('id', 'desc');
+            if (!empty($cat)) {
+                $predQuery->where(function($q) use ($cat) {
+                    $q->where('tag', $cat)->orWhere('title', 'like', "%{$cat}%");
+                });
+            }
             $preds = $predQuery->get()->map(function($item) {
                 $item->tag = $item->tag ?: 'MATCH PREDICTION';
                 $item->content_type = 'prediction';
@@ -462,7 +535,13 @@ class PageController extends Controller
 
         // 4. Fetch Fantasy Tips
         if ($type === 'fantasy' || $type === 'fantasy_tips') {
-            $tips = FantasyTip::orderBy('id', 'desc')->get()->map(function($item) {
+            $tipsQuery = FantasyTip::orderBy('id', 'desc');
+            if (!empty($cat)) {
+                $tipsQuery->where(function($q) use ($cat) {
+                    $q->where('tag', $cat)->orWhere('title', 'like', "%{$cat}%");
+                });
+            }
+            $tips = $tipsQuery->get()->map(function($item) {
                 $item->tag = $item->tag ?: 'FANTASY';
                 $item->content_type = 'fantasy';
                 $item->badge_label = 'FANTASY TIP';
@@ -473,7 +552,13 @@ class PageController extends Controller
 
         // 5. Fetch Match Previews
         if ($type === 'preview' || $type === 'previews' || $type === 'match_preview') {
-            $previews = Prediction::where('tag', 'MATCH PREVIEW')->orderBy('id', 'desc')->get()->map(function($item) {
+            $previewsQuery = Prediction::where('tag', 'MATCH PREVIEW')->orderBy('id', 'desc');
+            if (!empty($cat)) {
+                $previewsQuery->where(function($q) use ($cat) {
+                    $q->where('tag', $cat)->orWhere('title', 'like', "%{$cat}%");
+                });
+            }
+            $previews = $previewsQuery->get()->map(function($item) {
                 $item->tag = 'MATCH PREVIEW';
                 $item->content_type = 'preview';
                 $item->badge_label = 'MATCH PREVIEW';
@@ -1282,11 +1367,19 @@ class PageController extends Controller
         return view('pages.web_stories', compact('webStories'));
     }
 
-    public function showWebStory($id)
+    public function showWebStory($id = null)
     {
+        if (empty($id)) {
+            return redirect()->route('webstories.all');
+        }
+
         $story = is_numeric($id) ? \App\Models\WebStory::find($id) : \App\Models\WebStory::where('slug', $id)->first();
         if (!$story) {
-            $story = \App\Models\WebStory::findOrFail($id);
+            $story = \App\Models\WebStory::where('id', $id)->first();
+        }
+
+        if (!$story) {
+            return redirect()->route('webstories.all');
         }
 
         $slides = $story->slides;
@@ -1315,16 +1408,6 @@ class PageController extends Controller
     public function matchDetail($id)
     {
         $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats', 'venue'])->findOrFail($id);
-        
-        // Auto-sync or synthesize API match details (Squads, Scorecard, Commentary, Overs) if not yet populated
-        if ($match->is_api_match || !empty($match->api_match_id)) {
-            $hasBatting = $match->battingStats->isNotEmpty();
-            $hasSquads = ($match->team1 && $match->team1->players->isNotEmpty() && $match->team2 && $match->team2->players->isNotEmpty());
-            if (!$hasBatting || !$hasSquads) {
-                app(\App\Services\CricketApiService::class)->syncMatchDetails($match);
-                $match->load(['team1.players', 'team2.players', 'battingStats', 'bowlingStats']);
-            }
-        }
 
         $balls = \App\Models\BallByBall::where('match_id', $id)->orderBy('created_at', 'desc')->get();
         

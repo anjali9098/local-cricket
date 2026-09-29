@@ -18,7 +18,7 @@ class CricketMatch extends Model
         'api_raw_data' => 'array',
     ];
 
-    protected $appends = ['winning_title', 'effective_status'];
+    protected $appends = ['winning_title', 'effective_status', 'where_to_watch'];
 
     public function scopeApproved($query)
     {
@@ -140,4 +140,103 @@ class CricketMatch extends Model
     {
         return $this->effective_status;
     }
+
+    /**
+     * Where to watch broadcaster / stream info
+     */
+    public function getWhereToWatchAttribute()
+    {
+        if (!empty($this->attributes['where_to_watch'])) {
+            $val = str_ireplace(['CricketKaScore Live Stream', 'CricketKaScore Live', 'CricketKaScore'], '', $this->attributes['where_to_watch']);
+            $val = trim($val, " ,");
+            if (!empty($val)) {
+                return $val;
+            }
+        }
+
+        if (is_array($this->api_raw_data) && !empty($this->api_raw_data['broadcast'])) {
+            $val = str_ireplace(['CricketKaScore Live Stream', 'CricketKaScore Live', 'CricketKaScore'], '', $this->api_raw_data['broadcast']);
+            $val = trim($val, " ,");
+            if (!empty($val)) {
+                return $val;
+            }
+        }
+
+        $tournamentName = strtolower($this->tournament?->name ?? '');
+        $venueName = strtolower($this->venue?->name ?? '');
+        $levelType = strtoupper($this->level_type ?? '');
+        $t1 = strtolower($this->team1?->name ?? '');
+        $t2 = strtolower($this->team2?->name ?? '');
+        $allText = $tournamentName . ' ' . $venueName . ' ' . $t1 . ' ' . $t2;
+
+        // 1. English County Championship / Vitality Blast / The Hundred / ECB English Cricket
+        $englishCounties = [
+            'durham', 'northamptonshire', 'worcestershire', 'lancashire', 'gloucestershire',
+            'leicestershire', 'somerset', 'sussex', 'surrey', 'yorkshire', 'essex',
+            'nottinghamshire', 'hampshire', 'middlesex', 'warwickshire', 'derbyshire',
+            'kent', 'glamorgan', 'chester-le-street', 'headingley', 'trent bridge', 'old trafford',
+            'county ground', 'grace road', 'vitality', 'hundred', 'county'
+        ];
+        foreach ($englishCounties as $county) {
+            if (str_contains($allText, $county)) {
+                return 'Sony LIV, Sony Sports Ten 5';
+            }
+        }
+
+        // 2. Caribbean Premier League (CPL) & West Indies
+        $cplKeywords = ['trinbago', 'guyana', 'amazon warriors', 'jamaica', 'barbados', 'patriots', 'lucia kings', 'antigua', 'providence', 'kensington', 'bridgetown', 'cpl', 'caribbean'];
+        foreach ($cplKeywords as $cpl) {
+            if (str_contains($allText, $cpl)) {
+                return 'Star Sports Select, JioCinema';
+            }
+        }
+
+        // 3. Indian Premier League (IPL) & WPL
+        $iplClubs = ['chennai super', 'csk', 'mumbai indians', 'royal challengers', 'rcb', 'kolkata knight', 'kkr', 'rajasthan royals', 'sunrisers', 'delhi capitals', 'punjab kings', 'gujarat titans', 'lucknow super', 'ipl', 'wpl'];
+        foreach ($iplClubs as $ipl) {
+            if (str_contains($allText, $ipl)) {
+                return 'JioCinema, Star Sports 1 HD';
+            }
+        }
+
+        // 4. South Africa (SA20 / CSA T20 Challenge)
+        $saTeams = ['titans', 'western province', 'warriors', 'north west', 'lions', 'dolphins', 'supersport park', 'wanderers', 'csa', 'sa20'];
+        foreach ($saTeams as $sa) {
+            if (str_contains($allText, $sa)) {
+                return 'JioCinema, Sports18';
+            }
+        }
+
+        // 5. Australia (BBL / Big Bash)
+        $bblTeams = ['scorchers', 'sixers', 'stars', 'heat', 'renegades', 'hurricanes', 'strikers', 'thunder', 'bbl', 'big bash', 'mcg', 'scg'];
+        foreach ($bblTeams as $bbl) {
+            if (str_contains($allText, $bbl)) {
+                return 'Disney+ Hotstar, Star Sports 2';
+            }
+        }
+
+        // 6. Pakistan (PSL)
+        if (str_contains($allText, 'psl') || str_contains($allText, 'qalandars') || str_contains($allText, 'zalmi') || str_contains($allText, 'karachi kings')) {
+            return 'Sony LIV, Sony Sports Ten 5';
+        }
+
+        // 7. ICC World Cup / Champions Trophy / Asia Cup
+        if (str_contains($allText, 'world cup') || str_contains($allText, 'icc') || str_contains($allText, 'asia cup') || str_contains($allText, 'champions trophy')) {
+            return 'Disney+ Hotstar, Star Sports 1 HD';
+        }
+
+        // 8. Team India International Matches
+        if (str_contains($t1, 'india') || str_contains($t2, 'india')) {
+            return 'Disney+ Hotstar, Star Sports 1 HD';
+        }
+
+        // 9. General International Matches
+        if ($levelType === 'INTERNATIONAL') {
+            return 'Disney+ Hotstar, Star Sports Network';
+        }
+
+        // 10. Default real TV & streaming network (Never site name)
+        return 'Disney+ Hotstar, Star Sports 1';
+    }
 }
+

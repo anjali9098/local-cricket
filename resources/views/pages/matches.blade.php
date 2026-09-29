@@ -65,19 +65,24 @@
 @section('content')
 <main class="container py-6 sm:py-10">
     <!-- Header & Category Badges -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-black text-white uppercase tracking-tight m-0">{{ $pageHeading }}</h1>
-            <p class="text-xs sm:text-sm text-gray-400 mt-1 mb-0">All international, domestic and local cricket matches</p>
+    <div class="section-header mb-5 flex flex-col gap-3 pb-4 border-b w-full" style="border-color: var(--border-color); align-items: flex-start !important; text-align: left !important;">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 w-full" style="align-items: flex-start !important; text-align: left !important;">
+            <div style="text-align: left !important;">
+                <h1 class="text-xl sm:text-2xl font-black uppercase tracking-tight m-0" style="color: var(--text-main); text-align: left !important;">{{ $pageHeading }}</h1>
+                <p class="text-xs sm:text-sm mt-2 leading-relaxed" style="color: var(--text-muted); max-width: 840px; text-align: left !important;">
+                    {{ $customDesc }}
+                </p>
+            </div>
+            
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none flex-nowrap">
+                <a href="{{ route('matches') }}" class="tag-badge {{ empty($status) && empty($category) ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">All</a>
+                <a href="{{ route('matches', ['status' => 'live']) }}" class="tag-badge {{ ($status ?? '') === 'live' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Live</a>
+                <a href="{{ route('matches', ['status' => 'upcoming']) }}" class="tag-badge {{ in_array(($status ?? ''), ['upcoming', 'scheduled']) ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Upcoming</a>
+                <a href="{{ route('matches', ['status' => 'completed']) }}" class="tag-badge {{ ($status ?? '') === 'completed' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Completed</a>
+                <a href="{{ route('matches', ['category' => 'local']) }}" class="tag-badge {{ ($category ?? '') === 'local' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/40">Local</a>
+            </div>
         </div>
-        
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none flex-nowrap">
-            <a href="{{ route('matches') }}" class="tag-badge {{ empty($status) && empty($category) ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">All</a>
-            <a href="{{ route('matches', ['status' => 'live']) }}" class="tag-badge {{ ($status ?? '') === 'live' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Live</a>
-            <a href="{{ route('matches', ['status' => 'upcoming']) }}" class="tag-badge {{ in_array(($status ?? ''), ['upcoming', 'scheduled']) ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Upcoming</a>
-            <a href="{{ route('matches', ['status' => 'completed']) }}" class="tag-badge {{ ($status ?? '') === 'completed' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Completed</a>
-            <a href="{{ route('matches', ['category' => 'local']) }}" class="tag-badge {{ ($category ?? '') === 'local' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/40">🏏 Local Matches</a>
-        </div>
+
     </div>
 
     <!-- Match Search Bar (Mobile & Desktop) -->

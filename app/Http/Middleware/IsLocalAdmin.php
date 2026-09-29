@@ -18,6 +18,11 @@ class IsLocalAdmin
         if (!auth()->check()) {
             return redirect()->route('login');
         }
+
+        if (!auth()->user()->isEmailVerified()) {
+            return redirect()->route('verification.notice')->with('error', 'Please verify your email address to access CrickArena.');
+        }
+
         return $next($request);
     }
 }

@@ -1,5 +1,65 @@
 @extends('layouts.app')
 
+@php
+    $playerName = trim($player->name);
+    $playerRole = !empty($player->role) ? ucfirst(strtolower($player->role)) : 'Cricketer';
+    $playerTeam = $player->team->name ?? (!empty($player->nationality) ? $player->nationality : 'Cricket Team');
+    
+    $pageTitle = $playerName . ' Profile — Career Stats, Records, Match Scores & Biography | CricketKaScore';
+    $metaDesc = "Explore {$playerName}'s full cricket profile on CricketKaScore. Detailed career statistics, {$playerRole} records, batting & bowling performance, ICC rankings, and latest match updates.";
+    $metaKeywords = "{$playerName}, {$playerName} profile, {$playerName} stats, {$playerName} career records, {$playerName} batting, {$playerName} bowling, {$playerTeam}, {$playerRole}, cricket player profile, CricketKaScore";
+    $canonicalUrl = route('player.profile', $player->slug ?? $player->id);
+    
+    $ogImage = asset('images/logo.png');
+    if (!empty($player->profile_image) && !str_starts_with($player->profile_image, 'data:')) {
+        $ogImage = str_starts_with($player->profile_image, 'http') ? $player->profile_image : asset($player->profile_image);
+    }
+
+    $personSchema = [
+        chr(64) . 'context' => 'https://schema.org',
+        chr(64) . 'type' => 'Person',
+        'name' => $playerName,
+        'url' => $canonicalUrl,
+        'description' => "{$playerName} is a {$playerRole} playing for {$playerTeam}."
+    ];
+    if (!empty($player->profile_image) && !str_starts_with($player->profile_image, 'data:')) {
+        $personSchema['image'] = $ogImage;
+    }
+    if (!empty($player->role)) {
+        $personSchema['jobTitle'] = $playerRole;
+    }
+    if (!empty($player->nationality)) {
+        $personSchema['nationality'] = $player->nationality;
+    }
+    if (!empty($player->dob)) {
+        try {
+            $personSchema['birthDate'] = \Carbon\Carbon::parse($player->dob)->format('Y-m-d');
+        } catch (\Exception $e) {}
+    }
+    if (!empty($player->team)) {
+        $personSchema['memberOf'] = [
+            chr(64) . 'type' => 'SportsTeam',
+            'name' => $player->team->name
+        ];
+    }
+@endphp
+
+@section('pageTitle', $pageTitle)
+@section('meta_description', $metaDesc)
+@section('meta_keywords', $metaKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_type', 'profile')
+@section('og_title', $playerName . ' Profile — Career Stats & Records | CricketKaScore')
+@section('og_description', $metaDesc)
+@section('og_url', $canonicalUrl)
+@section('og_image', $ogImage)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode($personSchema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
 <main class="container mx-auto px-3 sm:px-6 py-6 sm:py-10 pb-24" style="font-family: var(--font-body, 'Inter', sans-serif);">
 
@@ -553,7 +613,7 @@
                 </h2>
             </div>
 
-            <a href="{{ route('news', ['type' => 'article']) }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 800; color: #38bdf8; text-decoration: none;">
+            <a href="{{ route('articles') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 800; color: #38bdf8; text-decoration: none;">
                 View All Articles &rarr;
             </a>
         </div>

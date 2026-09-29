@@ -7,17 +7,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Artisan::command('cricket:fetch-api {--auto-approve : Automatically approve fetched matches}', function (\App\Services\CricketApiService $apiService) {
-    $autoApprove = (bool) $this->option('auto-approve');
-    $this->info("Fetching latest cricket matches from CricketData API...");
-    $result = $apiService->syncCurrentMatches($autoApprove);
-    if ($result['success']) {
-        $this->info("✓ " . $result['message']);
-    } else {
-        $this->error("✗ " . $result['message']);
-    }
-})->purpose('Fetch and update live/upcoming matches from CricketData API');
-
 Artisan::command('cricket:sync-cloud', function () {
     $this->info("Connecting to Aiven Cloud Database...");
     try {

@@ -1,9 +1,55 @@
 @extends(isset($isLocal) && $isLocal ? 'layouts.local' : 'layouts.admin')
 
-@section('content')
 @php
     $isLocalMode = isset($isLocal) && $isLocal;
+    $t1Name = $match->team1?->name ?? 'Team A';
+    $t2Name = $match->team2?->name ?? 'Team B';
+    $mTitle = $match->title ?? ($t1Name . ' vs ' . $t2Name);
+    $vName  = $match->venue?->name ?? (is_string($match->venue) ? $match->venue : 'Wankhede Stadium');
+    
+    $seoTitle = $mTitle . ' Live Scorecard & Match Details | CricketKaScore';
+    $seoDesc  = 'Live cricket score, ball-by-ball commentary, scorecard, overs, run rates, venue information, and match status for ' . $mTitle . ' at ' . $vName . ' on CricketKaScore.';
+    $seoKeywords = strtolower($mTitle) . ', ' . strtolower($t1Name) . ' vs ' . strtolower($t2Name) . ', live cricket score, scorecard, commentary, ' . strtolower($vName) . ', CricketKaScore match';
+    $canonicalUrl = route('local.match.detail', $match->id);
 @endphp
+
+@section('pageTitle', $seoTitle)
+@section('meta_description', $seoDesc)
+@section('meta_keywords', $seoKeywords)
+@section('canonical_url', $canonicalUrl)
+@section('og_title', $seoTitle)
+@section('og_description', $seoDesc)
+@section('og_url', $canonicalUrl)
+
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'type' => 'SportsEvent',
+    'name' => $mTitle,
+    'url' => $canonicalUrl,
+    'description' => $seoDesc,
+    'startDate' => $match->match_date ?? date('c'),
+    'eventStatus' => $match->status === 'live' ? 'https://schema.org/EventLive' : ($match->status === 'completed' ? 'https://schema.org/EventPostponed' : 'https://schema.org/EventScheduled'),
+    'location' => [
+        chr(64) . 'type' => 'Place',
+        'name' => $vName
+    ],
+    'competitor' => [
+        [
+            chr(64) . 'type' => 'SportsTeam',
+            'name' => $t1Name
+        ],
+        [
+            chr(64) . 'type' => 'SportsTeam',
+            'name' => $t2Name
+        ]
+    ]
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
+@section('content')
 <main class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-28">
 
     <!-- Match Header Card -->
@@ -350,6 +396,39 @@
                 <div class="{{ $isLocalMode ? 'bg-[#161b22] border-[#30363d]' : 'bg-slate-50 border-slate-200' }} border p-3.5 rounded-xl">
                     <span class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} block text-[11px] font-bold uppercase mb-1">STATUS</span>
                     <strong class="{{ $isLocalMode ? 'text-white' : 'text-slate-900' }} uppercase">{{ $match->status }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visible On-Page SEO Feature Section -->
+    <div class="mt-8 border-t {{ $isLocalMode ? 'border-[#30363d] text-gray-300' : 'border-slate-200 text-slate-700' }} pt-8">
+        <div class="{{ $isLocalMode ? 'bg-[#0d1117] border-[#30363d]' : 'bg-slate-50 border-slate-200' }} border rounded-2xl p-5 sm:p-6 shadow-sm">
+            <h2 class="text-base sm:text-lg font-black {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} mb-2">
+                {{ $mTitle }} — Live Cricket Match Center &amp; Scorecard Overview
+            </h2>
+            <p class="text-xs sm:text-sm {{ $isLocalMode ? 'text-gray-400' : 'text-slate-600' }} leading-relaxed mb-4">
+                Stay updated with real-time score updates, detailed batting and bowling scorecards, ball-by-ball commentary, and match information for <strong>{{ $mTitle }}</strong> played at <strong>{{ $vName }}</strong> on <strong>CricketKaScore</strong>.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm">
+                <div class="{{ $isLocalMode ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200 shadow-xs' }} border p-4 rounded-xl">
+                    <h3 class="font-bold {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} mb-1 text-xs uppercase tracking-wide">⚡ Live Ball-by-Ball Scorecard</h3>
+                    <p class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-600' }} text-xs leading-relaxed">
+                        Track current run rates, required run rates, boundaries (4s &amp; 6s), wickets, overs, and individual player performances live in real time.
+                    </p>
+                </div>
+                <div class="{{ $isLocalMode ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200 shadow-xs' }} border p-4 rounded-xl">
+                    <h3 class="font-bold {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} mb-1 text-xs uppercase tracking-wide">🎙️ Real-time Commentary</h3>
+                    <p class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-600' }} text-xs leading-relaxed">
+                        Never miss a single delivery with interactive live commentary badges, over highlights, boundary alerts, and key match moments.
+                    </p>
+                </div>
+                <div class="{{ $isLocalMode ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200 shadow-xs' }} border p-4 rounded-xl">
+                    <h3 class="font-bold {{ $isLocalMode ? 'text-white' : 'text-slate-900' }} mb-1 text-xs uppercase tracking-wide">🏆 Community &amp; Local Tournaments</h3>
+                    <p class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-600' }} text-xs leading-relaxed">
+                        CricketKaScore powers grassroots and local cricket scoring across cities and states with digital scorecards and tournament dashboards.
+                    </p>
                 </div>
             </div>
         </div>
