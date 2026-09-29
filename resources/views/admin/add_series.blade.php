@@ -34,8 +34,16 @@
             </div>
         </div>
 
-        <!-- Right: + Add New Series Button -->
-        <div>
+        <!-- Right: Action Buttons (Possible11 Sync & Add Series) -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <form method="POST" action="{{ route('admin.series.sync-possible11') }}" style="margin: 0; display: inline-flex; align-items: center; gap: 4px;">
+                @csrf
+                <input type="hidden" name="status" value="live">
+                <button type="submit" onclick="this.innerHTML='⏳ Syncing...'; this.disabled=true; this.form.submit();" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #38bdf8; border-radius: 4px; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 3px rgba(2,132,199,0.3); transition: all 0.2s;" title="Fetch latest live series from Possible11 API directly into Database">
+                    <span>⚡</span> Sync Live Series (Possible11)
+                </button>
+            </form>
+
             <button type="button" onclick="toggleSeriesForm()" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; color: #0f172a; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                 <span style="font-size: 1.1rem; line-height: 1; color: #0284c7;">+</span> Add New Series
             </button>

@@ -82,3 +82,11 @@ use App\Http\Controllers\Api\SearchApiController;
 Route::get('/search', [SearchApiController::class, 'search']);
 Route::get('/admin/search', [SearchApiController::class, 'adminSearch']);
 
+// 8. Possible11 Automated Series Sync Endpoint
+Route::match(['get', 'post'], '/possible11/sync-series', function (\Illuminate\Http\Request $request, \App\Services\Possible11ApiService $service) {
+    $status = $request->input('status', 'live');
+    $result = $service->syncSeries($status);
+    return response()->json($result);
+});
+
+

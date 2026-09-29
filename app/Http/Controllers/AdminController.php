@@ -1283,6 +1283,21 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * Trigger Possible11 API Live/Upcoming Series Synchronization
+     */
+    public function syncPossible11Series(Request $request, \App\Services\Possible11ApiService $service)
+    {
+        $status = $request->input('status', 'live');
+        $result = $service->syncSeries($status);
+
+        if ($result['success']) {
+            return redirect()->route('admin.series')->with('success', $result['message']);
+        }
+
+        return redirect()->route('admin.series')->with('error', 'Failed to synchronize with Possible11 API.');
+    }
+
     public function showAddFantasyTipForm(Request $request)
     {
         return $this->showAddPredictionForm($request);

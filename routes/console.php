@@ -7,6 +7,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Artisan::command('possible11:sync-series {--status=live : Status to sync: live, upcoming, or all}', function (\App\Services\Possible11ApiService $service) {
+    $status = (string) $this->option('status');
+    $this->info("Fetching and synchronizing series from Possible11 API (status: {$status})...");
+    $result = $service->syncSeries($status);
+    if ($result['success']) {
+        $this->info("✓ " . $result['message']);
+    } else {
+        $this->error("✗ Failed to sync Possible11 series.");
+    }
+})->purpose('Fetch and update live/upcoming series from Possible11 API');
+
 Artisan::command('cricket:sync-cloud', function () {
     $this->info("Connecting to Aiven Cloud Database...");
     try {

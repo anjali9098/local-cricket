@@ -136,10 +136,10 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/add-ball-commentary', [AdminController::class, 'addBallCommentary'])->name('admin.add-ball-commentary');
     Route::post('/admin/add-scorecard-stat', [AdminController::class, 'addScorecardStat'])->name('admin.add-scorecard-stat');
 
-    // GET & POST routes for individual forms (without slugs/hyphens)
     Route::get('/admin/series', [AdminController::class, 'showAddSeriesForm'])->name('admin.series');
     Route::post('/admin/series', [AdminController::class, 'addSeries'])->name('admin.series.post');
     Route::post('/admin/series/update/{id}', [AdminController::class, 'updateSeries'])->name('admin.series.update');
+    Route::post('/admin/series/sync-possible11', [AdminController::class, 'syncPossible11Series'])->name('admin.series.sync-possible11');
 
     Route::get('/admin/match', [AdminController::class, 'showCreateMatchForm'])->name('admin.match');
     Route::post('/admin/match', [AdminController::class, 'createMatch'])->name('admin.match.post');
