@@ -156,12 +156,12 @@
             {{-- LIVE TAB --}}
             @if($liveSeries->isNotEmpty())
             <div id="series-tab-live" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'live' ? 'display:none;' : '' }}">
-                @foreach($liveSeries->take(3) as $s)
+                @foreach($liveSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
-                            <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
+                            <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
                                 <div style="font-size: 0.75rem; font-weight: 800; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px;">
@@ -177,6 +177,15 @@
                                     <span style="font-weight: 800; color: var(--text-main); font-size: 0.9rem;">{{ $mb['score2'] }} <span style="font-size:0.7rem; color:var(--text-dim);">({{ $mb['overs2'] }})</span></span>
                                 </div>
                             </div>
+                            @else
+                            <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                <span style="display: inline-block; background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                                    {{ $s->category ?? 'International' }} &bull; {{ $s->format ?? 'T20' }}
+                                </span>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">
+                                    {{ $s->total_matches ? $s->total_matches . ' Matches' : ($s->start_date ? date('M d', strtotime($s->start_date)) : 'Live / Active') }}
+                                </span>
+                            </div>
                             @endif
                         </div>
                         <div class="series-arrow">&rarr;</div>
@@ -187,12 +196,12 @@
 
             {{-- UPCOMING TAB --}}
             <div id="series-tab-upcoming" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'upcoming' ? 'display:none;' : '' }}">
-                @forelse($upcomingSeries->take(3) as $s)
+                @forelse($upcomingSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
-                            <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
+                            <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
                                 <div style="font-size: 0.75rem; font-weight: 800; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px;">
@@ -207,6 +216,15 @@
                                     <span style="font-weight: 700; color: var(--text-main); font-size: 0.85rem;">{{ $mb['team2'] }}</span>
                                     <span style="font-weight: 800; color: var(--text-main); font-size: 0.9rem;">{{ $mb['score2'] }} <span style="font-size:0.7rem; color:var(--text-dim);">({{ $mb['overs2'] }})</span></span>
                                 </div>
+                            </div>
+                            @else
+                            <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                <span style="display: inline-block; background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                                    {{ $s->category ?? 'International' }} &bull; {{ $s->format ?? 'T20' }}
+                                </span>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">
+                                    {{ $s->total_matches ? $s->total_matches . ' Matches' : ($s->start_date ? date('M d', strtotime($s->start_date)) : 'Scheduled') }}
+                                </span>
                             </div>
                             @endif
                         </div>
@@ -219,12 +237,12 @@
 
             {{-- ONGOING TAB --}}
             <div id="series-tab-ongoing" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'ongoing' ? 'display:none;' : '' }}">
-                @forelse($ongoingSeries->take(3) as $s)
+                @forelse($ongoingSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
-                            <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
+                            <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }} &bull; {{ $s->year ?? '2026' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
                                 <div style="font-size: 0.75rem; font-weight: 800; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px;">
@@ -240,6 +258,15 @@
                                     <span style="font-weight: 800; color: var(--text-main); font-size: 0.9rem;">{{ $mb['score2'] }} <span style="font-size:0.7rem; color:var(--text-dim);">({{ $mb['overs2'] }})</span></span>
                                 </div>
                             </div>
+                            @else
+                            <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                <span style="display: inline-block; background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                                    {{ $s->category ?? 'International' }} &bull; {{ $s->format ?? 'T20' }}
+                                </span>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">
+                                    {{ $s->total_matches ? $s->total_matches . ' Matches' : ($s->start_date ? date('M d', strtotime($s->start_date)) : 'Ongoing') }}
+                                </span>
+                            </div>
                             @endif
                         </div>
                         <div class="series-arrow">&rarr;</div>
@@ -251,12 +278,12 @@
 
             {{-- COMPLETED TAB --}}
             <div id="series-tab-completed" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'completed' ? 'display:none;' : '' }}">
-                @forelse($completedSeries->take(3) as $s)
+                @forelse($completedSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
                     <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
-                            <span class="series-location">{{ $s->city ?? 'Multiple' }}</span>
+                            <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }}</span>
                             @if($mb)
                             <div style="margin-top: 12px; background: var(--bg-card-secondary); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
                                 <div style="font-size: 0.75rem; font-weight: 800; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px;">
@@ -271,6 +298,15 @@
                                     <span style="font-weight: 700; color: var(--text-main); font-size: 0.85rem;">{{ $mb['team2'] }}</span>
                                     <span style="font-weight: 800; color: var(--text-main); font-size: 0.9rem;">{{ $mb['score2'] }} <span style="font-size:0.7rem; color:var(--text-dim);">({{ $mb['overs2'] }})</span></span>
                                 </div>
+                            </div>
+                            @else
+                            <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                <span style="display: inline-block; background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                                    {{ $s->category ?? 'International' }} &bull; {{ $s->format ?? 'T20' }}
+                                </span>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);">
+                                    {{ $s->total_matches ? $s->total_matches . ' Matches' : 'Completed' }}
+                                </span>
                             </div>
                             @endif
                         </div>

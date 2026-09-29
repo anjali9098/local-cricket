@@ -89,7 +89,7 @@ class HomeController extends Controller
                 ->get();
         }
 
-        // Fetch all tournaments with teams and recent matches (exclude empty tournaments without teams)
+        // Fetch all approved tournaments with teams and recent matches
         $allTournaments = Tournament::with([
                 'matches' => function($q) {
                     $q->has('team1')->has('team2')->orderBy('id', 'desc')->take(3);
@@ -98,12 +98,6 @@ class HomeController extends Controller
             ])
             ->where(function($q) { $q->whereNull('is_approved')->orWhere('is_approved', true); })
             ->where(function($q) { $q->whereNull('is_enabled')->orWhere('is_enabled', true); })
-            ->where(function($q) {
-                $q->has('teams', '>=', 2)
-                  ->orWhereHas('matches', function($mq) {
-                      $mq->has('team1')->has('team2');
-                  });
-            })
             ->orderBy('display_order', 'asc')
             ->orderBy('id', 'desc')
             ->get();
