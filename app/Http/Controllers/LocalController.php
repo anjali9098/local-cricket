@@ -262,9 +262,26 @@ class LocalController extends Controller
     public function manageTournament($id)
     {
         $tournament = $this->authorizeTournament($id);
-        $teams = \App\Models\Team::where('tournament_id', $id)->with('players')->get();
+        $teams = \App\Models\Team::where('tournament_id', $id)->get();
         $teamIds = $teams->pluck('id');
-        $players = \App\Models\Player::whereIn('team_id', $teamIds)->get();
+
+        $allTournamentPlayers = collect();
+        foreach ($teams as $t) {
+            $teamName = trim($t->name);
+            $squad = \App\Models\Player::where(function($q) use ($t, $teamName) {
+                $q->where('team_id', $t->id);
+                if (!empty($teamName)) {
+                    $q->orWhere('played_teams', 'like', "%{$teamName}%");
+                }
+            })->get()->unique('id')->values();
+
+            $t->setRelation('players', $squad);
+            foreach ($squad as $p) {
+                $allTournamentPlayers->push($p);
+            }
+        }
+
+        $players = $allTournamentPlayers->unique('id')->values();
         $matches = CricketMatch::where('tournament_id', $id)->with(['team1', 'team2', 'venue'])->orderBy('id', 'desc')->get();
 
         // 1. Detect all players currently playing in live matches across any tournament/series
@@ -798,24 +815,25 @@ class LocalController extends Controller
             return back()->with('error', 'Please select an existing player or enter a player name.');
         }
 
-        // Duplicate Check: Check if this player is already registered in this specific team's squad
-        $alreadyInTeam = \App\Models\Player::where('team_id', $team->id)
-            ->where('name', $playerName)
-            ->exists();
-
-        if ($alreadyInTeam) {
-            return back()->with('error', "Player '{$playerName}' is already registered in {$team->name}'s squad!");
-        }
-
-        // Reuse existing styles or photo if available
-        if (!$profileImage) {
-            $existingByName = \App\Models\Player::where('name', $playerName)->first();
-            if ($existingByName) {
-                $battingStyle = $battingStyle ?: $existingByName->batting_style;
-                $bowlingStyle = $bowlingStyle ?: $existingByName->bowling_style;
-                $country = $country ?: $existingByName->country;
-                $profileImage = $existingByName->profile_image;
+        // Reuse or update existing player if already registered globally
+        $existingByName = \App\Models\Player::where('name', $playerName)->first();
+        if ($existingByName) {
+            $existingTeams = array_filter(array_map('trim', explode(',', $existingByName->played_teams ?? '')));
+            if (!in_array($team->name, $existingTeams)) {
+                $existingTeams[] = $team->name;
+                $existingByName->played_teams = implode(', ', $existingTeams);
             }
+            if ($profileImage && empty($existingByName->profile_image)) {
+                $existingByName->profile_image = $profileImage;
+            }
+            if ($battingStyle && empty($existingByName->batting_style)) {
+                $existingByName->batting_style = $battingStyle;
+            }
+            if ($bowlingStyle && empty($existingByName->bowling_style)) {
+                $existingByName->bowling_style = $bowlingStyle;
+            }
+            $existingByName->save();
+            return back()->with('success', "Player '{$playerName}' successfully added to {$team->name}'s squad!");
         }
 
         // Create player in team roster
@@ -827,7 +845,8 @@ class LocalController extends Controller
             'batting_style' => $battingStyle,
             'bowling_style' => $bowlingStyle,
             'country' => $country,
-            'profile_image' => $profileImage
+            'profile_image' => $profileImage,
+            'played_teams' => $team->name,
         ]);
 
         return back()->with('success', "Player '{$playerName}' successfully added to {$team->name}!");

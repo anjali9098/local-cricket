@@ -234,7 +234,24 @@ class AdminController extends Controller
         $tournament = Tournament::findOrFail($id);
         $teams = Team::where('tournament_id', $id)->get();
         $teamIds = $teams->pluck('id');
-        $players = Player::whereIn('team_id', $teamIds)->get();
+
+        $allTournamentPlayers = collect();
+        foreach ($teams as $t) {
+            $teamName = trim($t->name);
+            $squad = Player::where(function($q) use ($t, $teamName) {
+                $q->where('team_id', $t->id);
+                if (!empty($teamName)) {
+                    $q->orWhere('played_teams', 'like', "%{$teamName}%");
+                }
+            })->get()->unique('id')->values();
+
+            $t->setRelation('players', $squad);
+            foreach ($squad as $p) {
+                $allTournamentPlayers->push($p);
+            }
+        }
+
+        $players = $allTournamentPlayers->unique('id')->values();
         $matches = CricketMatch::where('tournament_id', $id)->with(['team1', 'team2'])->orderBy('id', 'desc')->get();
 
         return view('admin.manage-tournament', compact('tournament', 'teams', 'players', 'matches'));
@@ -256,10 +273,35 @@ class AdminController extends Controller
 
     public function addPlayer(Request $request, $id)
     {
+        $name = trim($request->input('name', ''));
+        $teamId = $request->input('team_id');
+        $role = $request->input('role', 'Batsman');
+
+        if (empty($name)) {
+            return back()->with('error', 'Player name is required.');
+        }
+
+        $existing = Player::where('name', $name)->first();
+        if ($existing) {
+            $team = Team::find($teamId);
+            if ($team && !empty($team->name)) {
+                $existingTeams = array_filter(array_map('trim', explode(',', $existing->played_teams ?? '')));
+                if (!in_array($team->name, $existingTeams)) {
+                    $existingTeams[] = $team->name;
+                    $existing->played_teams = implode(', ', $existingTeams);
+                }
+            }
+            if ($role && in_array($role, ['All-Rounder', 'Bowler', 'Wicket-Keeper']) && ($existing->role === 'Batsman' || empty($existing->role))) {
+                $existing->role = $role;
+            }
+            $existing->save();
+            return back()->with('success', "Player '{$name}' squad updated successfully!");
+        }
+
         Player::create([
-            'team_id' => $request->input('team_id'),
-            'name' => $request->input('name'),
-            'role' => $request->input('role', 'batsman')
+            'team_id' => $teamId,
+            'name' => $name,
+            'role' => $role
         ]);
         return back()->with('success', 'Player added!');
     }
@@ -2035,6 +2077,19 @@ class AdminController extends Controller
         $players = $query->orderBy('id', 'desc')
             ->paginate(10, ['*'], 'page', (int) $request->query('page', 1))
             ->withQueryString();
+
+        if ($request->ajax() || $request->query('ajax') || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'html' => view('admin.partials.player_rows', compact('players'))->render(),
+                'total' => $players->total(),
+                'first_item' => $players->firstItem() ?? 0,
+                'last_item' => $players->lastItem() ?? 0,
+                'pagination_html' => $players->links()->toHtml(),
+                'has_results' => $players->count() > 0,
+            ]);
+        }
+
         $teams = Team::orderBy('name', 'asc')->get();
         return view('admin.admin_players', compact('players', 'editItem', 'teams', 'search', 'roleFilter'));
     }
@@ -2045,6 +2100,13 @@ class AdminController extends Controller
         if (empty($name)) {
             return back()->with('error', 'Player name is required.')->withInput();
         }
+
+        $existing = \App\Models\Player::where('name', $name)->first();
+        if ($existing) {
+            return redirect()->route('admin.players', ['edit' => $existing->id])
+                ->with('error', "A player named '{$name}' already exists in the database. You can edit their details here.");
+        }
+
         $country = trim($request->input('country', $request->input('nationality', '')));
 
         $profileImage = $this->handleUploadedImage($request, 'poster_file', 'profile_image', '');

@@ -28,12 +28,15 @@
 
             <!-- Search input & buttons -->
             <div style="display: flex; align-items: center; gap: 6px;">
-                <input type="text" id="story-search-input" oninput="filterStoryTable()" onkeyup="filterStoryTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterStoryTable();}" placeholder="Search web stories..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px;">
+                <div class="admin-search-wrapper">
+                    <input type="text" id="story-search-input" class="admin-search-input" oninput="filterStoryTable()" onkeyup="filterStoryTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterStoryTable();}" placeholder="Search web stories..." style="width: 220px;">
+                    <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
+                </div>
                 <button type="button" onclick="filterStoryTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                     Search
                 </button>
                 <button type="button" onclick="resetStorySearch()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Refresh
+                    Reset
                 </button>
             </div>
         </div>

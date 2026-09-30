@@ -14,6 +14,47 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Tailwind CSS (Full Responsive & Utility System) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Universal Admin Search Input Styling */
+        .admin-search-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .admin-search-input {
+            padding: 6px 28px 6px 12px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 4px !important;
+            font-size: 0.85rem !important;
+            outline: none !important;
+            background: #ffffff !important;
+            color: #1e293b !important;
+            transition: border-color 0.15s, box-shadow 0.15s !important;
+        }
+        .admin-search-input:focus {
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+        }
+        .admin-search-clear-btn {
+            position: absolute !important;
+            right: 7px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: transparent !important;
+            border: none !important;
+            font-size: 1.15rem !important;
+            color: #94a3b8 !important;
+            cursor: pointer !important;
+            padding: 0 4px !important;
+            line-height: 1 !important;
+            display: none;
+            z-index: 2;
+            transition: color 0.15s;
+        }
+        .admin-search-clear-btn:hover {
+            color: #475569 !important;
+        }
+    </style>
     <script>
         // Universal Image Preview and Client-side Base64 Compressor
         function previewAndConvertImage(fileInput, targetInputId, previewImgId, statusBadgeId, maxDimension = 700, quality = 0.85) {
@@ -873,185 +914,7 @@
             }
         }
     </style>
-</head>
-<body>
-
-    <!-- Mobile Sidebar Backdrop Overlay -->
-    <div class="admin-sidebar-backdrop" onclick="closeMobileSidebar()"></div>
-
-    @php
-        $navApprovalsCount = \App\Models\Tournament::where('category', 'local')->where('is_approved', false)->count();
-        $navDeletionsCount = \App\Models\Tournament::where('category', 'local')->where('delete_requested', true)->count();
-        $totalNavNotifications = $navApprovalsCount + $navDeletionsCount;
-    @endphp
-
-    <!-- Sidebar -->
-    <aside class="admin-sidebar" id="admin-sidebar">
-        <!-- Sidebar Brand Header + Close Button (on Mobile) -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #1e293b; flex-shrink: 0;">
-            <a href="{{ route('home') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-                <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" style="height: 34px; width: 34px; object-fit: contain; border-radius: 8px; background: white; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
-                <div>
-                    <div style="font-weight:900; font-size:0.92rem; color:white; line-height:1.1; letter-spacing:-0.02em;">CRICKET<span style="color:#38bdf8;">KASCORE</span></div>
-                    <div style="font-size:0.62rem; color:#94a3b8; font-weight:800; letter-spacing:1px; text-transform:uppercase;">SUPER ADMIN</div>
-                </div>
-            </a>
-            <button type="button" class="admin-sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close menu">
-                &times;
-            </button>
-        </div>
-        
-        <nav class="admin-nav">
-
-            <!-- Content Management Sub-Navigation -->
-            <div class="admin-subnav-label expanded" onclick="toggleSubnav(this)">
-                <span>📋 Content Management</span>
-                <span class="chevron">▶</span>
-            </div>
-            <div class="admin-subnav show" id="content-subnav">
-                <a href="{{ route('admin.match') }}" class="admin-subnav-item {{ request()->routeIs('admin.match') ? 'active' : '' }}">
-                    <span class="subnav-icon">📺</span> Live & Upcoming Matches
-                </a>
-                <a href="{{ route('admin.series') }}" class="admin-subnav-item {{ request()->routeIs('admin.series') ? 'active' : '' }}">
-                    <span class="subnav-icon">🏆</span> Series
-                </a>
-                <a href="{{ route('admin.match-preview') }}" class="admin-subnav-item {{ request()->routeIs('admin.match-preview*') ? 'active' : '' }}">
-                    <span class="subnav-icon">⚡</span> Match Preview
-                </a>
-                <a href="{{ route('admin.prediction') }}" class="admin-subnav-item {{ request()->routeIs('admin.prediction*') || request()->routeIs('admin.fantasy*') ? 'active' : '' }}">
-                    <span class="subnav-icon">🎯</span> Prediction & Fantasy Tips
-                </a>
-                <a href="{{ route('admin.article') }}" class="admin-subnav-item {{ request()->routeIs('admin.article') ? 'active' : '' }}">
-                    <span class="subnav-icon">📰</span> Latest Articles
-                </a>
-                <a href="{{ route('admin.news') }}" class="admin-subnav-item {{ request()->routeIs('admin.news') ? 'active' : '' }}">
-                    <span class="subnav-icon">📢</span> Latest News
-                </a>
-                <a href="{{ route('admin.popular') }}" class="admin-subnav-item {{ request()->routeIs('admin.popular*') || request()->routeIs('admin.teams*') ? 'active' : '' }}">
-                    <span class="subnav-icon">🏏</span> Most Popular Teams
-                </a>
-                <a href="{{ route('admin.ranking') }}" class="admin-subnav-item {{ request()->routeIs('admin.ranking') ? 'active' : '' }}">
-                    <span class="subnav-icon">📊</span> Team Rankings
-                </a>
-                <a href="{{ route('admin.story') }}" class="admin-subnav-item {{ request()->routeIs('admin.story') ? 'active' : '' }}">
-                    <span class="subnav-icon">📖</span> Web Stories
-                </a>
-                <a href="{{ route('admin.glossary') }}" class="admin-subnav-item {{ request()->routeIs('admin.glossary') ? 'active' : '' }}">
-                    <span class="subnav-icon">📚</span> Glossary Terms
-                </a>
-                <a href="{{ route('admin.players') }}" class="admin-subnav-item {{ request()->routeIs('admin.players*') ? 'active' : '' }}">
-                    <span class="subnav-icon">👤</span> Players
-                </a>
-                <a href="{{ route('admin.venues') }}" class="admin-subnav-item {{ request()->routeIs('admin.venues*') ? 'active' : '' }}">
-                    <span class="subnav-icon">🏟️</span> Venues
-                </a>
-                <a href="{{ route('admin.image-uploader') }}" class="admin-subnav-item {{ request()->routeIs('admin.image-uploader*') ? 'active' : '' }}">
-                    <span class="subnav-icon">🖼️</span> Standard Image Uploader
-                </a>
-            </div>
-
-            <a href="{{ route('home') }}" class="admin-nav-link">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                Go to Website
-            </a>
-
-            <a href="{{ route('admin.notifications') }}" class="admin-nav-link {{ request()->routeIs('admin.notifications') ? 'active' : '' }}" style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="display: flex; align-items: center;">
-                    <span style="font-size: 1.1rem; margin-right: 8px;">🔔</span>
-                    Notifications
-                </span>
-                @if($totalNavNotifications > 0)
-                    <span style="background: #ef4444; color: white; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;">
-                        {{ $totalNavNotifications }}
-                    </span>
-                @endif
-            </a>
-
-            <!-- Logout / Profile -->
-            <div style="margin-top: auto; padding: 16px; border-top: 1px solid #1e293b;">
-                <div style="color: white; font-weight: 700; font-size: 0.9rem; margin-bottom: 2px;">{{ Auth::user()->name ?? 'Super Admin' }}</div>
-                <div style="color: var(--admin-primary); font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 12px;">Super Admin</div>
-                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                    @csrf
-                    <button type="submit" style="background: transparent; border: 1px solid #334155; color: #94a3b8; width: 100%; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;">Logout</button>
-                </form>
-            </div>
-        </nav>
-    </aside>
-
-    <!-- Main Wrapper -->
-    <div class="admin-wrapper">
-        <!-- Top App Bar / Header (Mobile and Tablet) -->
-        <header class="admin-topbar">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <!-- Hamburger Menu Button -->
-                <button type="button" class="admin-hamburger-btn" onclick="toggleMobileSidebar()" aria-label="Toggle navigation menu">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                
-                <!-- Brand Title -->
-                <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
-                    <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px; background: white; padding: 2px;">
-                    <div>
-                        <span style="font-weight: 900; font-size: 0.9rem; color: #0f172a; line-height: 1.1; display: block;">CRICKET<span style="color: #0ea5e9;">KASCORE</span></span>
-                        <span style="font-size: 0.6rem; color: #64748b; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">SUPER ADMIN</span>
-                    </div>
-                </a>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <!-- Notifications Bell -->
-                <a href="{{ route('admin.notifications') }}" class="admin-topbar-icon-btn" title="Notifications">
-                    <span style="font-size: 1.05rem;">🔔</span>
-                    @if($totalNavNotifications > 0)
-                        <span class="admin-topbar-badge">{{ $totalNavNotifications }}</span>
-                    @endif
-                </a>
-
-                <!-- Website Link -->
-                <a href="{{ route('home') }}" class="admin-topbar-web-btn" title="View Public Website">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                    <span class="hidden sm:inline">Website</span>
-                </a>
-            </div>
-        </header>
-
-        <!-- Content Area -->
-        <main class="admin-content">
-            @yield('content')
-        </main>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: calc(100vw - 48px);">
-        @if(session('success'))
-            <div class="toast-alert" style="background: #10b981; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 260px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out; font-size: 0.9rem;">
-                <span>{{ session('success') }}</span>
-                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8; margin-left: 10px;">&times;</button>
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="toast-alert" style="background: #ef4444; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 260px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out; font-size: 0.9rem;">
-                <span>{{ session('error') }}</span>
-                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8; margin-left: 10px;">&times;</button>
-            </div>
-        @endif
-    </div>
-    
     <script>
-        function toggleSubnav(label) {
-            if (!label) return;
-            label.classList.toggle('expanded');
-            const subnav = label.nextElementSibling;
-            if (subnav && subnav.classList.contains('admin-subnav')) {
-                subnav.classList.toggle('show');
-            }
-        }
-
         /* ==========================================================
            UNIVERSAL ADMIN TABLE MANAGER (SMART FILTERING & SEARCH)
            ========================================================== */
@@ -1074,12 +937,47 @@
             init() {
                 const searchInput = document.getElementById(this.searchInputId);
                 if (searchInput) {
-                    searchInput.addEventListener('input', () => this.applyFilter(1));
-                    searchInput.addEventListener('keyup', () => this.applyFilter(1));
-                    searchInput.addEventListener('change', () => this.applyFilter(1));
+                    const wrapper = searchInput.closest('.admin-search-wrapper');
+                    const clearBtn = wrapper ? wrapper.querySelector('.admin-search-clear-btn') : document.getElementById(`${this.searchInputId}-clear`);
+
+                    const updateClearBtn = () => {
+                        if (clearBtn) {
+                            clearBtn.style.display = searchInput.value.trim().length > 0 ? 'inline-block' : 'none';
+                        }
+                    };
+
+                    if (clearBtn) {
+                        clearBtn.addEventListener('click', () => {
+                            searchInput.value = '';
+                            updateClearBtn();
+                            this.applyFilter(1);
+                            searchInput.focus();
+                        });
+                    }
+
+                    searchInput.addEventListener('input', () => {
+                        updateClearBtn();
+                        this.applyFilter(1);
+                    });
+                    searchInput.addEventListener('keyup', () => {
+                        updateClearBtn();
+                        this.applyFilter(1);
+                    });
+                    searchInput.addEventListener('change', () => {
+                        updateClearBtn();
+                        this.applyFilter(1);
+                    });
+                    searchInput.addEventListener('paste', () => {
+                        setTimeout(() => {
+                            updateClearBtn();
+                            this.applyFilter(1);
+                        }, 50);
+                    });
                     searchInput.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') { e.preventDefault(); this.applyFilter(1); }
                     });
+
+                    updateClearBtn();
                 }
 
                 this.filterSelects.forEach(f => {
@@ -1098,7 +996,12 @@
 
             reset() {
                 const searchInput = document.getElementById(this.searchInputId);
-                if (searchInput) searchInput.value = '';
+                if (searchInput) {
+                    searchInput.value = '';
+                    const wrapper = searchInput.closest('.admin-search-wrapper');
+                    const clearBtn = wrapper ? wrapper.querySelector('.admin-search-clear-btn') : document.getElementById(`${this.searchInputId}-clear`);
+                    if (clearBtn) clearBtn.style.display = 'none';
+                }
 
                 this.filterSelects.forEach(f => {
                     const el = document.getElementById(f.id);
@@ -1296,6 +1199,189 @@
                 `;
 
                 container.innerHTML = html;
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="admin-sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
+    @php
+        $navApprovalsCount = \App\Models\Tournament::where('category', 'local')->where('is_approved', false)->count();
+        $navDeletionsCount = \App\Models\Tournament::where('category', 'local')->where('delete_requested', true)->count();
+        $totalNavNotifications = $navApprovalsCount + $navDeletionsCount;
+    @endphp
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <!-- Sidebar Brand Header + Close Button (on Mobile) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #1e293b; flex-shrink: 0;">
+            <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none;" title="Go to Super Admin Dashboard">
+                <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" style="height: 34px; width: 34px; object-fit: contain; border-radius: 8px; background: white; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+                <div>
+                    <div style="font-weight:900; font-size:0.92rem; color:white; line-height:1.1; letter-spacing:-0.02em;">CRICKET<span style="color:#38bdf8;">KASCORE</span></div>
+                    <div style="font-size:0.62rem; color:#94a3b8; font-weight:800; letter-spacing:1px; text-transform:uppercase;">SUPER ADMIN</div>
+                </div>
+            </a>
+            <button type="button" class="admin-sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close menu">
+                &times;
+            </button>
+        </div>
+        
+        <nav class="admin-nav">
+            <a href="{{ route('admin.dashboard') }}" class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" style="margin-bottom: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Dashboard Overview
+            </a>
+
+            <!-- Content Management Sub-Navigation -->
+            <div class="admin-subnav-label expanded" onclick="toggleSubnav(this)">
+                <span>📋 Content Management</span>
+                <span class="chevron">▶</span>
+            </div>
+            <div class="admin-subnav show" id="content-subnav">
+                <a href="{{ route('admin.match') }}" class="admin-subnav-item {{ request()->routeIs('admin.match') ? 'active' : '' }}">
+                    <span class="subnav-icon">📺</span> Live & Upcoming Matches
+                </a>
+                <a href="{{ route('admin.series') }}" class="admin-subnav-item {{ request()->routeIs('admin.series') ? 'active' : '' }}">
+                    <span class="subnav-icon">🏆</span> Series
+                </a>
+                <a href="{{ route('admin.match-preview') }}" class="admin-subnav-item {{ request()->routeIs('admin.match-preview*') ? 'active' : '' }}">
+                    <span class="subnav-icon">⚡</span> Match Preview
+                </a>
+                <a href="{{ route('admin.prediction') }}" class="admin-subnav-item {{ request()->routeIs('admin.prediction*') || request()->routeIs('admin.fantasy*') ? 'active' : '' }}">
+                    <span class="subnav-icon">🎯</span> Prediction & Fantasy Tips
+                </a>
+                <a href="{{ route('admin.article') }}" class="admin-subnav-item {{ request()->routeIs('admin.article') ? 'active' : '' }}">
+                    <span class="subnav-icon">📰</span> Latest Articles
+                </a>
+                <a href="{{ route('admin.news') }}" class="admin-subnav-item {{ request()->routeIs('admin.news') ? 'active' : '' }}">
+                    <span class="subnav-icon">📢</span> Latest News
+                </a>
+                <a href="{{ route('admin.popular') }}" class="admin-subnav-item {{ request()->routeIs('admin.popular*') || request()->routeIs('admin.teams*') ? 'active' : '' }}">
+                    <span class="subnav-icon">🏏</span> Most Popular Teams
+                </a>
+                <a href="{{ route('admin.ranking') }}" class="admin-subnav-item {{ request()->routeIs('admin.ranking') ? 'active' : '' }}">
+                    <span class="subnav-icon">📊</span> Team Rankings
+                </a>
+                <a href="{{ route('admin.story') }}" class="admin-subnav-item {{ request()->routeIs('admin.story') ? 'active' : '' }}">
+                    <span class="subnav-icon">📖</span> Web Stories
+                </a>
+                <a href="{{ route('admin.glossary') }}" class="admin-subnav-item {{ request()->routeIs('admin.glossary') ? 'active' : '' }}">
+                    <span class="subnav-icon">📚</span> Glossary Terms
+                </a>
+                <a href="{{ route('admin.players') }}" class="admin-subnav-item {{ request()->routeIs('admin.players*') ? 'active' : '' }}">
+                    <span class="subnav-icon">👤</span> Players
+                </a>
+                <a href="{{ route('admin.venues') }}" class="admin-subnav-item {{ request()->routeIs('admin.venues*') ? 'active' : '' }}">
+                    <span class="subnav-icon">🏟️</span> Venues
+                </a>
+                <a href="{{ route('admin.image-uploader') }}" class="admin-subnav-item {{ request()->routeIs('admin.image-uploader*') ? 'active' : '' }}">
+                    <span class="subnav-icon">🖼️</span> Standard Image Uploader
+                </a>
+            </div>
+
+            <a href="{{ route('home') }}" class="admin-nav-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Go to Website
+            </a>
+
+            <a href="{{ route('admin.notifications') }}" class="admin-nav-link {{ request()->routeIs('admin.notifications') ? 'active' : '' }}" style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="display: flex; align-items: center;">
+                    <span style="font-size: 1.1rem; margin-right: 8px;">🔔</span>
+                    Notifications
+                </span>
+                @if($totalNavNotifications > 0)
+                    <span style="background: #ef4444; color: white; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;">
+                        {{ $totalNavNotifications }}
+                    </span>
+                @endif
+            </a>
+
+            <!-- Logout / Profile -->
+            <div style="margin-top: auto; padding: 16px; border-top: 1px solid #1e293b;">
+                <div style="color: white; font-weight: 700; font-size: 0.9rem; margin-bottom: 2px;">{{ Auth::user()->name ?? 'Super Admin' }}</div>
+                <div style="color: var(--admin-primary); font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 12px;">Super Admin</div>
+                <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                    @csrf
+                    <button type="submit" style="background: transparent; border: 1px solid #334155; color: #94a3b8; width: 100%; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;">Logout</button>
+                </form>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="admin-wrapper">
+        <!-- Top App Bar / Header (Mobile and Tablet) -->
+        <header class="admin-topbar">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Hamburger Menu Button -->
+                <button type="button" class="admin-hamburger-btn" onclick="toggleMobileSidebar()" aria-label="Toggle navigation menu">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                
+                <!-- Brand Title -->
+                <a href="{{ route('admin.dashboard') }}" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" style="height: 28px; width: 28px; object-fit: contain; border-radius: 6px; background: white; padding: 2px;">
+                    <div>
+                        <span style="font-weight: 900; font-size: 0.9rem; color: #0f172a; line-height: 1.1; display: block;">CRICKET<span style="color: #0ea5e9;">KASCORE</span></span>
+                        <span style="font-size: 0.6rem; color: #64748b; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">SUPER ADMIN</span>
+                    </div>
+                </a>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <!-- Notifications Bell -->
+                <a href="{{ route('admin.notifications') }}" class="admin-topbar-icon-btn" title="Notifications">
+                    <span style="font-size: 1.05rem;">🔔</span>
+                    @if($totalNavNotifications > 0)
+                        <span class="admin-topbar-badge">{{ $totalNavNotifications }}</span>
+                    @endif
+                </a>
+
+                <!-- Website Link -->
+                <a href="{{ route('home') }}" class="admin-topbar-web-btn" title="View Public Website">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    <span class="hidden sm:inline">Website</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="admin-content">
+            @yield('content')
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: calc(100vw - 48px);">
+        @if(session('success'))
+            <div class="toast-alert" style="background: #10b981; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 260px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out; font-size: 0.9rem;">
+                <span>{{ session('success') }}</span>
+                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8; margin-left: 10px;">&times;</button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="toast-alert" style="background: #ef4444; color: white; padding: 14px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: space-between; min-width: 260px; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s ease-out; font-size: 0.9rem;">
+                <span>{{ session('error') }}</span>
+                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.8; margin-left: 10px;">&times;</button>
+            </div>
+        @endif
+    </div>
+    
+    <script>
+        function toggleSubnav(label) {
+            if (!label) return;
+            label.classList.toggle('expanded');
+            const subnav = label.nextElementSibling;
+            if (subnav && subnav.classList.contains('admin-subnav')) {
+                subnav.classList.toggle('show');
             }
         }
 

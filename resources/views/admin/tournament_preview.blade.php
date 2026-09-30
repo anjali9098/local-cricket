@@ -23,7 +23,9 @@
                 . ($seoCity ? ', ' . $seoCity . ' cricket' : '')
                 . ($seoState ? ', ' . $seoState . ' cricket tournament' : '')
                 . ', grassroots cricket, gully cricket, CricketKaScore';
-    $canonicalUrl = route('local.tournament.preview', $tournament->id);
+    $canonicalUrl = (isset($isLocal) && $isLocal) ? route('local.tournament.preview', $tournament->id) : route('admin.tournament.preview', $tournament->id);
+    $dashboardUrl = (isset($isLocal) && $isLocal) ? route('local.dashboard') : route('admin.dashboard');
+    $dashboardName = (isset($isLocal) && $isLocal) ? 'Local Dashboard' : 'Admin Dashboard';
 @endphp
 
 @section('pageTitle', $pageTitle)
@@ -61,9 +63,9 @@
     'breadcrumb'  => [
         '@type'           => 'BreadcrumbList',
         'itemListElement' => array_filter([
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home',            'item' => url('/')],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Local Dashboard', 'item' => route('local.dashboard')],
-            ['@type' => 'ListItem', 'position' => 3, 'name' => $seoName,          'item' => $canonicalUrl],
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home',          'item' => url('/')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => $dashboardName,   'item' => $dashboardUrl],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $seoName,        'item' => $canonicalUrl],
         ]),
     ],
 ]), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) !!}

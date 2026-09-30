@@ -48,12 +48,15 @@
 
         <!-- Live Matches Search -->
         <div style="display: flex; align-items: center; gap: 6px;">
-            <input type="text" id="match-search-input" oninput="filterMatches()" onkeyup="filterMatches()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterMatches();}" placeholder="Search matches..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px;">
+            <div class="admin-search-wrapper">
+                <input type="text" id="match-search-input" class="admin-search-input" oninput="filterMatches()" onkeyup="filterMatches()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterMatches();}" placeholder="Search matches..." style="width: 220px;">
+                <button type="button" class="admin-search-clear-btn" onclick="document.getElementById('match-search-input').value=''; filterMatches(); this.style.display='none';" title="Clear search">&times;</button>
+            </div>
             <button type="button" onclick="filterMatches()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                 Search
             </button>
-            <button type="button" onclick="document.getElementById('match-search-input').value=''; filterMatches();" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                Refresh
+            <button type="button" onclick="document.getElementById('match-search-input').value=''; filterMatches(); const btn = document.querySelector('#match-search-input ~ .admin-search-clear-btn'); if(btn) btn.style.display='none';" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                Reset
             </button>
         </div>
     </div>

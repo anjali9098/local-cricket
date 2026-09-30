@@ -16,7 +16,7 @@ class SyncPossible11Series extends Command
                             {--status=live : Status of series to sync: live, upcoming, completed, all}
                             {--sport=Cricket : Sport: Cricket, Football, etc.}
                             {--id= : Specific series ID to sync}
-                            {--squads : Also sync team player squads}';
+                            {--no-squads : Disable player squads synchronization}';
 
     /**
      * The console command description.
@@ -33,7 +33,7 @@ class SyncPossible11Series extends Command
         $this->info('Starting Possible11 API synchronization...');
 
         $seriesId = $this->option('id');
-        $syncSquads = (bool)$this->option('squads');
+        $syncSquads = !$this->option('no-squads');
 
         if (!empty($seriesId)) {
             $this->info("Synchronizing specific series ID: {$seriesId}...");

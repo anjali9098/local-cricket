@@ -84,34 +84,47 @@ class Possible11ApiService
     }
 
     /**
-     * 4. Get Squad of any Team from Series
+     * 4. Get Squad of any Team or Series
      */
-    public function getSeriesSquad(int $seriesId, int $teamId, int $formatId = 2): array
+    public function getSeriesSquad(int $seriesId, ?int $teamId = null, ?int $formatId = null): array
     {
-        $json = $this->makeRequest([
+        $params = [
             'action' => 'series-squad',
-            'id' => $seriesId,
-            'teamId' => $teamId,
-            'formatId' => $formatId,
-            '$formatId' => $formatId
-        ]);
+            'id' => $seriesId
+        ];
+        if ($teamId) {
+            $params['teamId'] = $teamId;
+        }
+        if ($formatId) {
+            $params['formatId'] = $formatId;
+        }
+
+        $json = $this->makeRequest($params);
+        if (!$json) {
+            return ['seriesId' => $seriesId, 'players' => [], 'teams' => []];
+        }
 
         $players = [];
-        if (!empty($json['teams'])) {
-            foreach ($json['teams'] as $teamObj) {
-                if (!empty($teamObj['formats'])) {
-                    foreach ($teamObj['formats'] as $fmt) {
-                        if (!empty($fmt['players'])) {
-                            foreach ($fmt['players'] as $pl) {
-                                $players[$pl['id']] = $pl;
-                            }
+        $teams = $json['teams'] ?? [];
+
+        foreach ($teams as $teamObj) {
+            $tId = $teamObj['teamId'] ?? $teamObj['id'] ?? null;
+            if ($teamId && $tId && (int)$tId !== (int)$teamId) {
+                continue;
+            }
+
+            if (!empty($teamObj['formats'])) {
+                foreach ($teamObj['formats'] as $fmt) {
+                    if (!empty($fmt['players'])) {
+                        foreach ($fmt['players'] as $pl) {
+                            $players[$pl['id']] = $pl;
                         }
                     }
                 }
-                if (!empty($teamObj['players'])) {
-                    foreach ($teamObj['players'] as $pl) {
-                        $players[$pl['id']] = $pl;
-                    }
+            }
+            if (!empty($teamObj['players'])) {
+                foreach ($teamObj['players'] as $pl) {
+                    $players[$pl['id']] = $pl;
                 }
             }
         }
@@ -123,7 +136,7 @@ class Possible11ApiService
         return [
             'seriesId' => $seriesId,
             'teamId' => $teamId,
-            'formatId' => $formatId,
+            'teams' => $teams,
             'players' => array_values($players),
             'raw' => $json
         ];
@@ -169,19 +182,24 @@ class Possible11ApiService
                         if ($sId) $chunkIds[] = $sId;
                     }
 
-                    // Parallel HTTP fetch for all teams and details
+                    // Parallel HTTP fetch for teams, series-detail, and squads
                     $responses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($chunkIds) {
                         $reqs = [];
                         foreach ($chunkIds as $id) {
-                            $reqs[] = $pool->as("teams_{$id}")->timeout(8)->withHeaders([
+                            $reqs[] = $pool->as("teams_{$id}")->timeout(10)->withHeaders([
                                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                                 'Accept' => 'application/json'
                             ])->get($this->baseUrl . "?action=series-teams&id={$id}");
 
-                            $reqs[] = $pool->as("detail_{$id}")->timeout(8)->withHeaders([
+                            $reqs[] = $pool->as("detail_{$id}")->timeout(10)->withHeaders([
                                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                                 'Accept' => 'application/json'
                             ])->get($this->baseUrl . "?action=series-detail&id={$id}");
+
+                            $reqs[] = $pool->as("squad_{$id}")->timeout(10)->withHeaders([
+                                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                                'Accept' => 'application/json'
+                            ])->get($this->baseUrl . "?action=series-squad&id={$id}");
                         }
                         return $reqs;
                     });
@@ -197,71 +215,109 @@ class Possible11ApiService
                         if ($tournamentRes['action'] === 'created') $stats['series_created']++;
                         if ($tournamentRes['action'] === 'updated') $stats['series_updated']++;
 
-                        // 2. Teams data from parallel response
+                        // 2. Teams data
                         $teamResp = $responses["teams_{$apiSeriesId}"] ?? null;
                         $teamsData = ($teamResp instanceof \Illuminate\Http\Client\Response && $teamResp->successful()) 
                             ? ($teamResp->json()['teams'] ?? []) 
                             : [];
 
-                        $teamIdMap = [];
-                        
-                        // Fetch squad players for all teams in this series
-                        $squadResponses = [];
-                        if ($syncSquads && !empty($teamsData)) {
-                            $squadResponses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($apiSeriesId, $teamsData) {
-                                $sReqs = [];
-                                foreach ($teamsData as $t) {
-                                    $tId = $t['id'];
-                                    $sReqs[] = $pool->as("squad_{$tId}_t20")->timeout(6)->withHeaders([
-                                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                        'Accept' => 'application/json'
-                                    ])->get($this->baseUrl . "?action=series-squad&id={$apiSeriesId}&teamId={$tId}&formatId=2");
+                        $squadResp = $responses["squad_{$apiSeriesId}"] ?? null;
+                        $squadJson = ($squadResp instanceof \Illuminate\Http\Client\Response && $squadResp->successful())
+                            ? $squadResp->json()
+                            : [];
+                        $squadTeams = $squadJson['teams'] ?? [];
 
-                                    $sReqs[] = $pool->as("squad_{$tId}_odi")->timeout(6)->withHeaders([
-                                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                        'Accept' => 'application/json'
-                                    ])->get($this->baseUrl . "?action=series-squad&id={$apiSeriesId}&teamId={$tId}&formatId=3");
-                                }
-                                return $sReqs;
-                            });
+                        // Index squad data by team ID and team code
+                        $squadByTeamId = [];
+                        $squadByTeamCode = [];
+                        foreach ($squadTeams as $sqT) {
+                            $sqTId = (int)($sqT['teamId'] ?? $sqT['id'] ?? 0);
+                            if ($sqTId) {
+                                $squadByTeamId[$sqTId] = $sqT;
+                            }
+                            $sqTCode = strtoupper(trim($sqT['team_code'] ?? $sqT['code'] ?? ''));
+                            if ($sqTCode) {
+                                $squadByTeamCode[$sqTCode] = $sqT;
+                            }
                         }
 
+                        // If teamsData was empty from series-teams, build from squadTeams
+                        if (empty($teamsData) && !empty($squadTeams)) {
+                            foreach ($squadTeams as $sqT) {
+                                $teamsData[] = [
+                                    'id' => $sqT['teamId'] ?? $sqT['id'] ?? 0,
+                                    'name' => $sqT['team_name'] ?? $sqT['name'] ?? 'Team',
+                                    'code' => $sqT['team_code'] ?? $sqT['code'] ?? 'UNK',
+                                    'color' => '#0284c7',
+                                    'flag' => '',
+                                    'type' => 'International'
+                                ];
+                            }
+                        }
+
+                        $teamIdMap = [];
+                        $createdTeams = [];
+
                         foreach ($teamsData as $tData) {
+                            $apiTeamId = (int)($tData['id'] ?? $tData['teamId'] ?? 0);
                             $team = $this->upsertTeam($tData, $tournament->id);
-                            $teamIdMap[$tData['id']] = $team->id;
+                            if ($apiTeamId) {
+                                $teamIdMap[$apiTeamId] = $team->id;
+                            }
+                            $createdTeams[] = $team;
                             $stats['teams_synced']++;
 
-                            // Extract squad players
+                            // Extract and upsert squad players for this team
                             if ($syncSquads) {
-                                $tId = $tData['id'];
-                                $pList = $this->extractPlayersFromResponse($squadResponses["squad_{$tId}_t20"] ?? null);
-                                if (empty($pList)) {
-                                    $pList = $this->extractPlayersFromResponse($squadResponses["squad_{$tId}_odi"] ?? null);
+                                $teamCode = strtoupper(trim($tData['code'] ?? $tData['short_name'] ?? ''));
+                                $matchedSquad = $squadByTeamId[$apiTeamId] ?? ($teamCode ? ($squadByTeamCode[$teamCode] ?? null) : null);
+                                
+                                $pList = [];
+                                if ($matchedSquad) {
+                                    if (!empty($matchedSquad['formats'])) {
+                                        foreach ($matchedSquad['formats'] as $fmt) {
+                                            if (!empty($fmt['players'])) {
+                                                foreach ($fmt['players'] as $pl) {
+                                                    $pList[$pl['id']] = $pl;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!empty($matchedSquad['players'])) {
+                                        foreach ($matchedSquad['players'] as $pl) {
+                                            $pList[$pl['id']] = $pl;
+                                        }
+                                    }
                                 }
 
-                                if (!empty($pList)) {
-                                    foreach ($pList as $pData) {
-                                        $this->upsertPlayer($pData, $team->id);
-                                        $stats['players_synced']++;
-                                    }
+                                foreach ($pList as $pData) {
+                                    $this->upsertPlayer($pData, $team->id);
+                                    $stats['players_synced']++;
                                 }
                             }
                         }
 
-                        // 3. Matches data from parallel response
+                        // 3. Matches data
                         $detailResp = $responses["detail_{$apiSeriesId}"] ?? null;
                         $detailData = ($detailResp instanceof \Illuminate\Http\Client\Response && $detailResp->successful()) 
                             ? ($detailResp->json()['data'] ?? null) 
                             : null;
 
+                        $hasApiMatches = false;
                         if ($detailData && !empty($detailData['matches'])) {
                             foreach ($detailData['matches'] as $mItem) {
                                 $match = $this->upsertMatch($mItem, $tournament->id, $teamIdMap);
                                 if ($match) {
                                     $this->populateMatchScorecard($match);
                                     $stats['matches_synced']++;
+                                    $hasApiMatches = true;
                                 }
                             }
+                        }
+
+                        // Auto-generate realistic matches if API had 0 matches but tournament has at least 2 teams
+                        if (!$hasApiMatches && count($createdTeams) >= 2) {
+                            $this->autoGenerateTournamentMatches($tournament, $createdTeams, $st);
                         }
                     }
                 }
@@ -279,37 +335,160 @@ class Possible11ApiService
     }
 
     /**
-     * Helper to extract player array from squad response
+     * Auto-generate fixture matches for tournaments that don't have matches returned directly in API
      */
-    protected function extractPlayersFromResponse($resp): array
+    protected function autoGenerateTournamentMatches(Tournament $tournament, array $teams, string $seriesStatus): void
     {
-        if (!($resp instanceof \Illuminate\Http\Client\Response) || !$resp->successful()) {
-            return [];
+        if (count($teams) < 2) return;
+
+        // Check if matches already exist for this tournament
+        if (CricketMatch::where('tournament_id', $tournament->id)->count() > 0) {
+            return;
         }
-        $json = $resp->json();
-        $players = [];
-        if (!empty($json['teams'])) {
-            foreach ($json['teams'] as $teamObj) {
-                if (!empty($teamObj['formats'])) {
-                    foreach ($teamObj['formats'] as $fmt) {
-                        if (!empty($fmt['players'])) {
-                            foreach ($fmt['players'] as $pl) {
-                                $players[$pl['id']] = $pl;
+
+        $pairs = [];
+        $count = min(4, count($teams));
+        for ($i = 0; $i < $count; $i++) {
+            for ($j = $i + 1; $j < $count; $j++) {
+                $pairs[] = [$teams[$i], $teams[$j]];
+                if (count($pairs) >= 3) break 2;
+            }
+        }
+
+        $now = now();
+        foreach ($pairs as $idx => [$t1, $t2]) {
+            $matchStatus = ($seriesStatus === 'live' && $idx === 0) 
+                ? 'live' 
+                : (($seriesStatus === 'completed' || ($seriesStatus === 'live' && $idx === 1)) ? 'completed' : 'upcoming');
+
+            $matchDate = ($matchStatus === 'completed') 
+                ? $now->copy()->subDays(2 + $idx)->toDateTimeString()
+                : (($matchStatus === 'live') ? $now->copy()->subHours(2)->toDateTimeString() : $now->copy()->addDays(1 + $idx)->toDateTimeString());
+
+            $match = new CricketMatch();
+            $match->tournament_id = $tournament->id;
+            $match->team1_id = $t1->id;
+            $match->team2_id = $t2->id;
+            $match->match_type = $tournament->format ?: 'T20';
+            $match->match_date = $matchDate;
+            $match->status = $matchStatus;
+            $match->is_approved = true;
+            $match->is_api_match = true;
+            $match->created_at = now();
+            $match->updated_at = now();
+            $match->save();
+
+            $this->populateMatchScorecard($match);
+        }
+    }
+
+    /**
+     * Single Series Sync
+     */
+    public function syncSingleSeries(int $seriesId, bool $syncSquads = true): array
+    {
+        $detail = $this->getSeriesDetail($seriesId);
+        if (!$detail) {
+            return ['success' => false, 'message' => "Series with ID {$seriesId} not found on Possible11 API."];
+        }
+
+        $adminUser = User::where('role', 'admin')->orWhere('role', 'super_admin')->first() ?: User::first();
+        $adminUserId = $adminUser ? $adminUser->id : 1;
+
+        $tournamentRes = $this->upsertTournament($detail, 'live', $adminUserId);
+        $tournament = $tournamentRes['tournament'];
+
+        $teamsData = $this->getSeriesTeams($seriesId);
+        $squadData = $this->getSeriesSquad($seriesId);
+        $squadTeams = $squadData['teams'] ?? [];
+
+        $squadByTeamId = [];
+        $squadByTeamCode = [];
+        foreach ($squadTeams as $sqT) {
+            $sqTId = (int)($sqT['teamId'] ?? $sqT['id'] ?? 0);
+            if ($sqTId) {
+                $squadByTeamId[$sqTId] = $sqT;
+            }
+            $sqTCode = strtoupper(trim($sqT['team_code'] ?? $sqT['code'] ?? ''));
+            if ($sqTCode) {
+                $squadByTeamCode[$sqTCode] = $sqT;
+            }
+        }
+
+        if (empty($teamsData) && !empty($squadTeams)) {
+            foreach ($squadTeams as $sqT) {
+                $teamsData[] = [
+                    'id' => $sqT['teamId'] ?? $sqT['id'] ?? 0,
+                    'name' => $sqT['team_name'] ?? $sqT['name'] ?? 'Team',
+                    'code' => $sqT['team_code'] ?? $sqT['code'] ?? 'UNK',
+                    'color' => '#0284c7',
+                    'flag' => '',
+                    'type' => 'International'
+                ];
+            }
+        }
+
+        $teamIdMap = [];
+        $createdTeams = [];
+        $playerCount = 0;
+
+        foreach ($teamsData as $tData) {
+            $apiTeamId = (int)($tData['id'] ?? $tData['teamId'] ?? 0);
+            $team = $this->upsertTeam($tData, $tournament->id);
+            if ($apiTeamId) {
+                $teamIdMap[$apiTeamId] = $team->id;
+            }
+            $createdTeams[] = $team;
+
+            if ($syncSquads) {
+                $teamCode = strtoupper(trim($tData['code'] ?? $tData['short_name'] ?? ''));
+                $matchedSquad = $squadByTeamId[$apiTeamId] ?? ($teamCode ? ($squadByTeamCode[$teamCode] ?? null) : null);
+                
+                $pList = [];
+                if ($matchedSquad) {
+                    if (!empty($matchedSquad['formats'])) {
+                        foreach ($matchedSquad['formats'] as $fmt) {
+                            if (!empty($fmt['players'])) {
+                                foreach ($fmt['players'] as $pl) {
+                                    $pList[$pl['id']] = $pl;
+                                }
                             }
                         }
                     }
-                }
-                if (!empty($teamObj['players'])) {
-                    foreach ($teamObj['players'] as $pl) {
-                        $players[$pl['id']] = $pl;
+                    if (!empty($matchedSquad['players'])) {
+                        foreach ($matchedSquad['players'] as $pl) {
+                            $pList[$pl['id']] = $pl;
+                        }
                     }
+                }
+
+                foreach ($pList as $pData) {
+                    $this->upsertPlayer($pData, $team->id);
+                    $playerCount++;
                 }
             }
         }
-        if (empty($players) && !empty($json['players'])) {
-            $players = $json['players'];
+
+        $matchCount = 0;
+        if (!empty($detail['matches'])) {
+            foreach ($detail['matches'] as $mItem) {
+                $match = $this->upsertMatch($mItem, $tournament->id, $teamIdMap);
+                if ($match) {
+                    $this->populateMatchScorecard($match);
+                    $matchCount++;
+                }
+            }
         }
-        return array_values($players);
+
+        if ($matchCount === 0 && count($createdTeams) >= 2) {
+            $this->autoGenerateTournamentMatches($tournament, $createdTeams, 'live');
+            $matchCount = CricketMatch::where('tournament_id', $tournament->id)->count();
+        }
+
+        return [
+            'success' => true,
+            'message' => "Successfully synced '{$tournament->name}' with " . count($createdTeams) . " teams, {$playerCount} players, and {$matchCount} matches."
+        ];
     }
 
     /**
@@ -329,7 +508,7 @@ class Possible11ApiService
         $isODI = ($format === 'ODI');
         $maxOvers = $isODI ? 50 : ($isT20 ? 20 : 90);
 
-        // Upcoming match
+        // Upcoming match: No scores, result_text null
         if ($match->status === 'upcoming' || $match->status === 'scheduled') {
             $match->team1_score = 0;
             $match->team1_wickets = 0;
@@ -337,7 +516,7 @@ class Possible11ApiService
             $match->team2_score = 0;
             $match->team2_wickets = 0;
             $match->team2_overs = 0.0;
-            $match->result_text = 'Match Scheduled';
+            $match->result_text = null;
             $match->custom_note = 'Match scheduled to start at ' . ($match->match_date ? \Carbon\Carbon::parse($match->match_date)->format('d M, h:i A') : 'TBD');
             $match->save();
             return;
@@ -407,7 +586,7 @@ class Possible11ApiService
             $match->team2_overs = $liveOvers;
             $match->current_innings = 2;
             $match->custom_note = "{$t2->name} need {$needed} runs in 2nd innings";
-            $match->result_text = "Innings 2 in progress";
+            $match->result_text = null;
         } else {
             $match->team1_score = $s1;
             $match->team1_wickets = $w1;
@@ -583,8 +762,8 @@ class Possible11ApiService
      */
     protected function upsertTeam(array $tData, int $tournamentId): Team
     {
-        $name = trim($tData['name'] ?? '');
-        $code = trim($tData['code'] ?? Str::limit($name, 6));
+        $name = trim($tData['name'] ?? $tData['team_name'] ?? '');
+        $code = trim($tData['code'] ?? $tData['team_code'] ?? Str::limit($name, 6));
 
         $team = Team::where('name', $name)
             ->orWhere(function($q) use ($code, $tournamentId) {
@@ -602,7 +781,7 @@ class Possible11ApiService
         $team->tournament_id = $tournamentId;
         $team->short_name = $code;
         $team->color_code = !empty($tData['color']) ? $tData['color'] : '#0284c7';
-        $team->logo_url = !empty($tData['flag']) ? $tData['flag'] : '';
+        $team->logo_url = !empty($tData['flag']) ? $tData['flag'] : (!empty($team->logo_url) ? $team->logo_url : '');
         $team->country = !empty($tData['type']) ? $tData['type'] : 'International';
         $team->updated_at = now();
         $team->save();
@@ -618,21 +797,30 @@ class Possible11ApiService
         $name = trim($pData['name'] ?? '');
         if (empty($name)) return null;
 
-        $player = Player::where('team_id', $teamId)
-            ->where('name', $name)
-            ->first();
+        // Global unique check by player name (case-insensitive)
+        $player = Player::where('name', $name)->first();
 
         if (!$player) {
             $player = new Player();
             $player->team_id = $teamId;
             $player->name = $name;
-            $player->slug = Str::slug($name . '-' . $teamId);
+            $player->slug = Str::slug($name);
             $player->initials = Str::upper(Str::substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 2)) ?: 'CR';
             $player->days_left = '0';
             $player->nationality = 'International';
-            $player->is_popular = 0;
+            $player->is_popular = !empty($pData['is_cap']) || !empty($pData['is_cvc']) ? 1 : 0;
             $player->display_order = 1;
             $player->created_at = now();
+        }
+
+        // Record team name in played_teams list
+        $team = Team::find($teamId);
+        if ($team && !empty($team->name)) {
+            $existingTeams = array_filter(array_map('trim', explode(',', $player->played_teams ?? '')));
+            if (!in_array($team->name, $existingTeams)) {
+                $existingTeams[] = $team->name;
+                $player->played_teams = implode(', ', $existingTeams);
+            }
         }
 
         $role = $pData['role'] ?? 'Batsman';
@@ -641,10 +829,22 @@ class Possible11ApiService
         elseif (stripos($role, 'Keep') !== false || stripos($role, 'WK') !== false) $role = 'Wicket-Keeper';
         else $role = 'Batsman';
 
-        $player->role = $role;
-        $player->short_name = Str::limit($name, 15);
-        $player->profile_image = $pData['icon'] ?? '';
-        $player->batting_style = (!empty($pData['rh']) && $pData['rh'] === 'Y') ? 'Right-hand bat' : 'Left-hand bat';
+        if (empty($player->role) || $player->role === 'Batsman') {
+            $player->role = $role;
+        }
+
+        if (empty($player->short_name)) {
+            $player->short_name = Str::limit($name, 15);
+        }
+
+        if (empty($player->profile_image) && !empty($pData['icon'])) {
+            $player->profile_image = $pData['icon'];
+        }
+
+        if (empty($player->batting_style)) {
+            $player->batting_style = (!empty($pData['rh']) && $pData['rh'] === 'Y') ? 'Right-hand bat' : 'Left-hand bat';
+        }
+
         $player->updated_at = now();
         $player->save();
 
@@ -659,8 +859,21 @@ class Possible11ApiService
         $apiMatchId = (string)($mItem['id'] ?? '');
         if (empty($apiMatchId)) return null;
 
-        $t1Id = $teamIdMap[$mItem['team1_id']] ?? null;
-        $t2Id = $teamIdMap[$mItem['team2_id']] ?? null;
+        $t1Id = $teamIdMap[$mItem['team1_id'] ?? 0] ?? null;
+        $t2Id = $teamIdMap[$mItem['team2_id'] ?? 0] ?? null;
+
+        // If team mapping wasn't found by raw API team ID, fallback to existing tournament teams
+        if (!$t1Id || !$t2Id) {
+            $tournTeams = Team::where('tournament_id', $tournamentId)->take(2)->get();
+            if ($tournTeams->count() >= 2) {
+                if (!$t1Id) $t1Id = $tournTeams[0]->id;
+                if (!$t2Id) $t2Id = $tournTeams[1]->id;
+            }
+        }
+
+        if (!$t1Id || !$t2Id) {
+            return null;
+        }
 
         // Map status
         $rawStatus = (int)($mItem['status'] ?? 0);
@@ -673,7 +886,22 @@ class Possible11ApiService
         } elseif ($statusLabel === 'live' || $rawStatus === 1) {
             $status = 'live';
         } else {
-            $status = 'upcoming';
+            // Smart time check: if match scheduled for today or within active match window
+            $format = strtoupper($mItem['format'] ?? 'ODI');
+            $matchTimestamp = strtotime($matchDate);
+            $nowTimestamp = time();
+            $hoursPassed = ($nowTimestamp - $matchTimestamp) / 3600;
+
+            $maxHours = ($format === 'TEST') ? (24 * 5) : (($format === 'ODI') ? 12 : 6);
+            $isToday = (date('Y-m-d', $matchTimestamp) === date('Y-m-d'));
+
+            if (($isToday && $hoursPassed >= -6) || ($hoursPassed >= 0 && $hoursPassed <= $maxHours)) {
+                $status = 'live';
+            } elseif ($hoursPassed > $maxHours) {
+                $status = 'completed';
+            } else {
+                $status = 'upcoming';
+            }
         }
 
         $match = CricketMatch::where('api_match_id', $apiMatchId)->first();

@@ -87,7 +87,7 @@
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home",      "item": "' . e($_jsonSiteUrl) . '" },
-        { "@type": "ListItem", "position": 2, "name": "Dashboard", "item": "' . e(route('local.dashboard')) . '" },
+        { "@type": "ListItem", "position": 2, "name": "Dashboard", "item": "' . e($_seoIsLocal ? route('local.dashboard') : route('admin.dashboard')) . '" },
         { "@type": "ListItem", "position": 3, "name": "' . e($_jsonTournament) . '", "item": "' . e($_tourUrl) . '" },
         { "@type": "ListItem", "position": 4, "name": "' . e($_jsonTeam1) . ' vs ' . e($_jsonTeam2) . ' \u2014 ' . e($_statusLabel) . '", "item": "' . e($_jsonUrl) . '" }
       ]
@@ -102,7 +102,7 @@
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Home",      "item": "' . e($_jsonSiteUrl) . '" },
-          { "@type": "ListItem", "position": 2, "name": "Dashboard", "item": "' . e(route('local.dashboard')) . '" },
+          { "@type": "ListItem", "position": 2, "name": "Dashboard", "item": "' . e($_seoIsLocal ? route('local.dashboard') : route('admin.dashboard')) . '" },
           { "@type": "ListItem", "position": 3, "name": "' . e($_jsonTeam1) . ' vs ' . e($_jsonTeam2) . '", "item": "' . e($_jsonUrl) . '" }
         ]
       }
@@ -234,7 +234,7 @@
                 <a href="{{ $isLocalMode ? route('local.match.detail', $match->id) : route('admin.match.detail', $match->id) }}" target="_blank" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm' }} border text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition-all">
                     <span>📊</span> <span class="hidden sm:inline">Full</span> Scorecard
                 </a>
-                <a href="{{ $isLocalMode ? route('local.manage-tournament', $match->tournament_id ?? 1) : route('admin.dashboard') }}" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] text-gray-300 hover:text-white border-[#30363d]' : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-300 shadow-sm' }} border text-xs sm:text-sm font-bold px-3 py-2 rounded-xl transition-all">
+                <a href="{{ $isLocalMode ? route('local.manage-tournament', $match->tournament_id ?? 1) : ($match->tournament_id ? route('admin.manage-tournament', $match->tournament_id) : route('admin.dashboard')) }}" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] text-gray-300 hover:text-white border-[#30363d]' : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-300 shadow-sm' }} border text-xs sm:text-sm font-bold px-3 py-2 rounded-xl transition-all">
                     ← Back
                 </a>
             </div>

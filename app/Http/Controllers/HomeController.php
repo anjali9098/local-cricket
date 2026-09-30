@@ -25,7 +25,7 @@ class HomeController extends Controller
     {
         $todayDate = \Carbon\Carbon::today()->toDateString();
 
-        $allMatches = CricketMatch::approved()
+        $liveMatches = CricketMatch::approved()
             ->has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where(function($q) {
@@ -34,42 +34,43 @@ class HomeController extends Controller
                       $tq->where('is_approved', true);
                   });
             })
-            ->where(function($q) use ($todayDate) {
-                // Live matches: ALWAYS show active live matches
-                $q->where('status', 'live')
-                // Upcoming / Scheduled matches
-                ->orWhere(function($upq) use ($todayDate) {
-                    $upq->whereIn('status', ['upcoming', 'scheduled'])
-                        ->where(function($dateCond) use ($todayDate) {
-                            $dateCond->whereNull('match_date')
-                                     ->orWhereDate('match_date', '>=', $todayDate);
-                        });
-                })
-                // Completed matches (played today or recent)
-                ->orWhere(function($subQ) use ($todayDate) {
-                    $subQ->where('status', 'completed')
-                         ->whereDate('match_date', '>=', \Carbon\Carbon::parse($todayDate)->subDays(1)->toDateString());
-                });
+            ->where('status', 'live')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $upcomingMatches = CricketMatch::approved()
+            ->has('team1')->has('team2')
+            ->with(['team1', 'team2', 'venue', 'tournament'])
+            ->where(function($q) {
+                $q->whereNull('tournament_id')
+                  ->orWhereHas('tournament', function($tq) {
+                      $tq->where('is_approved', true);
+                  });
             })
-            ->orderByRaw("CASE WHEN status = 'live' THEN 1 WHEN status IN ('scheduled', 'upcoming') THEN 2 ELSE 3 END")
+            ->whereIn('status', ['upcoming', 'scheduled'])
+            ->where(function($dateCond) use ($todayDate) {
+                $dateCond->whereNull('match_date')
+                         ->orWhereDate('match_date', '>=', $todayDate);
+            })
             ->orderBy('id', 'desc')
             ->take(12)
             ->get();
 
-        if ($allMatches->isEmpty()) {
-            $allMatches = CricketMatch::approved()
+        if ($upcomingMatches->isEmpty()) {
+            $upcomingMatches = CricketMatch::approved()
                 ->has('team1')->has('team2')
                 ->with(['team1', 'team2', 'venue', 'tournament'])
-                ->where(function($q) {
-                    $q->whereNull('tournament_id')
-                      ->orWhereHas('tournament', function($tq) {
-                          $tq->where('is_approved', true);
-                      });
-                })
-                ->orderByRaw("CASE WHEN status = 'live' THEN 1 WHEN status IN ('scheduled', 'upcoming') THEN 2 ELSE 3 END")
+                ->whereIn('status', ['upcoming', 'scheduled'])
                 ->orderBy('id', 'desc')
                 ->take(12)
                 ->get();
+        }
+
+        // Exclusively show live matches first, followed by upcoming (NO completed matches in this section)
+        if ($liveMatches->isNotEmpty()) {
+            $allMatches = $liveMatches->merge($upcomingMatches)->take(12);
+        } else {
+            $allMatches = $upcomingMatches->take(12);
         }
 
         // Fetch all approved tournaments with teams and recent matches

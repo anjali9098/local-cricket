@@ -288,16 +288,31 @@ class PageController extends Controller
         // Sort by points descending
         usort($pointsTable, fn($a, $b) => $b['pts'] <=> $a['pts']);
 
-        // 2. Tournament Teams
+        // 2. Tournament Teams with dynamically resolved squad players
         $teams = $tournament->teams;
-
-        // 3. Tournament Players (All registered squad players)
         $players = collect();
-        foreach ($tournament->teams as $team) {
-            foreach ($team->players as $player) {
-                $player->team_name = $team->name;
-                $player->team_logo = $team->logo;
-                $players->push($player);
+
+        foreach ($teams as $team) {
+            $teamName = trim($team->name);
+            $shortName = trim($team->short_name ?? '');
+
+            $squad = \App\Models\Player::where(function($q) use ($team, $teamName, $shortName) {
+                $q->where('team_id', $team->id);
+                if (!empty($teamName)) {
+                    $q->orWhere('played_teams', 'like', "%{$teamName}%");
+                }
+                if (!empty($shortName) && strlen($shortName) >= 3) {
+                    $q->orWhere('played_teams', 'like', "%{$shortName}%");
+                }
+            })->get()->unique('id')->values();
+
+            $team->setRelation('players', $squad);
+
+            foreach ($squad as $player) {
+                $pClone = clone $player;
+                $pClone->team_name = $team->name;
+                $pClone->team_logo = $team->logo;
+                $players->push($pClone);
             }
         }
 

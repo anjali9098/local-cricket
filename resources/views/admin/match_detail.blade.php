@@ -10,7 +10,7 @@
     $seoTitle = $mTitle . ' Live Scorecard & Match Details | CricketKaScore';
     $seoDesc  = 'Live cricket score, ball-by-ball commentary, scorecard, overs, run rates, venue information, and match status for ' . $mTitle . ' at ' . $vName . ' on CricketKaScore.';
     $seoKeywords = strtolower($mTitle) . ', ' . strtolower($t1Name) . ' vs ' . strtolower($t2Name) . ', live cricket score, scorecard, commentary, ' . strtolower($vName) . ', CricketKaScore match';
-    $canonicalUrl = route('local.match.detail', $match->id);
+    $canonicalUrl = $isLocalMode ? route('local.match.detail', $match->id) : route('admin.match.detail', $match->id);
 @endphp
 
 @section('pageTitle', $seoTitle)
@@ -178,7 +178,7 @@
             
             @if(isset($isLocal) && $isLocal)
                 <div class="mt-4 pt-4 border-t border-[#30363d]">
-                    <form method="POST" action="{{ route('local.add-scorecard-stat') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                    <form method="POST" action="{{ $isLocalMode ? route('local.add-scorecard-stat') : route('admin.add-scorecard-stat') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
                         @csrf
                         <input type="hidden" name="match_id" value="{{ $match->id }}">
                         <input type="hidden" name="stat_type" value="BATTER">
@@ -261,7 +261,7 @@
 
             @if(isset($isLocal) && $isLocal)
                 <div class="mt-4 pt-4 border-t border-[#30363d]">
-                    <form method="POST" action="{{ route('local.add-scorecard-stat') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                    <form method="POST" action="{{ $isLocalMode ? route('local.add-scorecard-stat') : route('admin.add-scorecard-stat') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
                         @csrf
                         <input type="hidden" name="match_id" value="{{ $match->id }}">
                         <input type="hidden" name="stat_type" value="BOWLER">

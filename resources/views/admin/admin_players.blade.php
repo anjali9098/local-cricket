@@ -14,13 +14,13 @@
             </a>
 
             <!-- Server Search & Filter Form -->
-            <form id="player-filter-form" method="GET" action="{{ route('admin.players') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
+            <form id="player-filter-form" method="GET" action="{{ route('admin.players') }}" onsubmit="event.preventDefault(); triggerPlayerLiveSearch(1);" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
                 @if(request('edit'))
                     <input type="hidden" name="edit" value="{{ request('edit') }}">
                 @endif
 
                 <!-- Role Filter -->
-                <select name="role" id="filter-player-role" onchange="this.form.submit()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px; cursor: pointer;">
+                <select name="role" id="filter-player-role" onchange="triggerPlayerLiveSearch(1)" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px; cursor: pointer;">
                     <option value="">All Roles</option>
                     <option value="batsman" {{ strtolower($roleFilter ?? '') === 'batsman' ? 'selected' : '' }}>Batsman</option>
                     <option value="bowler" {{ strtolower($roleFilter ?? '') === 'bowler' ? 'selected' : '' }}>Bowler</option>
@@ -30,17 +30,17 @@
                 </select>
 
                 <!-- Search input & buttons -->
-                <div style="display: flex; align-items: center; gap: 6px; position: relative;">
-                    <input type="text" name="search" id="player-search-input" value="{{ $search ?? '' }}" placeholder="Search by name, team, country..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 240px;">
-                    @if(!empty($search))
-                        <button type="button" onclick="clearPlayerSearch()" style="position: absolute; right: 140px; background: none; border: none; font-size: 1.1rem; color: #94a3b8; cursor: pointer; padding: 0 4px; line-height: 1;" title="Clear search">&times;</button>
-                    @endif
-                    <button type="submit" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.15s;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="position: relative; display: inline-flex; align-items: center;">
+                        <input type="text" name="search" id="player-search-input" value="{{ $search ?? '' }}" oninput="handlePlayerSearchInput()" onkeyup="handlePlayerSearchInput()" onkeydown="if(event.key==='Enter'){event.preventDefault(); triggerPlayerLiveSearch(1);}" placeholder="Search by name, team, country..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 240px; background: white; color: #1e293b;">
+                        <button type="button" id="player-search-clear" onclick="clearPlayerSearch()" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.15rem; color: #94a3b8; cursor: pointer; padding: 0 4px; line-height: 1; display: {{ !empty($search) ? 'inline-block' : 'none' }}; z-index: 2;" title="Clear search">&times;</button>
+                    </div>
+                    <button type="button" onclick="triggerPlayerLiveSearch(1)" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.15s;">
                         Search
                     </button>
-                    <a href="{{ route('admin.players') }}" style="display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; text-decoration: none; cursor: pointer;">
+                    <button type="button" onclick="resetPlayerSearch()" style="display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                         Reset
-                    </a>
+                    </button>
                 </div>
             </form>
         </div>
@@ -404,108 +404,11 @@
                             <th style="padding: 10px 14px; min-width: 220px;">NAME</th>
                             <th style="padding: 10px 14px; min-width: 220px;">PAGE LINK / TEAM</th>
                             <th style="padding: 10px 12px;">ROLE &amp; COUNTRY</th>
-                            <th style="padding: 10px 14px; min-width: 180px;">ADD/UPDATE</th>
                             <th style="padding: 10px 12px; text-align: right; width: 80px;">ACTION</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach($players as $item)
-                            <tr class="tbl-player-row" data-role="{{ strtolower($item->role ?? '') }}" data-team="{{ strtolower($item->team->name ?? '') }}" data-country="{{ strtolower($item->country ?? '') }}" data-name="{{ strtolower($item->name ?? '') }}" style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc';" onmouseout="this.style.background='none';">
-                                
-                                <!-- # EDIT -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    <div style="display: flex; align-items: center; gap: 4px;">
-                                        <a href="{{ route('admin.players', ['edit' => $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
-                                             {{ $item->id }}
-                                        </a>
-                                        <a href="{{ route('admin.players', ['edit' => $item->id]) }}" title="Edit Player" style="color: #0284c7; text-decoration: none;">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                        </a>
-                                    </div>
-                                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
-                                        Jersey: <strong>#{{ $item->jersey_number ?: '-' }}</strong>
-                                    </div>
-                                </td>
-
-                                <!-- ORDER -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    <input type="number" value="{{ $item->display_order ?? 1 }}" min="1" style="width: 44px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; text-align: center; color: #1e293b; outline: none;">
-                                </td>
-
-                                <!-- POSTER -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    @if(!empty($item->profile_image))
-                                        <img src="{{ $item->profile_image }}" alt="Photo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; display: block;" onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
-                                        <div style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 50%; border: 1px solid #cbd5e1; display: none; align-items: center; justify-content: center; font-size: 0.8rem; color: #0284c7; font-weight: 800;">
-                                            {{ $item->initials ?: substr($item->name, 0, 2) }}
-                                        </div>
-                                    @else
-                                        <div style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 50%; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #0284c7; font-weight: 800;">
-                                            {{ $item->initials ?: substr($item->name, 0, 2) }}
-                                        </div>
-                                    @endif
-                                </td>
-
-                                <!-- NAME -->
-                                <td style="padding: 12px 14px; vertical-align: middle;">
-                                    <div style="font-weight: 800; color: #0f172a; font-size: 0.9rem; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-                                        {{ $item->name }}
-                                        @if($item->is_popular)
-                                            <span style="font-size: 0.68rem; background: #fef3c7; color: #b45309; font-weight: 800; padding: 2px 6px; border-radius: 4px;">★ POPULAR</span>
-                                        @endif
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
-                                        {{ $item->batting_style ?: 'Batting' }} &bull; {{ $item->bowling_style ?: 'Bowling' }}
-                                    </div>
-                                </td>
-
-                                <!-- PAGE LINK / TEAM -->
-                                <td style="padding: 12px 14px; vertical-align: middle;">
-                                    <div style="margin-bottom: 2px;">
-                                        <a href="{{ route('players') }}" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 3px;">
-                                            {{ $item->slug ?: \Illuminate\Support\Str::slug($item->name) }}
-                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                        </a>
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: #475569; font-weight: 600;">
-                                        Team: <strong>{{ $item->team ? $item->team->name : 'No Team' }}</strong>
-                                    </div>
-                                </td>
-
-                                <!-- ROLE, DOB & COUNTRY -->
-                                <td style="padding: 12px 12px; vertical-align: middle; font-weight: 700; color: #1e293b;">
-                                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                        <span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
-                                            {{ $item->role }}
-                                        </span>
-                                        @if($item->date_of_birth)
-                                            <span style="background: #fdf2f8; color: #db2777; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">
-                                                🎂 {{ date('d M Y', strtotime($item->date_of_birth)) }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 3px;">
-                                        {{ $item->country ?: ($item->nationality ?: 'India') }}
-                                    </div>
-                                </td>
-
-                                <!-- ADD/UPDATE -->
-                                <td style="padding: 12px 14px; vertical-align: middle; font-size: 0.75rem; color: #475569; line-height: 1.4;">
-                                    <div>{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('Y-m-d H:i:s') : date('Y-m-d H:i:s') }} - <strong>Admin</strong></div>
-                                    <div>{{ $item->updated_at ? \Carbon\Carbon::parse($item->updated_at)->format('Y-m-d H:i:s') : date('Y-m-d H:i:s') }} - <strong>Admin</strong></div>
-                                </td>
-
-                                <!-- ACTION -->
-                                <td style="padding: 12px 12px; vertical-align: middle; text-align: right;">
-                                    <form method="POST" action="{{ route('admin.players.delete', $item->id) }}" onsubmit="return confirm('Delete player \'{{ addslashes($item->name) }}\'?');" style="display:inline; margin:0;">
-                                        @csrf
-                                        <button type="submit" style="background: #fee2e2; color: #b91c1c; border: none; font-weight: 700; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
+                    <tbody id="player-table-tbody">
+                        @include('admin.partials.player_rows', ['players' => $players])
                     </tbody>
                 </table>
             </div>
@@ -526,9 +429,9 @@
                 @if(!empty($search) || !empty($roleFilter))
                     <div style="font-size: 1.1rem; color: #1e293b; font-weight: 700; margin-bottom: 6px;">No matching players found</div>
                     <div style="font-size: 0.85rem; margin-bottom: 14px;">No players match your search criteria.</div>
-                    <a href="{{ route('admin.players') }}" style="display: inline-block; padding: 7px 18px; background: #0284c7; color: white; border-radius: 4px; font-weight: 700; text-decoration: none; font-size: 0.85rem;">
+                    <button type="button" onclick="resetPlayerSearch()" style="display: inline-block; padding: 7px 18px; background: #0284c7; color: white; border-radius: 4px; font-weight: 700; border: none; cursor: pointer; font-size: 0.85rem;">
                         Clear Search &amp; Filters
-                    </a>
+                    </button>
                 @else
                     No players available yet. Click <strong>+ Add New Player</strong> above to add one!
                 @endif
@@ -592,11 +495,111 @@ document.getElementById('player_slug')?.addEventListener('input', function() {
     this.dataset.manual = 'true';
 });
 
+let playerSearchDebounceTimer = null;
+
+function handlePlayerSearchInput() {
+    const input = document.getElementById('player-search-input');
+    const clearBtn = document.getElementById('player-search-clear');
+    if (clearBtn) {
+        clearBtn.style.display = input && input.value.trim().length > 0 ? 'inline-block' : 'none';
+    }
+    clearTimeout(playerSearchDebounceTimer);
+    playerSearchDebounceTimer = setTimeout(() => {
+        triggerPlayerLiveSearch(1);
+    }, 200);
+}
+
 function clearPlayerSearch() {
     const input = document.getElementById('player-search-input');
-    if (input) input.value = '';
-    const form = document.getElementById('player-filter-form');
-    if (form) form.submit();
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+    const clearBtn = document.getElementById('player-search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    triggerPlayerLiveSearch(1);
 }
+
+function resetPlayerSearch() {
+    const input = document.getElementById('player-search-input');
+    const roleSelect = document.getElementById('filter-player-role');
+    if (input) input.value = '';
+    if (roleSelect) roleSelect.value = '';
+    const clearBtn = document.getElementById('player-search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    triggerPlayerLiveSearch(1);
+}
+
+async function triggerPlayerLiveSearch(page = 1) {
+    const input = document.getElementById('player-search-input');
+    const roleSelect = document.getElementById('filter-player-role');
+    const searchVal = input ? input.value.trim() : '';
+    const roleVal = roleSelect ? roleSelect.value.trim() : '';
+    const tbody = document.getElementById('player-table-tbody');
+    const paginationContainer = document.getElementById('player-table-pagination');
+
+    if (tbody) {
+        tbody.style.opacity = '0.45';
+        tbody.style.transition = 'opacity 0.15s ease';
+    }
+
+    try {
+        const url = new URL('{{ route("admin.players") }}', window.location.origin);
+        if (searchVal) url.searchParams.set('search', searchVal);
+        if (roleVal) url.searchParams.set('role', roleVal);
+        if (page > 1) url.searchParams.set('page', page);
+        url.searchParams.set('ajax', '1');
+
+        const res = await fetch(url.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (tbody) {
+                tbody.innerHTML = data.html;
+                tbody.style.opacity = '1';
+            }
+            if (paginationContainer) {
+                paginationContainer.innerHTML = `
+                    <div style="font-size: 0.85rem; color: #475569;">
+                        Showing <strong>${data.first_item}</strong> to <strong>${data.last_item}</strong> of <strong>${data.total}</strong> players
+                        ${searchVal || roleVal ? '<span style="color: #0284c7; font-weight: 700; margin-left: 4px;">(filtered)</span>' : ''}
+                    </div>
+                    <div class="player-pagination-links">
+                        ${data.pagination_html || ''}
+                    </div>
+                `;
+                bindPlayerPaginationLinks();
+            }
+        }
+    } catch (err) {
+        console.error('Player live search error:', err);
+        if (tbody) tbody.style.opacity = '1';
+    }
+}
+
+function bindPlayerPaginationLinks() {
+    const container = document.getElementById('player-table-pagination');
+    if (!container) return;
+    const links = container.querySelectorAll('.player-pagination-links a');
+    links.forEach(a => {
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = a.getAttribute('href');
+            if (href) {
+                const url = new URL(href, window.location.origin);
+                const page = url.searchParams.get('page') || 1;
+                triggerPlayerLiveSearch(page);
+            }
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    bindPlayerPaginationLinks();
+});
 </script>
 @endsection

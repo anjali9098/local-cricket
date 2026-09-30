@@ -103,7 +103,7 @@
 
         <div class="flex items-center gap-2">
             @if(Auth::check() && (Auth::id() == $s->user_id || Auth::user()->role === 'superadmin'))
-                <a href="{{ route('local.manage-tournament', $s->id) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 px-3 rounded-xl inline-flex items-center justify-center gap-1 transition-all shadow-sm flex-1 text-decoration-none">
+                <a href="{{ Auth::user()->role === 'superadmin' || !$isLocal ? route('admin.manage-tournament', $s->id) : route('local.manage-tournament', $s->id) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 px-3 rounded-xl inline-flex items-center justify-center gap-1 transition-all shadow-sm flex-1 text-decoration-none">
                     <span>⚙️ Manage</span>
                 </a>
             @endif

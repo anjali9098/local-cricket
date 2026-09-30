@@ -18,9 +18,11 @@
             <div class="section-header">
                 <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                     <span class="section-title-icon">⚡</span>
-                    <span>LIVE &amp; UPCOMING MATCHES</span>
-                    @if($allMatches->where('status', 'live')->count() > 0)
+                    @if($allMatches->where('effective_status', 'live')->count() > 0)
+                        <span>LIVE MATCHES</span>
                         <span class="badge-live">LIVE</span>
+                    @else
+                        <span>UPCOMING MATCHES</span>
                     @endif
                 </h2>
                 <a href="{{ route('matches') }}" class="view-all-link">FULL SCHEDULE &rarr;</a>
@@ -32,11 +34,11 @@
                         <div class="match-card-header">
                             <span>{{ $m->tournament->name ?? ($m->level_type ?? ($m->match_type . ' - ' . ($m->venue->name ?? 'MATCH'))) }}</span>
                             @if($m->effective_status === 'live')
-                                <span class="badge-live" style="font-size:0.6rem;padding:1px 5px;">LIVE</span>
+                                <span class="badge-live" style="font-size:0.6rem;padding:2px 6px;">LIVE</span>
                             @elseif($m->effective_status === 'completed')
-                                <span class="tag-badge" style="background:#059669;color:white;font-size:0.6rem;padding:1px 5px;">COMPLETED</span>
+                                <span class="tag-badge" style="background:#059669;color:white;font-size:0.6rem;padding:2px 6px;">COMPLETED</span>
                             @else
-                                <span class="tag-badge" style="background:#475569;color:white;font-size:0.6rem;padding:1px 5px;">UPCOMING</span>
+                                <span class="tag-badge" style="background:#2563eb;color:white;font-size:0.6rem;padding:2px 6px;">UPCOMING</span>
                             @endif
                         </div>
 
@@ -78,9 +80,9 @@
                             @if($m->effective_status === 'completed')
                                 <span style="color: #4ade80; font-weight: 800;">🏆 {{ $m->winning_title }}</span>
                             @elseif($m->effective_status === 'live')
-                                <span>{{ $m->custom_note && strlen($m->custom_note) < 60 && !str_contains($m->custom_note, '<p>') ? $m->custom_note : 'Match In Progress' }}</span>
+                                <span style="color: #38bdf8; font-weight: 700;">🔴 {{ $m->custom_note && strlen($m->custom_note) < 60 && !str_contains($m->custom_note, '<p>') ? $m->custom_note : 'Innings 2 in progress' }}</span>
                             @else
-                                <span>{{ $m->match_date ? date('M d, h:i A', strtotime($m->match_date)) : 'Scheduled' }}</span>
+                                <span style="color: var(--text-dim);">📅 {{ $m->match_date ? date('M d, h:i A', strtotime($m->match_date)) : 'Match Scheduled' }}</span>
                             @endif
                         </div>
                     </a>

@@ -20,16 +20,20 @@
                 <option value="t20 leagues">T20 Leagues</option>
                 <option value="domestic">Domestic</option>
                 <option value="women">Women's</option>
+                <option value="local">Local</option>
             </select>
 
             <!-- Search input & buttons -->
             <div style="display: flex; align-items: center; gap: 6px;">
-                <input type="text" id="series-search-input" oninput="filterSeriesTable()" onkeyup="filterSeriesTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterSeriesTable();}" placeholder="Search series..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px;">
+                <div class="admin-search-wrapper">
+                    <input type="text" id="series-search-input" class="admin-search-input" oninput="filterSeriesTable()" onkeyup="filterSeriesTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterSeriesTable();}" placeholder="Search series..." style="width: 220px;">
+                    <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
+                </div>
                 <button type="button" onclick="filterSeriesTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                     Search
                 </button>
                 <button type="button" onclick="resetSeriesSearch()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Refresh
+                    Reset
                 </button>
             </div>
         </div>
@@ -435,7 +439,10 @@
 
         <!-- Modal Search & Quick Add Toggle -->
         <div style="padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-            <input type="text" id="modal-team-search" oninput="filterModalTeams()" placeholder="Search teams by name, short name or ID..." style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; outline: none;">
+            <div class="admin-search-wrapper" style="flex: 1; min-width: 200px;">
+                <input type="text" id="modal-team-search" class="admin-search-input" oninput="filterModalTeams()" onkeyup="filterModalTeams()" placeholder="Search teams by name, short name or ID..." style="width: 100%; box-sizing: border-box;">
+                <button type="button" class="admin-search-clear-btn" onclick="document.getElementById('modal-team-search').value=''; filterModalTeams(); this.style.display='none';" title="Clear">&times;</button>
+            </div>
             <button type="button" onclick="toggleQuickTeamForm()" id="btn-toggle-quick-team" style="padding: 8px 14px; background: #0284c7; color: white; border: none; border-radius: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
                 + Add New Team
             </button>
@@ -522,7 +529,10 @@
 
         <!-- Modal Search & Quick Add Toggle -->
         <div style="padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-            <input type="text" id="modal-venue-search" oninput="filterModalVenues()" placeholder="Search venues by stadium name, city, or ID..." style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; outline: none;">
+            <div class="admin-search-wrapper" style="flex: 1; min-width: 200px;">
+                <input type="text" id="modal-venue-search" class="admin-search-input" oninput="filterModalVenues()" onkeyup="filterModalVenues()" placeholder="Search venues by stadium name, city, or ID..." style="width: 100%; box-sizing: border-box;">
+                <button type="button" class="admin-search-clear-btn" onclick="document.getElementById('modal-venue-search').value=''; filterModalVenues(); this.style.display='none';" title="Clear">&times;</button>
+            </div>
             <button type="button" onclick="toggleQuickVenueForm()" id="btn-toggle-quick-venue" style="padding: 8px 14px; background: #0284c7; color: white; border: none; border-radius: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
                 + Add New Venue
             </button>
@@ -633,25 +643,35 @@ document.getElementById('series_slug')?.addEventListener('input', function() {
 
 // Initialize Table Manager for Series
 let seriesTableManager;
-document.addEventListener('DOMContentLoaded', () => {
-    seriesTableManager = new AdminTableManager({
-        tableId: 'series-table',
-        rowSelector: '.tbl-series-row',
-        searchInputId: 'series-search-input',
-        filterSelectId: 'filter-category',
-        filterDataAttr: 'category',
-        paginationContainerId: 'series-table-pagination',
-        perPage: 10,
-        colSpan: 9,
-        noResultsMsg: 'No matching series found.'
-    });
-});
+function initSeriesTable() {
+    if (typeof AdminTableManager !== 'undefined' && !seriesTableManager) {
+        seriesTableManager = new AdminTableManager({
+            tableId: 'series-table',
+            rowSelector: '.tbl-series-row',
+            searchInputId: 'series-search-input',
+            filterSelectId: 'filter-category',
+            filterDataAttr: 'category',
+            paginationContainerId: 'series-table-pagination',
+            perPage: 10,
+            colSpan: 9,
+            noResultsMsg: 'No matching series found.'
+        });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSeriesTable);
+} else {
+    initSeriesTable();
+}
 
 function filterSeriesTable() {
+    if (!seriesTableManager) initSeriesTable();
     if (seriesTableManager) seriesTableManager.applyFilter(1);
 }
 
 function resetSeriesSearch() {
+    if (!seriesTableManager) initSeriesTable();
     if (seriesTableManager) seriesTableManager.reset();
 }
 

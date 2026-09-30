@@ -134,7 +134,6 @@
                     <tr style="border-bottom: 1px solid #e2e8f0;">
                         <th style="padding:12px; text-align:left; color:#64748b; font-weight:700; font-size: 0.85rem;">TOURNAMENT</th>
                         <th style="padding:12px; text-align:left; color:#64748b; font-weight:700; font-size: 0.85rem;">FORMAT</th>
-                        <th style="padding:12px; text-align:left; color:#64748b; font-weight:700; font-size: 0.85rem;">TYPE</th>
                         <th style="padding:12px; text-align:left; color:#64748b; font-weight:700; font-size: 0.85rem;">STATUS</th>
                         <th style="padding:12px; text-align:center; color:#64748b; font-weight:700; font-size: 0.85rem;">ACTIONS</th>
                     </tr>
@@ -144,17 +143,16 @@
                         <tr style="border-bottom: 1px solid #f1f5f9;">
                             <td style="padding:12px;">
                                 <div style="font-weight:700; color:#0f172a; font-size: 0.95rem;">{{ $t->name }}</div>
-                                <div style="font-size: 0.75rem; color:#64748b; font-weight:600; margin-top: 2px;">
-                                    {{ $t->city ? '📍 ' . $t->city . ' • ' : '' }}By: {{ $t->user->name ?? 'Super Admin' }}
-                                </div>
+                                @if($t->city || $t->start_date)
+                                    <div style="font-size: 0.75rem; color:#64748b; font-weight:600; margin-top: 2px;">
+                                        {{ $t->city ? '📍 ' . $t->city : '' }}
+                                        {{ $t->city && $t->start_date ? ' • ' : '' }}
+                                        {{ $t->start_date ? '📅 ' . \Carbon\Carbon::parse($t->start_date)->format('M d, Y') : '' }}
+                                    </div>
+                                @endif
                             </td>
                             <td style="padding:12px; color:#475569; font-size: 0.9rem;">
                                 <span style="background:#f1f5f9; padding:3px 8px; border-radius:6px; font-size:0.8rem; font-weight:700; color:#1e293b;">{{ $t->format }}</span>
-                            </td>
-                            <td style="padding:12px; color:#475569; font-size: 0.85rem; font-weight:700;">
-                                <span style="background: {{ $t->category === 'global' ? '#ede9fe' : '#e0f2fe' }}; color: {{ $t->category === 'global' ? '#6b21a8' : '#0369a1' }}; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; text-transform: uppercase;">
-                                    {{ $t->category ?? ($t->series_type ?? 'LOCAL') }}
-                                </span>
                             </td>
                             <td style="padding:12px;">
                                 @if(!$t->is_approved)
@@ -180,7 +178,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" style="padding:20px; text-align:center; color:#64748b; font-size: 0.9rem;">No tournaments found.</td>
+                            <td colspan="4" style="padding:20px; text-align:center; color:#64748b; font-size: 0.9rem;">No tournaments found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -204,7 +202,7 @@
                             @endif
                         </div>
                         <div style="font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">
-                            {{ $match->level_type ?? 'GLOBAL MATCH' }} &bull; {{ $match->match_type }}
+                            <span>{{ $match->match_type ?? 'T20' }}</span>
                             @if($match->status === 'completed')
                                 &bull; <strong style="color: #16a34a; text-transform: none;">🏆 {{ $match->winning_title }}</strong>
                             @elseif($match->custom_note)

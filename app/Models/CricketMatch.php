@@ -59,30 +59,37 @@ class CricketMatch extends Model
     }
 
     /**
-     * Compute effective status (checks if a match is completed by score chase)
+     * Compute effective status (checks live, upcoming, completed)
      */
     public function getEffectiveStatusAttribute()
     {
         try {
-            if ($this->status === 'completed' || (!empty($this->result_text) && !str_starts_with($this->result_text, 'toss:'))) {
+            $st = strtolower(trim($this->status ?? ''));
+            if ($st === 'completed') {
                 return 'completed';
             }
+            if ($st === 'live') {
+                return 'live';
+            }
+            if ($st === 'upcoming' || $st === 'scheduled') {
+                return 'upcoming';
+            }
 
+            // If status is empty, determine by scores
             $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team1_score ?? '0'))[0] ?? '0');
             $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team2_score ?? '0'))[0] ?? '0');
             $w2 = (int) ($this->team2_wickets ?? 0);
 
             // Automatic completion check if Team 2 chased down Team 1's target
-            if ($s1 > 0 && $s2 > $s1) {
+            if ($s1 > 0 && ($s2 > $s1 || $w2 >= 10)) {
                 return 'completed';
             }
 
-            // Automatic completion check if Team 2 played full overs or lost all 10 wickets defending target
-            if ($s1 > 0 && $w2 >= 10 && $s2 < $s1) {
-                return 'completed';
+            if ($s1 > 0 || $s2 > 0) {
+                return 'live';
             }
 
-            return $this->status ?: 'upcoming';
+            return 'upcoming';
         } catch (\Throwable $e) {
             return $this->status ?: 'upcoming';
         }
@@ -94,14 +101,13 @@ class CricketMatch extends Model
     public function getWinningTitleAttribute()
     {
         try {
-            if (!empty($this->result_text) && !str_starts_with($this->result_text, 'toss:')) {
-                return $this->result_text;
-            }
-
-            $t1Name = $this->team1?->name ?? 'Team 1';
-            $t2Name = $this->team2?->name ?? 'Team 2';
-
             if ($this->effective_status === 'completed') {
+                if (!empty($this->result_text) && !in_array(strtolower(trim($this->result_text)), ['match scheduled', 'innings 2 in progress', 'tbd', 'scheduled', 'live', 'upcoming']) && !str_starts_with($this->result_text, 'toss:')) {
+                    return $this->result_text;
+                }
+
+                $t1Name = $this->team1?->name ?? 'Team 1';
+                $t2Name = $this->team2?->name ?? 'Team 2';
                 $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team1_score ?? '0'))[0] ?? '0');
                 $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team2_score ?? '0'))[0] ?? '0');
                 if ($s1 > $s2) {
@@ -120,7 +126,7 @@ class CricketMatch extends Model
                 if (!empty($this->custom_note) && strlen($this->custom_note) < 60 && !str_contains($this->custom_note, '<p>')) {
                     return $this->custom_note;
                 }
-                return 'Match In Progress';
+                return 'Innings 2 in progress';
             }
 
             if (!empty($this->custom_note) && strlen($this->custom_note) < 60 && !str_contains($this->custom_note, '<p>')) {

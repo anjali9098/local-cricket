@@ -137,10 +137,17 @@
                 </button>
 
                 @auth
-                    <a href="{{ route('local.dashboard') }}" class="user-avatar-btn" title="Dashboard ({{ Auth::user()->name }})">
-                        <div class="user-avatar-img">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
-                        <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
-                    </a>
+                    @if(Auth::user()->role === 'superadmin')
+                        <a href="{{ route('admin.dashboard') }}" class="user-avatar-btn" title="Super Admin Panel ({{ Auth::user()->name }})">
+                            <div class="user-avatar-img">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+                            <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
+                        </a>
+                    @else
+                        <a href="{{ route('local.dashboard') }}" class="user-avatar-btn" title="Dashboard ({{ Auth::user()->name }})">
+                            <div class="user-avatar-img">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+                            <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
+                        </a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" style="display:inline; margin: 0;">
                         @csrf
                         <button type="submit" class="navbar-logout-btn" title="Logout" style="height: 32px; padding: 0 8px;">
@@ -241,6 +248,12 @@
                         <span class="side-arrow">&rsaquo;</span>
                         <span> Player Birthdays</span>
                     </a>
+                    @if(Auth::check() && Auth::user()->role === 'superadmin')
+                    <a href="{{ route('admin.dashboard') }}" class="side-menu-link" style="color: #38bdf8; font-weight: 800; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 6px 10px; background: rgba(56, 189, 248, 0.08);">
+                        <span class="side-arrow">👑</span>
+                        <span>Super Admin Panel</span>
+                    </a>
+                    @endif
                 </div>
             </div>
 
