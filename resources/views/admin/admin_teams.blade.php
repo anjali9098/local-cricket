@@ -13,33 +13,42 @@
                 Home
             </a>
 
-            <!-- Type Filter -->
-            <select id="filter-team-type" onchange="filterTeamTable()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px;">
-                <option value="">All Team Types</option>
-                <option value="international">International</option>
-                <option value="domestic">Domestic / T20</option>
-                <option value="local">Local</option>
-            </select>
+            <!-- Server Search & Filter Form -->
+            <form id="team-filter-form" method="GET" action="{{ route('admin.teams') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
+                @if(request('edit'))
+                    <input type="hidden" name="edit" value="{{ request('edit') }}">
+                @endif
 
-            <!-- Search input & buttons -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <div class="admin-search-wrapper">
-                    <input type="text" id="team-search-input" class="admin-search-input" oninput="filterTeamTable()" onkeyup="filterTeamTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterTeamTable();}" placeholder="Search teams..." style="width: 220px;">
-                    <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
+                <!-- Type Filter -->
+                <select name="type" id="filter-team-type" onchange="this.form.submit()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px; cursor: pointer;">
+                    <option value="">All Team Types</option>
+                    <option value="international" {{ strtolower($typeFilter ?? '') === 'international' ? 'selected' : '' }}>International</option>
+                    <option value="domestic" {{ strtolower($typeFilter ?? '') === 'domestic' ? 'selected' : '' }}>Domestic / T20</option>
+                    <option value="local" {{ strtolower($typeFilter ?? '') === 'local' ? 'selected' : '' }}>Local</option>
+                </select>
+
+                <!-- Search input & buttons -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="position: relative; display: inline-flex; align-items: center;">
+                        <input type="text" name="search" id="team-search-input" value="{{ $search ?? '' }}" placeholder="Search teams..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        @if(!empty($search))
+                            <a href="{{ route('admin.teams', array_filter(['type' => $typeFilter ?? null])) }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
+                        @endif
+                    </div>
+                    <button type="submit" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                        Search
+                    </button>
+                    <a href="{{ route('admin.teams') }}" style="display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
+                        Reset
+                    </a>
                 </div>
-                <button type="button" onclick="filterTeamTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Search
-                </button>
-                <button type="button" onclick="resetTeamSearch()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Reset
-                </button>
-            </div>
+            </form>
         </div>
 
         <!-- Right: + Add New Button -->
         <div>
             <button type="button" onclick="toggleTeamForm()" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; color: #0f172a; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                <span style="font-size: 1.1rem; line-height: 1; color: #0284c7;">+</span> Add Popular Team
+                <span style="font-size: 1.1rem; line-height: 1; color: #0284c7;">+</span> Add Team
             </button>
         </div>
     </div>
@@ -49,12 +58,12 @@
         
         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px;">
             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0;">
-                {{ $editItem ? '✏️ Edit Team: ' . $editItem->name : '🏏 Add New Popular Team' }}
+                {{ $editItem ? '✏️ Edit Team: ' . $editItem->name : '🏏 Add New Team' }}
             </h3>
-            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.popular') . "'" : "toggleTeamForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
+            <button type="button" onclick="{{ $editItem ? "window.location.href='" . route('admin.teams') . "'" : "toggleTeamForm()" }}" style="background: transparent; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; line-height: 1; padding: 0 4px;" title="Close Form">&times;</button>
         </div>
 
-        <form method="POST" action="{{ $editItem ? route('admin.popular.update', $editItem->id) : route('admin.popular.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
+        <form method="POST" action="{{ $editItem ? route('admin.teams.update', $editItem->id) : route('admin.teams.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
             <!-- ROW 1: Team Name & Slug | Short Name | Team Type | Display Order -->
@@ -176,6 +185,15 @@
     <!-- Existing Teams List Table (Matching Exact Series Style) -->
     <div id="team-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; color: #64748b; font-size: 0.85rem; font-weight: 600;">
+            <div>
+                Showing <strong>{{ $teams->firstItem() ?? 0 }}</strong> to <strong>{{ $teams->lastItem() ?? 0 }}</strong> of <strong>{{ $teams->total() }}</strong> teams
+                @if(!empty($search))
+                    <span style="color: #0284c7;">(filtered by "{{ $search }}")</span>
+                @endif
+            </div>
+        </div>
+
         @if($teams->isNotEmpty())
             <div style="overflow-x: auto;">
                 <table id="team-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
@@ -198,10 +216,10 @@
                                 <!-- # EDIT -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; gap: 4px;">
-                                        <a href="{{ route('admin.popular', ['edit' => $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
+                                        <a href="{{ route('admin.teams', ['edit' => $item->slug . '-' . $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
                                              {{ $item->id }}
                                         </a>
-                                        <a href="{{ route('admin.popular', ['edit' => $item->id]) }}" title="Edit Team" style="color: #0284c7; text-decoration: none;">
+                                        <a href="{{ route('admin.teams', ['edit' => $item->slug . '-' . $item->id]) }}" title="Edit Team" style="color: #0284c7; text-decoration: none;">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </a>
                                     </div>
@@ -270,10 +288,10 @@
 
                                 <!-- ACTION -->
                                 <td style="padding: 12px 12px; vertical-align: middle; text-align: right;">
-                                    <form method="POST" action="{{ route('admin.popular.delete', $item->id) }}" onsubmit="return confirm('Delete team \'{{ addslashes($item->name) }}\'?');" style="display:inline; margin:0;">
+                                    <form method="POST" action="{{ route('admin.teams.delete', $item->id) }}" onsubmit="return confirm('Delete team \'{{ addslashes($item->name) }}\'?');" style="display:inline; margin:0;">
                                         @csrf
                                         <button type="submit" style="background: #fee2e2; color: #b91c1c; border: none; font-weight: 700; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
-                                            Delete
+                                             Delete
                                         </button>
                                     </form>
                                 </td>
@@ -282,11 +300,14 @@
                     </tbody>
                 </table>
             </div>
-            <!-- 10-item Pagination Container -->
-            <div id="team-table-pagination"></div>
+
+            <!-- 20-item Pagination Container -->
+            <div style="margin-top: 20px; display: flex; justify-content: center;">
+                {{ $teams->links() }}
+            </div>
         @else
             <div style="text-align: center; padding: 48px; color: #94a3b8; font-weight: 600;">
-                No teams available yet. Click <strong>+ Add Popular Team</strong> above to add one!
+                No teams found matching your search. Click <strong>+ Add Team</strong> above to add one!
             </div>
         @endif
     </div>
@@ -331,29 +352,5 @@ function autoSlugify(text) {
 document.getElementById('team_slug')?.addEventListener('input', function() {
     this.dataset.manual = 'true';
 });
-
-// Initialize Table Manager for Teams
-let teamTableManager;
-document.addEventListener('DOMContentLoaded', () => {
-    teamTableManager = new AdminTableManager({
-        tableId: 'team-table',
-        rowSelector: '.tbl-team-row',
-        searchInputId: 'team-search-input',
-        filterSelectId: 'filter-team-type',
-        filterDataAttr: 'type',
-        paginationContainerId: 'team-table-pagination',
-        perPage: 10,
-        colSpan: 8,
-        noResultsMsg: 'No matching teams found.'
-    });
-});
-
-function filterTeamTable() {
-    if (teamTableManager) teamTableManager.applyFilter(1);
-}
-
-function resetTeamSearch() {
-    if (teamTableManager) teamTableManager.reset();
-}
 </script>
 @endsection

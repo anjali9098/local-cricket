@@ -106,7 +106,7 @@
                                 <td style="padding: 16px; color: #475569; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $item->summary }}</td>
                                 <td style="padding: 16px; text-align: right; display: flex; justify-content: flex-end; gap: 8px; align-items: center;">
                                     <a href="{{ route('home') }}" target="_blank" style="background: #f1f5f9; color: #475569; font-weight: 700; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; text-decoration: none;">View</a>
-                                    <a href="{{ route('admin.fantasy', ['edit' => $item->id]) }}" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; text-decoration: none;">Edit</a>
+                                    <a href="{{ route('admin.fantasy', ['edit' => $item->slug . '-' . $item->id]) }}" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; text-decoration: none;">Edit</a>
                                     <form method="POST" action="{{ route('admin.fantasy.delete', $item->id) }}" onsubmit="return confirm('Are you sure you want to delete this fantasy tip?');" style="display:inline; margin:0;">
                                         @csrf
                                         <button type="submit" style="background: #fee2e2; color: #b91c1c; border: none; font-weight: 700; font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Delete</button>

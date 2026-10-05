@@ -57,7 +57,7 @@
         </h2>
         <div class="series-grid">
             @forelse($ongoingSeries as $s)
-                <a href="{{ route('tournament.public', $s->id) }}" class="series-card no-underline block" style="cursor: pointer;">
+                <a href="{{ $s->url }}" class="series-card no-underline block" style="cursor: pointer;">
                     <div class="series-info">
                         <h3 class="series-title" style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main);">{{ $s->name }}</h3>
                         <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
@@ -76,7 +76,7 @@
         </h2>
         <div class="series-grid">
             @forelse($upcomingSeries as $s)
-                <a href="{{ route('tournament.public', $s->id) }}" class="series-card no-underline block" style="cursor: pointer;">
+                <a href="{{ $s->url }}" class="series-card no-underline block" style="cursor: pointer;">
                     <div class="series-info">
                         <h3 class="series-title" style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-main);">{{ $s->name }}</h3>
                         <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>

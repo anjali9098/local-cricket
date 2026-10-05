@@ -24,12 +24,12 @@
                 </p>
                 <div class="flex gap-2 flex-wrap justify-center">
                     @if($battingTeam->players->isEmpty())
-                        <a href="{{ isset($isLocal) && $isLocal ? route('local.manage-tournament', $match->tournament_id) : route('admin.players') }}" target="_blank" class="text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-all">
+                        <a href="{{ isset($isLocal) && $isLocal && $match->tournament ? route('local.manage-tournament.slug', ['slug' => $match->tournament->slug, 'id' => $match->tournament_id]) : route('admin.players') }}" target="_blank" class="text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-all">
                             + Add Players for {{ $battingTeam->name }}
                         </a>
                     @endif
                     @if($bowlingTeam->players->isEmpty())
-                        <a href="{{ isset($isLocal) && $isLocal ? route('local.manage-tournament', $match->tournament_id) : route('admin.players') }}" target="_blank" class="text-xs font-bold {{ isset($isLocal) && $isLocal ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-100 border-slate-300 text-slate-800' }} border px-3 py-1.5 rounded-lg transition-all">
+                        <a href="{{ isset($isLocal) && $isLocal && $match->tournament ? route('local.manage-tournament.slug', ['slug' => $match->tournament->slug, 'id' => $match->tournament_id]) : route('admin.players') }}" target="_blank" class="text-xs font-bold {{ isset($isLocal) && $isLocal ? 'bg-[#161b22] border-[#30363d] text-white' : 'bg-slate-100 border-slate-300 text-slate-800' }} border px-3 py-1.5 rounded-lg transition-all">
                             + Add Players for {{ $bowlingTeam->name }}
                         </a>
                     @endif

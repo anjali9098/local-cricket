@@ -10,7 +10,7 @@
     $seoTitle = $mTitle . ' Live Scorecard & Match Details | CricketKaScore';
     $seoDesc  = 'Live cricket score, ball-by-ball commentary, scorecard, overs, run rates, venue information, and match status for ' . $mTitle . ' at ' . $vName . ' on CricketKaScore.';
     $seoKeywords = strtolower($mTitle) . ', ' . strtolower($t1Name) . ' vs ' . strtolower($t2Name) . ', live cricket score, scorecard, commentary, ' . strtolower($vName) . ', CricketKaScore match';
-    $canonicalUrl = $isLocalMode ? route('local.match.detail', $match->id) : route('admin.match.detail', $match->id);
+    $canonicalUrl = $isLocalMode ? route('local.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]) : route('admin.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]);
 @endphp
 
 @section('pageTitle', $seoTitle)
@@ -157,9 +157,8 @@
                     <tbody>
                         @forelse($match->battingStats as $b)
                             <tr class="border-b {{ $isLocalMode ? 'border-white/5 hover:bg-white/5' : 'border-slate-100 hover:bg-slate-50' }} transition-colors">
-                                <td class="py-2.5 px-3 text-sm">
-                                    <strong class="{{ $isLocalMode ? 'text-white' : 'text-slate-900' }}">{{ $b->player_name }}</strong>
-                                    <span class="{{ $isLocalMode ? 'text-gray-400' : 'text-slate-500' }} text-xs ml-1.5">{{ $b->status_text }}</span>
+                                <td class="py-2.5 px-3 text-sm font-semibold {{ $isLocalMode ? 'text-white' : 'text-slate-900' }}">
+                                    {{ $b->player_name }}
                                 </td>
                                 <td class="py-2.5 px-3 text-sm text-center font-black text-emerald-600 dark:text-emerald-400">{{ $b->runs }}</td>
                                 <td class="py-2.5 px-3 text-sm text-center {{ $isLocalMode ? 'text-gray-300' : 'text-slate-600' }}">{{ $b->balls }}</td>
@@ -347,22 +346,28 @@
                                 </div>
                             </div>
 
-                            <!-- Commentary Line -->
+                            <!-- Commentary Line in Easy English -->
                             <p class="text-xs {{ $isLocalMode ? 'text-gray-300' : 'text-slate-600' }} leading-relaxed font-normal m-0">
                                 @if(strtoupper($ball->outcome) === 'W')
-                                    <strong class="text-red-500 font-bold">OUT!</strong> {{ $ball->batsman_name }} is dismissed off the delivery from {{ $ball->bowler_name }}.
+                                    <strong class="text-red-500 font-bold">OUT!</strong> {{ $ball->batsman_name }} is out! {{ $ball->bowler_name }} takes the wicket.
                                 @elseif($ball->outcome === '4')
-                                    <strong class="text-emerald-600 font-bold">FOUR!</strong> {{ $ball->batsman_name }} hits a boundary off {{ $ball->bowler_name }}.
+                                    <strong class="text-emerald-600 font-bold">FOUR!</strong> {{ $ball->batsman_name }} hits a four.
                                 @elseif($ball->outcome === '6')
-                                    <strong class="text-purple-600 font-bold">SIX!</strong> {{ $ball->batsman_name }} smashes a huge six off {{ $ball->bowler_name }}!
+                                    <strong class="text-purple-600 font-bold">SIX!</strong> Big six by {{ $ball->batsman_name }}!
                                 @elseif(str_contains(strtolower($ball->outcome), 'wide'))
-                                    <strong class="text-amber-600 font-bold">WIDE!</strong> {{ $ball->bowler_name }} strays in line, extra run awarded.
+                                    <strong class="text-amber-600 font-bold">WIDE!</strong> Wide ball bowled by {{ $ball->bowler_name }}.
                                 @elseif(str_contains(strtolower($ball->outcome), 'no ball'))
-                                    <strong class="text-amber-600 font-bold">NO BALL!</strong> {{ $ball->bowler_name }} oversteps, free hit next.
-                                @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot')
-                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, no run scored.
+                                    <strong class="text-amber-600 font-bold">NO BALL!</strong> No ball by {{ $ball->bowler_name }}. Free hit next!
+                                @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot' || strtolower($ball->outcome) === 'dot ball')
+                                    No run. {{ $ball->batsman_name }} defends safely.
+                                @elseif($ball->outcome === '1')
+                                    1 run. {{ $ball->batsman_name }} takes a single.
+                                @elseif($ball->outcome === '2')
+                                    2 runs. {{ $ball->batsman_name }} runs two.
+                                @elseif($ball->outcome === '3')
+                                    3 runs. Good running between the wickets.
                                 @elseif(is_numeric($ball->outcome))
-                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }} {{ (int)$ball->outcome === 1 ? 'run taken' : 'runs scored' }}.
+                                    {{ $ball->outcome }} runs scored.
                                 @else
                                     {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }}.
                                 @endif

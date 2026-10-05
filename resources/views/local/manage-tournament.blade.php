@@ -15,7 +15,7 @@
                 . ($seoLocation ? ' in ' . $seoLocation : '')
                 . ' — a ' . $seoFormat . ' local cricket tournament on CricketKaScore.'
                 . ' ' . $teamCount . ' teams, ' . $matchCount . ' matches.';
-    $canonicalUrl = route('local.manage-tournament', $tournament->id);
+    $canonicalUrl = route('local.manage-tournament.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]);
 @endphp
 
 @section('pageTitle', $pageTitle)
@@ -37,7 +37,7 @@
     'itemListElement' => [
         ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home',            'item' => url('/')],
         ['@type' => 'ListItem', 'position' => 2, 'name' => 'Local Dashboard', 'item' => route('local.dashboard')],
-        ['@type' => 'ListItem', 'position' => 3, 'name' => $seoName,          'item' => route('local.tournament.preview', $tournament->id)],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => $seoName,          'item' => route('local.tournament.preview.slug', ['slug' => $tournament->slug, 'id' => $tournament->id])],
         ['@type' => 'ListItem', 'position' => 4, 'name' => 'Manage',          'item' => $canonicalUrl],
     ],
 ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) !!}
@@ -74,7 +74,7 @@
         </div>
         
         <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap w-full sm:w-auto">
-            <a href="{{ route('local.tournament.preview', $tournament->id) }}" class="bg-[#161b22] hover:bg-[#21262d] text-white border border-[#30363d] font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm flex-1 sm:flex-none">
+            <a href="{{ route('local.tournament.preview.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]) }}" class="bg-[#161b22] hover:bg-[#21262d] text-white border border-[#30363d] font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm flex-1 sm:flex-none">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                 <span>Public Page</span>
             </a>
@@ -368,51 +368,64 @@
                 }
             </script>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @php
+                $teamCount = $teams->count();
+                $gridColsClass = match(true) {
+                    $teamCount === 1 => 'grid-cols-1',
+                    $teamCount === 2 => 'grid-cols-1 md:grid-cols-2',
+                    $teamCount === 3 => 'grid-cols-1 md:grid-cols-3',
+                    $teamCount === 4 => 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+                    default          => 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'
+                };
+            @endphp
+            
+            <div class="grid {{ $gridColsClass }} gap-3.5 items-start">
                 @forelse($teams as $team)
-                <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
-                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-[#30363d]">
-                        <h4 class="font-black text-sm text-white uppercase tracking-tight m-0 flex items-center gap-2">
-                            <span>🛡️</span> {{ $team->name }}
+                <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-3.5 flex flex-col shadow-sm hover:border-[#484f58] transition-all">
+                    <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#30363d]">
+                        <h4 class="font-black text-xs sm:text-sm text-white uppercase tracking-tight m-0 flex items-center gap-1.5 truncate" title="{{ $team->name }}">
+                            <span class="text-sm">🛡️</span> <span class="truncate">{{ $team->name }}</span>
                         </h4>
-                        <span class="text-xs font-bold text-gray-400 bg-[#0d1117] px-2 py-0.5 rounded-md border border-[#30363d]">
-                            {{ $team->players->count() }} players
+                        <span class="text-[11px] font-bold text-gray-400 bg-[#0d1117] px-2 py-0.5 rounded-md border border-[#30363d] flex-shrink-0">
+                            {{ $team->players->count() }}
                         </span>
                     </div>
                     
                     @if($team->players->count() > 0)
-                        <div class="flex flex-col gap-2">
+                        <div class="flex flex-col gap-1.5 max-h-[380px] overflow-y-auto pr-1" style="scrollbar-width: thin; scrollbar-color: #30363d #0d1117;">
                             @foreach($team->players as $player)
                                 @php
                                     $pKey = strtolower(trim($player->name));
                                     $liveInfo = $livePlayerMap[$pKey] ?? null;
                                 @endphp
-                                <div class="flex items-center justify-between p-2.5 bg-[#0d1117] border border-[#30363d]/60 rounded-lg hover:border-blue-500/40 transition-all gap-2">
-                                    <div class="flex items-center gap-2 min-w-0 flex-wrap">
-                                        <span class="font-bold text-sm text-white truncate">{{ $player->name }}</span>
-                                        <span class="bg-[#161b22] border border-[#30363d] px-2 py-0.5 rounded-full text-[10px] font-bold text-sky-400 flex-shrink-0">{{ $player->role }}</span>
+                                <div class="flex items-center justify-between p-2 bg-[#0d1117] border border-[#30363d]/70 rounded-lg hover:border-blue-500/50 transition-all gap-1.5">
+                                    <div class="flex items-center gap-1.5 min-w-0 flex-wrap flex-1">
+                                        <span class="font-bold text-xs text-white truncate max-w-[130px]" title="{{ $player->name }}">{{ $player->name }}</span>
+                                        <span class="bg-[#161b22] border border-[#30363d] px-1.5 py-0.2 text-[9px] font-bold text-sky-400 rounded-full flex-shrink-0">{{ $player->role }}</span>
                                         @if($liveInfo)
-                                            <span class="bg-red-500/15 border border-red-500/40 text-red-400 px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 flex-shrink-0" title="Currently playing in: {{ $liveInfo['match_title'] }} ({{ $liveInfo['tournament_name'] }})">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping"></span>
-                                                🔴 Live in {{ Str::limit($liveInfo['tournament_name'], 15) }}
+                                            <span class="bg-red-500/15 border border-red-500/40 text-red-400 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold flex items-center gap-1 flex-shrink-0" title="Currently playing in: {{ $liveInfo['match_title'] }} ({{ $liveInfo['tournament_name'] }})">
+                                                <span class="w-1 h-1 rounded-full bg-red-400 animate-ping"></span>
+                                                🔴 Live
                                             </span>
                                         @else
-                                            <span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 flex-shrink-0">
+                                            <span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.2 rounded-full text-[9px] font-bold flex items-center gap-1 flex-shrink-0">
                                                 🟢 Available
                                             </span>
                                         @endif
                                     </div>
-                                    <form method="POST" action="{{ route('local.delete-player', $player->id) }}" class="m-0" onsubmit="return confirm('Delete player {{ addslashes($player->name) }}?')">
+                                    <form method="POST" action="{{ route('local.delete-player', $player->id) }}" class="m-0 flex-shrink-0" onsubmit="return confirm('Delete player {{ addslashes($player->name) }}?')">
                                         @csrf
                                         <button type="submit" class="p-1 text-gray-500 hover:text-red-400 transition-colors" title="Delete player">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
                                     </form>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="text-xs text-gray-500 italic text-center py-4">No players added to this team yet. Use the selection above to add players!</div>
+                        <div class="text-xs text-gray-500 italic text-center py-6 bg-[#0d1117]/50 rounded-lg border border-[#30363d]/40">
+                            No players added yet
+                        </div>
                     @endif
                 </div>
                 @empty
@@ -564,16 +577,16 @@
 
                         {{-- Score button: go to toss if not started, else directly to scorer --}}
                         @if($match->status === 'live')
-                            <a href="{{ route('local.scorer', $match->id) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-all shadow-sm">
+                            <a href="{{ route('local.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-all shadow-sm">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Score
                             </a>
                         @else
-                            <a href="{{ route('local.toss', $match->id) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-all shadow-sm">
+                            <a href="{{ route('local.toss.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 transition-all shadow-sm">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Score
                             </a>
                         @endif
 
-                        <a href="{{ route('local.match.detail', $match->id) }}" class="bg-[#0d1117] hover:bg-[#161b22] border border-[#30363d] text-gray-300 hover:text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-all">
+                        <a href="{{ route('local.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" class="bg-[#0d1117] hover:bg-[#161b22] border border-[#30363d] text-gray-300 hover:text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-all">
                             View
                         </a>
 

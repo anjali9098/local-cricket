@@ -5,7 +5,7 @@
     $cleanDef = strip_tags($term->definition);
     $metaDesc = !empty($cleanDef) ? \Illuminate\Support\Str::limit($cleanDef, 160) : "Learn the definition, rules, and meaning of {$termName} in cricket on CricketKaScore.";
     $metaKeywords = !empty($term->keywords) ? $term->keywords : "{$termName}, {$termName} cricket meaning, {$termName} definition, cricket glossary, CricketKaScore";
-    $canonicalUrl = route('glossary.show', $term->id);
+    $canonicalUrl = $term->url;
 
     $ogImage = asset('images/logo.png');
     if (!empty($term->poster_image) && !str_starts_with($term->poster_image, 'data:')) {

@@ -13,23 +13,49 @@
                 Home
             </a>
 
-            <!-- Search input & buttons -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <div class="admin-search-wrapper">
-                    <input type="text" id="venue-search-input" class="admin-search-input" oninput="filterVenueTable()" onkeyup="filterVenueTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterVenueTable();}" placeholder="Search venues / stadiums..." style="width: 220px;">
-                    <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
+            <!-- Server Search & Filter Form -->
+            <form id="venue-filter-form" method="GET" action="{{ route('admin.venues') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
+                @if(request('edit'))
+                    <input type="hidden" name="edit" value="{{ request('edit') }}">
+                @endif
+
+                <!-- Country Filter -->
+                <select name="country" id="filter-venue-country" onchange="this.form.submit()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px; cursor: pointer;">
+                    <option value="">All Countries</option>
+                    @if(isset($countries))
+                        @foreach($countries as $c)
+                            <option value="{{ $c }}" {{ ($countryFilter ?? '') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                        @endforeach
+                    @endif
+                </select>
+
+                <!-- Search input & buttons -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="position: relative; display: inline-flex; align-items: center;">
+                        <input type="text" name="search" id="venue-search-input" value="{{ $search ?? '' }}" placeholder="Search stadium / city..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        @if(!empty($search))
+                            <a href="{{ route('admin.venues', array_filter(['country' => $countryFilter ?? null])) }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
+                        @endif
+                    </div>
+                    <button type="submit" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                        Search
+                    </button>
+                    <a href="{{ route('admin.venues') }}" style="display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
+                        Reset
+                    </a>
                 </div>
-                <button type="button" onclick="filterVenueTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Search
-                </button>
-                <button type="button" onclick="resetVenueSearch()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Reset
-                </button>
-            </div>
+            </form>
         </div>
 
-        <!-- Right: + Add New Button -->
-        <div>
+        <!-- Right: Actions (Possible11 Sync & Add Venue) -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <form method="POST" action="{{ route('admin.venues.sync-possible11') }}" style="margin: 0; display: inline-flex; align-items: center;">
+                @csrf
+                <button type="submit" onclick="this.innerHTML='⏳ Syncing...'; this.disabled=true; this.form.submit();" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #38bdf8; border-radius: 4px; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 3px rgba(2,132,199,0.3); transition: all 0.2s;" title="Fetch latest stadiums & international grounds from Possible11 API directly into Database">
+                    <span>⚡</span> Sync Venues (Possible11)
+                </button>
+            </form>
+
             <button type="button" onclick="toggleVenueForm()" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; color: #0f172a; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                 <span style="font-size: 1.1rem; line-height: 1; color: #0284c7;">+</span> Add New Venue
             </button>
@@ -49,7 +75,6 @@
         <form method="POST" action="{{ $editItem ? route('admin.venues.update', $editItem->id) : route('admin.venues.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Venue Name & Slug | City | Country | Display Order -->
             <!-- ROW 1: Venue Name & Slug | City | Country | Display Order -->
             <div style="display: grid; grid-template-columns: 2.2fr 1fr 1fr 0.8fr; gap: 16px; align-items: flex-start;">
                 <div>
@@ -137,6 +162,15 @@
     <!-- Existing Venues List Table (Matching Exact Series Style) -->
     <div id="venue-table-container" style="display: {{ $editItem ? 'none' : 'block' }}; background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; color: #64748b; font-size: 0.85rem; font-weight: 600;">
+            <div>
+                Showing <strong>{{ $venues->firstItem() ?? 0 }}</strong> to <strong>{{ $venues->lastItem() ?? 0 }}</strong> of <strong>{{ $venues->total() }}</strong> venues
+                @if(!empty($search))
+                    <span style="color: #0284c7;">(filtered by "{{ $search }}")</span>
+                @endif
+            </div>
+        </div>
+
         @if($venues->isNotEmpty())
             <div style="overflow-x: auto;">
                 <table id="venue-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
@@ -159,10 +193,10 @@
                                 <!-- # EDIT -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; gap: 4px;">
-                                        <a href="{{ route('admin.venues', ['edit' => $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
+                                        <a href="{{ route('admin.venues', ['edit' => $item->slug . '-' . $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
                                             {{ $item->id }}
                                         </a>
-                                        <a href="{{ route('admin.venues', ['edit' => $item->id]) }}" title="Edit Venue" style="color: #0284c7; text-decoration: none;">
+                                        <a href="{{ route('admin.venues', ['edit' => $item->slug . '-' . $item->id]) }}" title="Edit Venue" style="color: #0284c7; text-decoration: none;">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </a>
                                     </div>
@@ -240,11 +274,14 @@
                     </tbody>
                 </table>
             </div>
-            <!-- 10-item Pagination Container -->
-            <div id="venue-table-pagination"></div>
+
+            <!-- 20-item Pagination Container -->
+            <div style="margin-top: 20px; display: flex; justify-content: center;">
+                {{ $venues->links() }}
+            </div>
         @else
             <div style="text-align: center; padding: 48px; color: #94a3b8; font-weight: 600;">
-                No venues available yet. Click <strong>+ Add New Venue</strong> above to add one!
+                No venues found matching your search. Click <strong>+ Add New Venue</strong> above to add one!
             </div>
         @endif
     </div>
@@ -289,27 +326,5 @@ function autoSlugify(text) {
 document.getElementById('venue_slug')?.addEventListener('input', function() {
     this.dataset.manual = 'true';
 });
-
-// Initialize Table Manager for Venues
-let venueTableManager;
-document.addEventListener('DOMContentLoaded', () => {
-    venueTableManager = new AdminTableManager({
-        tableId: 'venue-table',
-        rowSelector: '.tbl-venue-row',
-        searchInputId: 'venue-search-input',
-        paginationContainerId: 'venue-table-pagination',
-        perPage: 10,
-        colSpan: 8,
-        noResultsMsg: 'No matching venues found.'
-    });
-});
-
-function filterVenueTable() {
-    if (venueTableManager) venueTableManager.applyFilter(1);
-}
-
-function resetVenueSearch() {
-    if (venueTableManager) venueTableManager.reset();
-}
 </script>
 @endsection

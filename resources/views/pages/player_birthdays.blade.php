@@ -109,7 +109,7 @@
                         @endif
                         <div>
                             <span style="font-size: 0.72rem; font-weight: 800; background: var(--primary); color: white; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">🎂 Turning {{ $pb->current_age }} Today</span>
-                            <a href="{{ route('player.profile', $pb->id) }}" style="font-size: 1.05rem; font-weight: 900; color: var(--text-main); text-decoration: none; display: block; margin: 4px 0 2px 0;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-main)'">
+                            <a href="{{ $pb->url }}" style="font-size: 1.05rem; font-weight: 900; color: var(--text-main); text-decoration: none; display: block; margin: 4px 0 2px 0;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-main)'">
                                 {{ $pb->name }}
                             </a>
                             <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">
@@ -165,7 +165,7 @@
 
                     <!-- Info -->
                     <div style="flex: 1; min-width: 0;">
-                        <a href="{{ route('player.profile', $pb->id) }}" style="font-size: 0.95rem; font-weight: 900; color: var(--text-main); text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-main)'">
+                        <a href="{{ $pb->url }}" style="font-size: 0.95rem; font-weight: 900; color: var(--text-main); text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-main)'">
                             {{ $pb->name }}
                         </a>
                         <div style="font-size: 0.76rem; color: var(--text-muted); font-weight: 600; margin-top: 2px;">

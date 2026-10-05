@@ -167,8 +167,8 @@
                             </td>
                             <td style="padding:12px; text-align:center; font-size: 0.88rem;">
                                 <div style="display: inline-flex; align-items: center; gap: 8px;">
-                                    <a href="{{ route('admin.manage-tournament', $t->id) }}" style="background: #0ea5e9; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; text-decoration: none;">Manage</a>
-                                    <a href="{{ route('admin.tournament.preview', $t->id) }}" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; text-decoration: none;">Preview</a>
+                                    <a href="{{ route('admin.manage-tournament.slug', ['slug' => $t->slug, 'id' => $t->id]) }}" style="background: #0ea5e9; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; text-decoration: none;">Manage</a>
+                                    <a href="{{ route('admin.tournament.preview.slug', ['slug' => $t->slug, 'id' => $t->id]) }}" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; text-decoration: none;">Preview</a>
                                     <form method="POST" action="{{ route('admin.delete-tournament', $t->id) }}" onsubmit="return confirm('Are you sure you want to permanently delete tournament \'{{ addslashes($t->name) }}\'? This will delete all matches and teams inside it.');" style="display:inline; margin:0;">
                                         @csrf
                                         <button type="submit" style="background: transparent; color: #ef4444; border: 1px solid #fca5a5; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Delete</button>
@@ -222,14 +222,14 @@
                         @endif
 
                         @if($match->status === 'live')
-                            <a href="{{ route('admin.scorer', $match->id) }}" style="background: #0ea5e9; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">Live Scorer</a>
+                            <a href="{{ route('admin.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" style="background: #0ea5e9; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">Live Scorer</a>
                         @elseif($match->status === 'completed')
-                            <a href="{{ route('admin.scorer', $match->id) }}" style="background: #10b981; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">Scorecard</a>
+                            <a href="{{ route('admin.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" style="background: #10b981; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">Scorecard</a>
                         @else
-                            <a href="{{ route('admin.toss', $match->id) }}" style="background: #0ea5e9; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">Start Match</a>
+                            <a href="{{ route('admin.toss.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" style="background: #0ea5e9; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">Start Match</a>
                         @endif
 
-                        <a href="{{ route('admin.match.detail', $match->id) }}" style="background: white; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none;">View Details</a>
+                        <a href="{{ route('admin.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" style="background: white; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none;">View Details</a>
                     </div>
                 </div>
             @empty

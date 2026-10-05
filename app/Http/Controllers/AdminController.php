@@ -229,9 +229,16 @@ class AdminController extends Controller
         return back()->with('error', 'Tournament name is required.');
     }
 
-    public function manageTournament($id)
+    public function manageTournament($slug = null, $id = null)
     {
-        $tournament = Tournament::findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $tournament = Tournament::findOrFail($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('admin.manage-tournament.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]);
+        }
+
+        $id = $resolvedId;
         $teams = Team::where('tournament_id', $id)->get();
         $teamIds = $teams->pluck('id');
 
@@ -327,9 +334,15 @@ class AdminController extends Controller
         return back()->with('error', 'Invalid teams selected.');
     }
 
-    public function toss($id)
+    public function toss($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('admin.toss.slug', ['slug' => $match->slug, 'id' => $match->id]);
+        }
+
         return view('admin.toss', compact('match'));
     }
 
@@ -349,12 +362,18 @@ class AdminController extends Controller
         $match->current_innings = 1;
         $match->save();
 
-        return redirect()->route('admin.opening-players', ['id' => $id, 'batting_team_id' => $battingTeamId]);
+        return redirect()->route('admin.opening-players.slug', ['slug' => $match->slug, 'id' => $id, 'batting_team_id' => $battingTeamId]);
     }
 
-    public function openingPlayers($id)
+    public function openingPlayers($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('admin.opening-players.slug', array_merge(['slug' => $match->slug, 'id' => $match->id], request()->query()));
+        }
+
         $battingTeamId = request('batting_team_id');
         $battingTeam   = Team::with('players')->findOrFail($battingTeamId);
         $bowlingTeamId = ($battingTeamId == $match->team1_id) ? $match->team2_id : $match->team1_id;
@@ -363,9 +382,16 @@ class AdminController extends Controller
         return view('admin.opening_players', compact('match', 'battingTeam', 'bowlingTeam', 'isLocal'));
     }
 
-    public function scorer($id)
+    public function scorer($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('admin.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]);
+        }
+
+        $id = $resolvedId;
         $isLocal = false;
         
         $allBalls = \App\Models\BallByBall::where('match_id', $id)
@@ -387,7 +413,7 @@ class AdminController extends Controller
             $request->input('bowler_id'),
             1
         );
-        return redirect()->route('admin.scorer', $id)->with('success', 'Innings 1 started! Striker and Bowler active.');
+        return redirect()->route('admin.scorer.slug', ['slug' => $match->slug, 'id' => $id])->with('success', 'Innings 1 started! Striker and Bowler active.');
     }
 
     public function updateScore(Request $request)
@@ -466,7 +492,7 @@ class AdminController extends Controller
             $innings
         );
 
-        return redirect()->route('admin.scorer', $id)->with('success', "Innings $innings started!");
+        return redirect()->route('admin.scorer.slug', ['slug' => $match->slug, 'id' => $id])->with('success', "Innings $innings started!");
     }
 
     public function createMatch(Request $request)
@@ -1076,16 +1102,28 @@ class AdminController extends Controller
         return back()->with('success', 'Player deleted successfully.');
     }
 
-    public function matchDetail($id)
+    public function matchDetail($slug = null, $id = null)
     {
-        $match = \App\Models\CricketMatch::with(['team1', 'team2', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($id);
-        $balls = \App\Models\BallByBall::where('match_id', $id)->orderBy('created_at', 'desc')->get();
+        $resolvedId = $id ?? $slug;
+        $match = \App\Models\CricketMatch::with(['team1', 'team2', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('admin.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]);
+        }
+
+        $balls = \App\Models\BallByBall::where('match_id', $match->id)->orderBy('created_at', 'desc')->get();
         return view('admin.match_detail', compact('match', 'balls'));
     }
 
-    public function tournamentPreview($id)
+    public function tournamentPreview($slug = null, $id = null)
     {
-        $tournament = \App\Models\Tournament::with(['teams', 'matches.team1', 'matches.team2'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $tournament = \App\Models\Tournament::with(['teams', 'matches.team1', 'matches.team2'])->findOrFail($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('admin.tournament.preview.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]);
+        }
+
         $teams = $tournament->teams;
         $matches = $tournament->matches;
 
@@ -1279,8 +1317,42 @@ class AdminController extends Controller
         return redirect()->route('admin.story')->with('success', 'Web Story created successfully!');
     }
 
-    public function showCreateMatchForm()
+    public function showCreateMatchForm(Request $request)
     {
+        $search = trim($request->query('search', ''));
+        $statusFilter = trim($request->query('status', ''));
+        $seriesFilter = trim($request->query('series_id', ''));
+
+        $query = CricketMatch::with(['team1', 'team2', 'venue', 'tournament']);
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('custom_note', 'like', "%{$search}%")
+                  ->orWhere('match_type', 'like', "%{$search}%")
+                  ->orWhereHas('team1', fn($t1) => $t1->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('team2', fn($t2) => $t2->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('tournament', fn($tq) => $tq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('venue', fn($vq) => $vq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if (!empty($statusFilter)) {
+            if ($statusFilter === 'live') {
+                $query->where('status', 'live');
+            } elseif ($statusFilter === 'upcoming') {
+                $query->whereIn('status', ['upcoming', 'scheduled']);
+            } elseif ($statusFilter === 'completed') {
+                $query->where('status', 'completed');
+            }
+        }
+
+        if (!empty($seriesFilter)) {
+            $query->where('tournament_id', $seriesFilter);
+        }
+
+        $matches = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
+
         $liveMatches = CricketMatch::has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where('status', 'live')
@@ -1299,25 +1371,93 @@ class AdminController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $matches = CricketMatch::has('team1')->has('team2')->with(['team1', 'team2'])->orderBy('id', 'desc')->get();
         $tournaments = Tournament::where('is_approved', true)->with('teams')->orderBy('id', 'desc')->get();
 
-        return view('admin.create_match', compact('liveMatches', 'upcomingMatches', 'completedMatches', 'matches', 'tournaments'));
+        return view('admin.create_match', compact('liveMatches', 'upcomingMatches', 'completedMatches', 'matches', 'tournaments', 'search', 'statusFilter', 'seriesFilter'));
     }
 
-    public function showAddSeriesForm(Request $request)
+    /**
+     * Resolve model instance from edit query param (supports raw ID or slug-ID, e.g. "ipl-2026-137")
+     */
+    private function resolveEditModel($modelClass, $editParam)
+    {
+        if (empty($editParam)) {
+            return null;
+        }
+
+        if (is_numeric($editParam)) {
+            return $modelClass::find($editParam);
+        }
+
+        if (preg_match('/-(\d+)$/', $editParam, $matches)) {
+            $item = $modelClass::find($matches[1]);
+            if ($item) {
+                return $item;
+            }
+        }
+
+        try {
+            $item = $modelClass::where('slug', $editParam)->first();
+            if ($item) {
+                return $item;
+            }
+        } catch (\Throwable $e) {}
+
+        return null;
+    }
+
+    public function showAddSeriesForm(Request $request, $slug = null, $id = null)
     {
         try {
+            $editParam = $request->query('edit') ?? ($id ?? $slug);
             $editItem = null;
-            if ($request->query('edit')) {
-                $editItem = Tournament::find($request->query('edit'));
+            if ($editParam) {
+                $editItem = $this->resolveEditModel(Tournament::class, $editParam);
+                if ($editItem && (is_numeric($editParam) || ($id === null && is_numeric($slug)) || $request->query('edit') === (string)$editItem->id)) {
+                    return redirect()->route('admin.series', ['edit' => $editItem->slug . '-' . $editItem->id]);
+                }
             }
-            $tournaments = Tournament::with(['teams', 'matches', 'user'])->orderBy('id', 'desc')->get();
+
+            $search = trim($request->query('search', ''));
+            $statusFilter = trim($request->query('status', ''));
+            $typeFilter = trim($request->query('type', ''));
+
+            $query = Tournament::with(['teams', 'matches', 'user']);
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('short_name', 'like', "%{$search}%")
+                      ->orWhere('city', 'like', "%{$search}%")
+                      ->orWhere('state', 'like', "%{$search}%")
+                      ->orWhere('format', 'like', "%{$search}%")
+                      ->orWhere('venue', 'like', "%{$search}%")
+                      ->orWhere('category', 'like', "%{$search}%");
+                });
+            }
+
+            if (!empty($statusFilter)) {
+                $query->where('status', $statusFilter);
+            }
+
+            if (!empty($typeFilter)) {
+                if ($typeFilter === 'local') {
+                    $query->where(function($q) {
+                        $q->where('series_type', 'LOCAL')->orWhere('category', 'local');
+                    });
+                } elseif ($typeFilter === 'international') {
+                    $query->where('category', 'international');
+                } elseif ($typeFilter === 'domestic') {
+                    $query->where('category', 'domestic');
+                }
+            }
+
+            $tournaments = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
             $allTeams = Team::orderBy('name', 'asc')->get();
             $allVenues = Venue::orderBy('name', 'asc')->get();
-            return view('admin.add_series', compact('tournaments', 'editItem', 'allTeams', 'allVenues'));
+            return view('admin.add_series', compact('tournaments', 'editItem', 'allTeams', 'allVenues', 'search', 'statusFilter', 'typeFilter'));
         } catch (\Throwable $e) {
-            $tournaments = Tournament::orderBy('id', 'desc')->get();
+            $tournaments = Tournament::orderBy('id', 'desc')->paginate(20)->withQueryString();
             $editItem = null;
             $allTeams = collect([]);
             $allVenues = collect([]);
@@ -1340,6 +1480,35 @@ class AdminController extends Controller
         return redirect()->route('admin.series')->with('error', 'Failed to synchronize with Possible11 API.');
     }
 
+    /**
+     * Trigger Possible11 API Player Synchronization
+     */
+    public function syncPossible11Players(Request $request, \App\Services\Possible11ApiService $service)
+    {
+        $status = $request->input('status', 'all');
+        $result = $service->syncPlayers($status);
+
+        if ($result['success']) {
+            return redirect()->route('admin.players')->with('success', $result['message']);
+        }
+
+        return redirect()->route('admin.players')->with('error', 'Failed to synchronize players with Possible11 API.');
+    }
+
+    /**
+     * Trigger Possible11 API Venue Synchronization
+     */
+    public function syncPossible11Venues(Request $request, \App\Services\Possible11ApiService $service)
+    {
+        $result = $service->syncVenues();
+
+        if ($result['success']) {
+            return redirect()->route('admin.venues')->with('success', $result['message']);
+        }
+
+        return redirect()->route('admin.venues')->with('error', 'Failed to synchronize venues with Possible11 API.');
+    }
+
     public function showAddFantasyTipForm(Request $request)
     {
         return $this->showAddPredictionForm($request);
@@ -1347,38 +1516,105 @@ class AdminController extends Controller
 
     public function showAddPredictionForm(Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
         $editType = 'PREDICTION';
-        if ($request->query('edit')) {
-            $editItem = \App\Models\Prediction::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\Prediction::class, $editParam);
             if (!$editItem) {
-                $editItem = \App\Models\FantasyTip::find($request->query('edit'));
+                $editItem = $this->resolveEditModel(\App\Models\FantasyTip::class, $editParam);
                 if ($editItem) $editType = 'FANTASY';
             }
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                return redirect()->route('admin.prediction', ['edit' => $editItem->slug . '-' . $editItem->id]);
+            }
         }
-        $predictions = \App\Models\Prediction::where('tag', '!=', 'MATCH PREVIEW')->orderBy('id', 'desc')->get();
-        $fantasyTips = \App\Models\FantasyTip::orderBy('id', 'desc')->get();
-        return view('admin.add_prediction', compact('predictions', 'fantasyTips', 'editItem', 'editType'));
+
+        $search = trim($request->query('search', ''));
+        $typeFilter = trim($request->query('type', ''));
+
+        $predQuery = \App\Models\Prediction::where('tag', '!=', 'MATCH PREVIEW');
+        $fantQuery = \App\Models\FantasyTip::query();
+
+        if (!empty($search)) {
+            $predQuery->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('match_title', 'like', "%{$search}%")
+                  ->orWhere('summary', 'like', "%{$search}%")
+                  ->orWhere('team1_name', 'like', "%{$search}%")
+                  ->orWhere('team2_name', 'like', "%{$search}%");
+            });
+            $fantQuery->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('match_title', 'like', "%{$search}%")
+                  ->orWhere('summary', 'like', "%{$search}%")
+                  ->orWhere('team1_name', 'like', "%{$search}%")
+                  ->orWhere('team2_name', 'like', "%{$search}%");
+            });
+        }
+
+        $predictions = $predQuery->orderBy('id', 'desc')->paginate(20, ['*'], 'pred_page')->withQueryString();
+        $fantasyTips = $fantQuery->orderBy('id', 'desc')->paginate(20, ['*'], 'fant_page')->withQueryString();
+
+        return view('admin.add_prediction', compact('predictions', 'fantasyTips', 'editItem', 'editType', 'search', 'typeFilter'));
     }
 
     public function showAddArticleForm(Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = \App\Models\Article::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\Article::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                return redirect()->route('admin.article', ['edit' => $editItem->slug . '-' . $editItem->id]);
+            }
         }
-        $articles = \App\Models\Article::orderBy('id', 'desc')->get();
-        return view('admin.add_article', compact('articles', 'editItem'));
+        $search = trim($request->query('search', ''));
+        $category = trim($request->query('category', ''));
+
+        $query = \App\Models\Article::query();
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('author', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('summary', 'like', "%{$search}%");
+            });
+        }
+        if (!empty($category)) {
+            $query->where('category', $category);
+        }
+        $articles = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
+        return view('admin.add_article', compact('articles', 'editItem', 'search', 'category'));
     }
 
     public function showAddNewsForm(Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = \App\Models\News::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\News::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                return redirect()->route('admin.news', ['edit' => $editItem->slug . '-' . $editItem->id]);
+            }
         }
-        $news = \App\Models\News::orderBy('id', 'desc')->get();
-        return view('admin.add_news', compact('news', 'editItem'));
+        $search = trim($request->query('search', ''));
+        $category = trim($request->query('category', ''));
+
+        $query = \App\Models\News::query();
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('author', 'like', "%{$search}%")
+                  ->orWhere('summary', 'like', "%{$search}%");
+            });
+        }
+        if (!empty($category)) {
+            $query->where('category', $category);
+        }
+        $news = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
+        return view('admin.add_news', compact('news', 'editItem', 'search', 'category'));
     }
 
     public function showAddPopularTeamForm(Request $request)
@@ -1388,36 +1624,94 @@ class AdminController extends Controller
 
     public function showAddTeamRankingForm(Request $request)
     {
+        $editTeamParam = $request->query('edit_team');
+        $editPlayerParam = $request->query('edit_player');
         $editTeam = null;
         $editPlayer = null;
-        if ($request->query('edit_team')) {
-            $editTeam = TeamRanking::find($request->query('edit_team'));
-        } elseif ($request->query('edit_player')) {
-            $editPlayer = \App\Models\PlayerRanking::find($request->query('edit_player'));
+        if ($editTeamParam) {
+            $editTeam = $this->resolveEditModel(TeamRanking::class, $editTeamParam);
+            if ($editTeam && (is_numeric($editTeamParam) || $request->query('edit_team') === (string)$editTeam->id)) {
+                return redirect()->route('admin.ranking', ['edit_team' => $editTeam->slug . '-' . $editTeam->id]);
+            }
+        } elseif ($editPlayerParam) {
+            $editPlayer = $this->resolveEditModel(\App\Models\PlayerRanking::class, $editPlayerParam);
+            if ($editPlayer && (is_numeric($editPlayerParam) || $request->query('edit_player') === (string)$editPlayer->id)) {
+                return redirect()->route('admin.ranking', ['edit_player' => $editPlayer->slug . '-' . $editPlayer->id]);
+            }
         }
-        $teamRankings = TeamRanking::orderBy('rank_num', 'asc')->get();
-        $playerRankings = \App\Models\PlayerRanking::orderBy('type')->orderBy('rank_num', 'asc')->get();
-        return view('admin.add_team_ranking', compact('teamRankings', 'playerRankings', 'editTeam', 'editPlayer'));
+
+        $search = trim($request->query('search', ''));
+        $teamQuery = TeamRanking::query();
+        $playerQuery = \App\Models\PlayerRanking::query();
+
+        if (!empty($search)) {
+            $teamQuery->where(function($q) use ($search) {
+                $q->where('team_name', 'like', "%{$search}%")
+                  ->orWhere('team_short_name', 'like', "%{$search}%")
+                  ->orWhere('format', 'like', "%{$search}%");
+            });
+            $playerQuery->where(function($q) use ($search) {
+                $q->where('player_name', 'like', "%{$search}%")
+                  ->orWhere('team_name', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%")
+                  ->orWhere('format', 'like', "%{$search}%");
+            });
+        }
+
+        $teamRankings = $teamQuery->orderBy('rank_num', 'asc')->get();
+        $playerRankings = $playerQuery->orderBy('type')->orderBy('rank_num', 'asc')->get();
+        return view('admin.add_team_ranking', compact('teamRankings', 'playerRankings', 'editTeam', 'editPlayer', 'search'));
     }
 
     public function showAddWebStoryForm(Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = \App\Models\WebStory::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\WebStory::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                return redirect()->route('admin.story', ['edit' => $editItem->slug . '-' . $editItem->id]);
+            }
         }
-        $webStories = \App\Models\WebStory::orderBy('id', 'desc')->get();
-        return view('admin.add_web_story', compact('webStories', 'editItem'));
+        $search = trim($request->query('search', ''));
+        $query = \App\Models\WebStory::query();
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('summary', 'like', "%{$search}%");
+            });
+        }
+        $webStories = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
+        return view('admin.add_web_story', compact('webStories', 'editItem', 'search'));
     }
 
     public function showAddGlossaryForm(Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = \App\Models\GlossaryTerm::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\GlossaryTerm::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                return redirect()->route('admin.glossary', ['edit' => $editItem->slug . '-' . $editItem->id]);
+            }
         }
-        $glossaryTerms = \App\Models\GlossaryTerm::orderBy('id', 'desc')->get();
-        return view('admin.add_glossary', compact('glossaryTerms', 'editItem'));
+        $search = trim($request->query('search', ''));
+        $letter = trim($request->query('letter', ''));
+
+        $query = \App\Models\GlossaryTerm::query();
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('term', 'like', "%{$search}%")
+                  ->orWhere('definition', 'like', "%{$search}%")
+                  ->orWhere('letter', 'like', "%{$search}%");
+            });
+        }
+        if (!empty($letter)) {
+            $query->where('letter', strtoupper($letter));
+        }
+        $glossaryTerms = $query->orderBy('term', 'asc')->paginate(20)->withQueryString();
+        return view('admin.add_glossary', compact('glossaryTerms', 'editItem', 'search', 'letter'));
     }
 
     public function addGlossary(Request $request)
@@ -1872,12 +2166,28 @@ class AdminController extends Controller
 
     public function showMatchPreviewForm(\Illuminate\Http\Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = \App\Models\Prediction::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\Prediction::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                return redirect()->route('admin.match-preview', ['edit' => $editItem->slug . '-' . $editItem->id]);
+            }
         }
-        $previews = \App\Models\Prediction::where('tag', 'MATCH PREVIEW')->orderBy('id', 'desc')->get();
-        return view('admin.add_match_preview', compact('previews', 'editItem'));
+
+        $search = trim($request->query('search', ''));
+        $query = \App\Models\Prediction::where('tag', 'MATCH PREVIEW');
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('match_title', 'like', "%{$search}%")
+                  ->orWhere('summary', 'like', "%{$search}%");
+            });
+        }
+
+        $previews = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
+        return view('admin.add_match_preview', compact('previews', 'editItem', 'search'));
     }
 
     public function addMatchPreview(\Illuminate\Http\Request $request)
@@ -1950,13 +2260,42 @@ class AdminController extends Controller
 
     public function showTeamsForm(\Illuminate\Http\Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = Team::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(Team::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                $params = $request->query();
+                $params['edit'] = $editItem->slug . '-' . $editItem->id;
+                return redirect()->route('admin.teams', $params);
+            }
         }
-        $teams = Team::with(['tournament', 'players'])->orderBy('id', 'desc')->get();
+
+        $search = trim($request->query('search', ''));
+        $typeFilter = trim($request->query('type', ''));
+
+        $query = Team::with(['tournament', 'players']);
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('short_name', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('country', 'like', "%{$search}%")
+                  ->orWhere('team_type', 'like', "%{$search}%")
+                  ->orWhereHas('tournament', function($tq) use ($search) {
+                      $tq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if (!empty($typeFilter)) {
+            $query->where('team_type', $typeFilter);
+        }
+
+        $teams = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
         $tournaments = Tournament::orderBy('name', 'asc')->get();
-        return view('admin.admin_teams', compact('teams', 'editItem', 'tournaments'));
+        return view('admin.admin_teams', compact('teams', 'editItem', 'tournaments', 'search', 'typeFilter'));
     }
 
     public function createTeam(\Illuminate\Http\Request $request)
@@ -1988,7 +2327,7 @@ class AdminController extends Controller
             'description' => $request->input('description', ''),
             'keywords' => $request->input('keywords', ''),
         ]);
-        return redirect()->route('admin.popular')->with('success', "Team '{$name}' created successfully!");
+        return redirect()->route('admin.teams')->with('success', "Team '{$name}' created successfully!");
     }
 
     public function updateTeam(\Illuminate\Http\Request $request, $id)
@@ -2017,7 +2356,7 @@ class AdminController extends Controller
             'description' => $request->input('description', $team->description ?? ''),
             'keywords' => $request->input('keywords', $team->keywords ?? ''),
         ]);
-        return redirect()->route('admin.popular')->with('success', 'Team updated successfully!');
+        return redirect()->route('admin.teams')->with('success', 'Team updated successfully!');
     }
 
     public function deleteTeamEntry($id)
@@ -2025,16 +2364,22 @@ class AdminController extends Controller
         $team = Team::findOrFail($id);
         \App\Models\Player::where('team_id', $id)->delete();
         $team->delete();
-        return redirect()->route('admin.popular')->with('success', 'Team deleted successfully!');
+        return redirect()->route('admin.teams')->with('success', 'Team deleted successfully!');
     }
 
     // =================== PLAYERS MANAGEMENT ===================
 
     public function showPlayersForm(\Illuminate\Http\Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = \App\Models\Player::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\Player::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                $params = $request->query();
+                $params['edit'] = $editItem->slug . '-' . $editItem->id;
+                return redirect()->route('admin.players', $params);
+            }
         }
 
         $query = \App\Models\Player::with('team');
@@ -2075,7 +2420,7 @@ class AdminController extends Controller
         }
 
         $players = $query->orderBy('id', 'desc')
-            ->paginate(10, ['*'], 'page', (int) $request->query('page', 1))
+            ->paginate(20, ['*'], 'page', (int) $request->query('page', 1))
             ->withQueryString();
 
         if ($request->ajax() || $request->query('ajax') || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
@@ -2103,7 +2448,7 @@ class AdminController extends Controller
 
         $existing = \App\Models\Player::where('name', $name)->first();
         if ($existing) {
-            return redirect()->route('admin.players', ['edit' => $existing->id])
+            return redirect()->route('admin.players', ['edit' => $existing->slug . '-' . $existing->id])
                 ->with('error', "A player named '{$name}' already exists in the database. You can edit their details here.");
         }
 
@@ -2251,12 +2596,38 @@ class AdminController extends Controller
 
     public function showVenuesForm(\Illuminate\Http\Request $request)
     {
+        $editParam = $request->query('edit');
         $editItem = null;
-        if ($request->query('edit')) {
-            $editItem = \App\Models\Venue::find($request->query('edit'));
+        if ($editParam) {
+            $editItem = $this->resolveEditModel(\App\Models\Venue::class, $editParam);
+            if ($editItem && (is_numeric($editParam) || $request->query('edit') === (string)$editItem->id)) {
+                $params = $request->query();
+                $params['edit'] = $editItem->slug . '-' . $editItem->id;
+                return redirect()->route('admin.venues', $params);
+            }
         }
-        $venues = \App\Models\Venue::orderBy('id', 'desc')->get();
-        return view('admin.admin_venues', compact('venues', 'editItem'));
+
+        $search = trim($request->query('search', ''));
+        $countryFilter = trim($request->query('country', ''));
+
+        $query = \App\Models\Venue::query();
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('country', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($countryFilter)) {
+            $query->where('country', $countryFilter);
+        }
+
+        $venues = $query->orderBy('id', 'desc')->paginate(20)->withQueryString();
+        $countries = \App\Models\Venue::whereNotNull('country')->where('country', '!=', '')->distinct()->orderBy('country')->pluck('country');
+
+        return view('admin.admin_venues', compact('venues', 'editItem', 'search', 'countryFilter', 'countries'));
     }
 
     public function createVenue(\Illuminate\Http\Request $request)

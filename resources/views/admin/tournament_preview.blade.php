@@ -23,7 +23,7 @@
                 . ($seoCity ? ', ' . $seoCity . ' cricket' : '')
                 . ($seoState ? ', ' . $seoState . ' cricket tournament' : '')
                 . ', grassroots cricket, gully cricket, CricketKaScore';
-    $canonicalUrl = (isset($isLocal) && $isLocal) ? route('local.tournament.preview', $tournament->id) : route('admin.tournament.preview', $tournament->id);
+    $canonicalUrl = (isset($isLocal) && $isLocal) ? route('local.tournament.preview.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]) : route('admin.tournament.preview.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]);
     $dashboardUrl = (isset($isLocal) && $isLocal) ? route('local.dashboard') : route('admin.dashboard');
     $dashboardName = (isset($isLocal) && $isLocal) ? 'Local Dashboard' : 'Admin Dashboard';
 @endphp
@@ -112,7 +112,7 @@
             
             @if($liveMatches->count() > 0)
                 @foreach($liveMatches as $liveMatch)
-                <a href="{{ route('matches.detail', $liveMatch->id) }}" style="display: block; background: var(--bg-card); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 18px; text-decoration: none; box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <a href="{{ $liveMatch->url }}" style="display: block; background: var(--bg-card); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 18px; text-decoration: none; box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease;">
                     <div style="display: inline-block; background: #ef4444; color: #ffffff; font-size: 0.68rem; font-weight: 900; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">&bull; LIVE</div>
                     <div style="font-size: 1.05rem; font-weight: 900; color: var(--text-main); text-transform: uppercase; margin-bottom: 8px;">
                         {{ $liveMatch->team1->name ?? 'TBA' }} <span style="color: #ef4444;">VS</span> {{ $liveMatch->team2->name ?? 'TBA' }}

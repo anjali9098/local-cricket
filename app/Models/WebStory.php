@@ -73,5 +73,19 @@ class WebStory extends Model {
         }
         return '';
     }
+
+    public function getSlugAttribute()
+    {
+        if (!empty($this->attributes['slug'] ?? null)) {
+            return $this->attributes['slug'];
+        }
+        return \Illuminate\Support\Str::slug($this->title ?? ('story-' . $this->id));
+    }
+
+    public function getUrlAttribute()
+    {
+        $slug = !empty($this->slug) ? $this->slug : \Illuminate\Support\Str::slug($this->title ?: 'web-story');
+        return route('webstories.show.slug', ['slug' => $slug, 'id' => $this->id]);
+    }
 }
 

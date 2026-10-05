@@ -25,7 +25,7 @@ class HomeController extends Controller
     {
         $todayDate = \Carbon\Carbon::today()->toDateString();
 
-        $liveMatches = CricketMatch::approved()
+        $allApprovedMatches = CricketMatch::approved()
             ->has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
             ->where(function($q) {
@@ -34,43 +34,23 @@ class HomeController extends Controller
                       $tq->where('is_approved', true);
                   });
             })
-            ->where('status', 'live')
             ->orderBy('id', 'desc')
             ->get();
 
-        $upcomingMatches = CricketMatch::approved()
-            ->has('team1')->has('team2')
-            ->with(['team1', 'team2', 'venue', 'tournament'])
-            ->where(function($q) {
-                $q->whereNull('tournament_id')
-                  ->orWhereHas('tournament', function($tq) {
-                      $tq->where('is_approved', true);
-                  });
-            })
-            ->whereIn('status', ['upcoming', 'scheduled'])
-            ->where(function($dateCond) use ($todayDate) {
-                $dateCond->whereNull('match_date')
-                         ->orWhereDate('match_date', '>=', $todayDate);
-            })
-            ->orderBy('id', 'desc')
-            ->take(12)
-            ->get();
+        // 1. Live Matches (Active live matches playing right now or today)
+        $liveMatches = $allApprovedMatches->filter(function($m) {
+            return $m->effective_status === 'live';
+        })->values();
 
-        if ($upcomingMatches->isEmpty()) {
-            $upcomingMatches = CricketMatch::approved()
-                ->has('team1')->has('team2')
-                ->with(['team1', 'team2', 'venue', 'tournament'])
-                ->whereIn('status', ['upcoming', 'scheduled'])
-                ->orderBy('id', 'desc')
-                ->take(12)
-                ->get();
-        }
+        // 2. Upcoming Matches (Scheduled future matches)
+        $upcomingMatches = $allApprovedMatches->filter(function($m) {
+            return $m->effective_status === 'upcoming';
+        })->sortBy('match_date')->values();
 
-        // Exclusively show live matches first, followed by upcoming (NO completed matches in this section)
-        if ($liveMatches->isNotEmpty()) {
-            $allMatches = $liveMatches->merge($upcomingMatches)->take(12);
-        } else {
-            $allMatches = $upcomingMatches->take(12);
+        // Top carousel: strictly LIVE matches first, followed by UPCOMING matches (displayed 8 per slide)
+        $allMatches = $liveMatches->merge($upcomingMatches);
+        if ($allMatches->isEmpty()) {
+            $allMatches = $allApprovedMatches->take(24);
         }
 
         // Fetch all approved tournaments with teams and recent matches

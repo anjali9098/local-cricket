@@ -10,7 +10,7 @@
     $metaDesc = !empty($story->meta_description) ? $story->meta_description : (!empty($firstSlideDesc) ? \Illuminate\Support\Str::limit($firstSlideDesc, 155) : "Watch {$storyTitle} visual web story with highlights, player stats, photos and facts on CricketKaScore.");
     $metaKeywords = !empty($story->keywords) ? $story->keywords : "{$storyTitle}, {$storyCategory} web story, cricket visual story, cricket highlights, {$storyAuthor}, CricketKaScore";
     
-    $canonicalUrl = route('webstories.show', $story->id);
+    $canonicalUrl = $story->url;
     
     // Find best representative cover image
     $ogImage = asset('images/logo.png');

@@ -5,7 +5,7 @@
     $pageTitle = $cleanTitle . ' — Fantasy Cricket Tips, Dream Team & Strategy | CricketKaScore';
     $metaDesc = trim($tip->meta_description ?: ($tip->summary ? \Illuminate\Support\Str::limit(strip_tags($tip->summary), 160) : 'Get latest fantasy cricket tips, playing XI predictions, captain and vice-captain choices, pitch reports, and match strategy on CricketKaScore.'));
     $metaKeywords = $tip->keywords ?: ($cleanTitle . ', fantasy cricket tips, today dream11 prediction, cricket fantasy team, fantasy captain pick, pitch report, match strategy, CricketKaScore fantasy');
-    $canonicalUrl = route('fantasy.show', $tip->id);
+    $canonicalUrl = $tip->url;
 
     // Image resolution: priority is poster_image, then image_url, then default match photo
     $fallbackImage = asset('images/articles/1788433528_India.jpg');
@@ -152,7 +152,7 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
                 @foreach($recentTips as $rt)
-                    <a href="{{ route('fantasy.show', $rt->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <a href="{{ $rt->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                         <div>
                             <div style="font-size: 0.72rem; font-weight: 700; color: #16a34a; text-transform: uppercase; margin-bottom: 4px;">
                                 {{ $rt->tag ?: 'FANTASY TIP' }}

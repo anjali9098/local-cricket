@@ -27,7 +27,7 @@
                 chr(64) . 'type' => 'DefinedTerm',
                 'name' => $gt->term,
                 'description' => \Illuminate\Support\Str::limit(strip_tags($gt->definition), 180),
-                'url' => route('glossary.show', $gt->id),
+                'url' => $gt->url,
                 'inDefinedTermSet' => $canonicalUrl
             ];
         }
@@ -106,7 +106,7 @@
     @if($glossaryTerms->isNotEmpty())
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px;">
             @foreach($glossaryTerms as $term)
-                <a href="{{ route('glossary.show', $term->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; gap: 16px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.5)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
+                <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; gap: 16px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.5)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
                     
                     <!-- Poster Image or Letter Badge -->
                     @if(!empty($term->poster_image))

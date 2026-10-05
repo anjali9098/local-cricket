@@ -12,14 +12,64 @@ class Player extends Model {
         'icc_rankings' => 'array',
     ];
 
-    protected $appends = ['initials', 'normalized_icc_rankings'];
+    protected $appends = ['initials', 'normalized_icc_rankings', 'default_avatar', 'is_female'];
+
+    public function getIsFemaleAttribute(): bool
+    {
+        $combined = strtolower(
+            ($this->name ?? '') . ' ' .
+            ($this->played_teams ?? '') . ' ' .
+            ($this->role ?? '') . ' ' .
+            ($this->bio ?? '') . ' ' .
+            ($this->description ?? '') . ' ' .
+            ($this->keywords ?? '') . ' ' .
+            ($this->team ? $this->team->name : '')
+        );
+
+        return str_contains($combined, 'women') ||
+            str_contains($combined, 'wpl') ||
+            str_contains($combined, 'wbbl') ||
+            str_contains($combined, 'female') ||
+            str_contains($combined, 'girls') ||
+            str_contains($combined, 'she/her') ||
+            str_contains($combined, 'her career') ||
+            str_contains($combined, 'her debut');
+    }
+
+    public function getDefaultAvatarAttribute(): string
+    {
+        return $this->is_female 
+            ? asset('images/default-player-girl.svg') 
+            : asset('images/default-player-boy.svg');
+    }
+
+    public function getHasCustomImageAttribute(): bool
+    {
+        return !empty($this->attributes['profile_image'] ?? null);
+    }
+
+    public function getRealProfileImageAttribute(): ?string
+    {
+        if (!empty($this->attributes['profile_image'] ?? null)) {
+            return self::formatImageUrl($this->attributes['profile_image']);
+        }
+        return null;
+    }
 
     public function getProfileImageAttribute($value)
     {
         if (!empty($value)) {
             return self::formatImageUrl($value);
         }
-        return null;
+        return $this->default_avatar;
+    }
+
+    public function getSlugAttribute()
+    {
+        if (!empty($this->attributes['slug'] ?? null)) {
+            return $this->attributes['slug'];
+        }
+        return \Illuminate\Support\Str::slug($this->name ?? ('player-' . $this->id));
     }
 
     public function getInitialsAttribute()
@@ -116,6 +166,12 @@ class Player extends Model {
 
     public function team() {
         return $this->belongsTo(Team::class);
+    }
+
+    public function getUrlAttribute()
+    {
+        $slug = !empty($this->slug) ? $this->slug : \Illuminate\Support\Str::slug($this->name ?: 'player');
+        return route('player.profile.slug', ['slug' => $slug, 'id' => $this->id]);
     }
 }
 

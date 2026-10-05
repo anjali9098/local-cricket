@@ -19,7 +19,7 @@
     }
 @endphp
 
-<a href="{{ route('matches.detail', $m->id) }}" class="custom-match-card">
+<a href="{{ $m->url }}" class="custom-match-card">
     <!-- Top Metadata: Series Name, Venue, Format Badge -->
     <div class="card-top-meta">
         <div class="card-series-info">
@@ -79,17 +79,23 @@
 
             <!-- Match Timing -->
             <div class="match-timing-str">
-                Match starts at - {{ !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->format('D d-M-Y h:i A') : 'TBA' }}
+                @if($isCompleted)
+                    Match Date &bull; {{ !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->format('D d-M-Y h:i A') : 'Completed' }}
+                @elseif($isLive)
+                    Live &bull; Started at {{ !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->format('h:i A') : 'Today' }}
+                @else
+                    Match starts at &bull; {{ !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->format('D d-M-Y h:i A') : 'TBA' }}
+                @endif
             </div>
 
             <!-- Custom Note or Winning Result -->
             @if($isCompleted && !empty($m->winning_title))
-                <div class="match-result-summary">
-                    {{ $m->winning_title }}
+                <div class="match-result-summary" style="color: #4ade80; font-weight: 800; font-size: 0.85rem;">
+                    🏆 {{ $m->winning_title }}
                 </div>
             @elseif($isLive && !empty($m->custom_note) && !str_contains($m->custom_note, '<p>'))
-                <div class="match-result-summary" style="color: #38bdf8;">
-                    {{ $m->custom_note }}
+                <div class="match-result-summary" style="color: #38bdf8; font-weight: 700;">
+                    🔴 {{ $m->custom_note }}
                 </div>
             @endif
 

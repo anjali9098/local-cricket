@@ -59,7 +59,7 @@ class CricketMatch extends Model
     }
 
     /**
-     * Compute effective status (checks live, upcoming, completed)
+     * Compute effective status (checks live, upcoming, completed dynamically with time-based lifecycle)
      */
     public function getEffectiveStatusAttribute()
     {
@@ -68,21 +68,48 @@ class CricketMatch extends Model
             if ($st === 'completed') {
                 return 'completed';
             }
+
+            $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team1_score ?? '0'))[0] ?? '0');
+            $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team2_score ?? '0'))[0] ?? '0');
+            $w1 = (int) ($this->team1_wickets ?? 0);
+            $w2 = (int) ($this->team2_wickets ?? 0);
+
+            // Automatic completion check if Team 2 chased down Team 1's target or all 10 wickets fell
+            if ($s1 > 0 && ($s2 > $s1 || $w2 >= 10)) {
+                return 'completed';
+            }
+
+            // Time-based lifecycle analysis
+            if (!empty($this->match_date)) {
+                $matchTime = strtotime($this->match_date);
+                $nowTime = time();
+                $hoursPassed = ($nowTime - $matchTime) / 3600;
+
+                $format = strtoupper($this->match_type ?: 'T20');
+                $maxHours = ($format === 'TEST') ? 120 : (($format === 'ODI') ? 10 : 5);
+
+                // If the scheduled match time has passed beyond the match duration window, it is completed
+                if ($hoursPassed > $maxHours) {
+                    return 'completed';
+                }
+
+                // If match is currently within the active play window
+                if ($hoursPassed >= 0 && $hoursPassed <= $maxHours) {
+                    return 'live';
+                }
+
+                // If match is in the future
+                if ($hoursPassed < 0) {
+                    return 'upcoming';
+                }
+            }
+
             if ($st === 'live') {
                 return 'live';
             }
+
             if ($st === 'upcoming' || $st === 'scheduled') {
                 return 'upcoming';
-            }
-
-            // If status is empty, determine by scores
-            $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team1_score ?? '0'))[0] ?? '0');
-            $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team2_score ?? '0'))[0] ?? '0');
-            $w2 = (int) ($this->team2_wickets ?? 0);
-
-            // Automatic completion check if Team 2 chased down Team 1's target
-            if ($s1 > 0 && ($s2 > $s1 || $w2 >= 10)) {
-                return 'completed';
             }
 
             if ($s1 > 0 || $s2 > 0) {
@@ -96,7 +123,7 @@ class CricketMatch extends Model
     }
 
     /**
-     * Compute winning title / match result dynamically
+     * Compute winning title / match result dynamically (identifies winner, loser, and margin)
      */
     public function getWinningTitleAttribute()
     {
@@ -110,6 +137,7 @@ class CricketMatch extends Model
                 $t2Name = $this->team2?->name ?? 'Team 2';
                 $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team1_score ?? '0'))[0] ?? '0');
                 $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team2_score ?? '0'))[0] ?? '0');
+
                 if ($s1 > $s2) {
                     $diff = $s1 - $s2;
                     return "{$t1Name} won by {$diff} runs";
@@ -119,7 +147,7 @@ class CricketMatch extends Model
                 } elseif ($s1 > 0 && $s1 === $s2) {
                     return "Match Tied";
                 }
-                return "Match Completed";
+                return "{$t1Name} won";
             }
 
             if ($this->effective_status === 'live') {
@@ -243,6 +271,33 @@ class CricketMatch extends Model
 
         // 10. Default real TV & streaming network (Never site name)
         return 'Disney+ Hotstar, Star Sports 1';
+    }
+
+    public function getSlugAttribute()
+    {
+        if (!empty($this->attributes['slug'])) {
+            return $this->attributes['slug'];
+        }
+        $t1 = $this->team1?->name ?? 'team1';
+        $t2 = $this->team2?->name ?? 'team2';
+        $custom = $this->custom_note ? '-' . \Illuminate\Support\Str::slug($this->custom_note) : '';
+        $slug = \Illuminate\Support\Str::slug($t1 . '-vs-' . $t2 . $custom);
+        return !empty($slug) ? $slug : 'match';
+    }
+
+    public function getUrlAttribute()
+    {
+        return route('matches.detail.slug', ['slug' => $this->slug, 'id' => $this->id]);
+    }
+
+    public function getLocalScorerUrlAttribute()
+    {
+        return route('local.scorer.slug', ['slug' => $this->slug, 'id' => $this->id]);
+    }
+
+    public function getAdminScorerUrlAttribute()
+    {
+        return route('admin.scorer.slug', ['slug' => $this->slug, 'id' => $this->id]);
     }
 }
 

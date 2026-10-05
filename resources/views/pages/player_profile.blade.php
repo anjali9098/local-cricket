@@ -8,7 +8,7 @@
     $pageTitle = $playerName . ' Profile — Career Stats, Records, Match Scores & Biography | CricketKaScore';
     $metaDesc = "Explore {$playerName}'s full cricket profile on CricketKaScore. Detailed career statistics, {$playerRole} records, batting & bowling performance, ICC rankings, and latest match updates.";
     $metaKeywords = "{$playerName}, {$playerName} profile, {$playerName} stats, {$playerName} career records, {$playerName} batting, {$playerName} bowling, {$playerTeam}, {$playerRole}, cricket player profile, CricketKaScore";
-    $canonicalUrl = route('player.profile', $player->slug ?? $player->id);
+    $canonicalUrl = $player->url;
     
     $ogImage = asset('images/logo.png');
     if (!empty($player->profile_image) && !str_starts_with($player->profile_image, 'data:')) {
@@ -120,47 +120,47 @@
                 @endif
 
                 <!-- 4-Card Responsive Grid Covering the Full Width: Role | Team | Nationality | D.O.B. -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-3.5 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-3.5 pt-3" style="border-top: 1px solid var(--border-color);">
                     
                     <!-- 1. Player Role -->
-                    <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.28); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
                         <span style="font-size: 1.15rem; flex-shrink: 0;">🏏</span>
                         <div style="min-width: 0; line-height: 1.2;">
-                            <span style="font-size: 0.65rem; font-weight: 800; color: #86efac; text-transform: uppercase; letter-spacing: 0.06em; display: block;">ROLE</span>
-                            <strong style="font-size: 0.84rem; font-weight: 900; color: #22c55e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; display: block;">ROLE</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
                                 {{ strtoupper($player->role ?? 'Player') }}
                             </strong>
                         </div>
                     </div>
 
                     <!-- 2. Team -->
-                    <div style="background: rgba(56, 189, 248, 0.10); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
                         <span style="font-size: 1.15rem; flex-shrink: 0;">🛡️</span>
                         <div style="min-width: 0; line-height: 1.2;">
-                            <span style="font-size: 0.65rem; font-weight: 800; color: #7dd3fc; text-transform: uppercase; letter-spacing: 0.06em; display: block;">TEAM</span>
-                            <strong style="font-size: 0.84rem; font-weight: 900; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="{{ $player->team ? $player->team->name : ($player->nationality ?: 'Free Agent') }}">
-                                {{ $player->team ? $player->team->name : ($player->nationality ?: 'Free Agent') }}
+                            <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; display: block;">TEAM</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="{{ $player->team ? $player->team->name : ($player->nationality ?: 'International') }}">
+                                {{ $player->team ? $player->team->name : ($player->nationality ?: 'International') }}
                             </strong>
                         </div>
                     </div>
 
                     <!-- 3. Nationality -->
-                    <div style="background: rgba(168, 85, 247, 0.10); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
                         <span style="font-size: 1.15rem; flex-shrink: 0;">📍</span>
                         <div style="min-width: 0; line-height: 1.2;">
-                            <span style="font-size: 0.65rem; font-weight: 800; color: #d8b4fe; text-transform: uppercase; letter-spacing: 0.06em; display: block;">NATIONALITY</span>
-                            <strong style="font-size: 0.84rem; font-weight: 900; color: #c084fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
-                                {{ $player->nationality ?: ($player->country ?: 'India') }}
+                            <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; display: block;">NATIONALITY</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                                {{ $player->nationality ?: ($player->country ?: '-') }}
                             </strong>
                         </div>
                     </div>
 
                     <!-- 4. Date of Birth -->
-                    <div style="background: rgba(244, 63, 94, 0.10); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; min-width: 0;">
                         <span style="font-size: 1.15rem; flex-shrink: 0;">🎂</span>
                         <div style="min-width: 0; line-height: 1.2;">
-                            <span style="font-size: 0.65rem; font-weight: 800; color: #fda4af; text-transform: uppercase; letter-spacing: 0.06em; display: block;">BORN (DOB)</span>
-                            <strong style="font-size: 0.84rem; font-weight: 900; color: #fb7185; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; display: block;">BORN (DOB)</span>
+                            <strong style="font-size: 0.84rem; font-weight: 900; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
                                 {{ $player->date_of_birth ? \Carbon\Carbon::parse($player->date_of_birth)->format('d M Y') : '-' }}
                             </strong>
                         </div>
@@ -259,7 +259,6 @@
                         </span>
                     </div>
 
-
                 </div>
             </div>
 
@@ -269,7 +268,7 @@
                     <span style="display: flex; align-items: center; gap: 8px;">
                         <span>👨‍👩‍👧</span> Family Details
                     </span>
-                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700; text-transform: uppercase;">Background</span>
+                    <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase;">Background</span>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 13px;">
@@ -292,7 +291,7 @@
                     <!-- Spouse / Wife -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim);">Spouse / Wife</span>
-                        <span style="font-size: 0.88rem; font-weight: 800; color: #ec4899; text-align: right;">
+                        <span style="font-size: 0.88rem; font-weight: 800; color: var(--text-main); text-align: right;">
                             {{ $player->spouse_name ?: '-' }}
                         </span>
                     </div>
@@ -323,10 +322,12 @@
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         @foreach($teammates as $mate)
-                            <a href="{{ route('player.profile', $mate->id) }}" style="text-decoration: none; background: var(--bg-card-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; transition: transform 0.15s, border-color 0.15s;" onmouseover="this.style.borderColor='#38bdf8'; this.style.transform='translateX(3px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateX(0)';">
-                                <div style="width: 34px; height: 34px; border-radius: 50%; background: var(--bg-card); border: 1px solid #38bdf8; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #38bdf8; font-size: 0.8rem; flex-shrink: 0;">
-                                    {{ strtoupper(substr($mate->name, 0, 2)) }}
-                                </div>
+                            @php
+                                $mateAvatar = $mate->default_avatar;
+                                $mateImg = !empty($mate->profile_image) ? $mate->profile_image : $mateAvatar;
+                            @endphp
+                            <a href="{{ $mate->url }}" style="text-decoration: none; background: var(--bg-card-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; transition: transform 0.15s, border-color 0.15s;" onmouseover="this.style.borderColor='#38bdf8'; this.style.transform='translateX(3px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateX(0)';">
+                                <img src="{{ $mateImg }}" alt="{{ $mate->name }}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #38bdf8; background: var(--bg-card); flex-shrink: 0;" onerror="this.onerror=null; this.src='{{ $mateAvatar }}';">
                                 <div style="flex: 1; min-width: 0;">
                                     <div style="font-weight: 800; font-size: 0.84rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $mate->name }}</div>
                                     <div style="font-size: 0.72rem; color: var(--text-dim);">{{ $mate->role ?? 'Player' }}</div>
@@ -402,9 +403,36 @@
 
             <!-- Career Statistics Dashboard -->
             <div>
-                <h2 style="font-size: 1.25rem; font-weight: 900; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                    <span>📊</span> Career Statistics &amp; Metrics
-                </h2>
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                    <h2 style="font-size: 1.25rem; font-weight: 900; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>📊</span> Career Statistics &amp; Metrics
+                    </h2>
+                </div>
+
+                <!-- Interactive Format Selector Tabs: ALL FORMATS | IPL | TEST | ODI | T20 | T10 | T20I -->
+                @php
+                    $formatsList = [
+                        'all' => 'ALL FORMATS',
+                        'ipl' => 'IPL',
+                        'test' => 'TEST',
+                        'odi' => 'ODI',
+                        't20' => 'T20',
+                        't10' => 'T10',
+                        't20i' => 'T20I',
+                    ];
+                @endphp
+                <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 18px; scrollbar-width: none;">
+                    @foreach($formatsList as $fmtKey => $fmtLabel)
+                        <button type="button" 
+                                class="player-format-tab-btn {{ $fmtKey === 'all' ? 'active' : '' }}" 
+                                id="player-fmt-btn-{{ $fmtKey }}"
+                                data-format="{{ $fmtKey }}"
+                                onclick="switchPlayerCareerFormat('{{ $fmtKey }}')"
+                                style="padding: 8px 18px; border-radius: 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer; border: 1px solid {{ $fmtKey === 'all' ? '#2563eb' : 'var(--border-color)' }}; background: {{ $fmtKey === 'all' ? '#2563eb' : 'var(--bg-card)' }}; color: {{ $fmtKey === 'all' ? '#ffffff' : 'var(--text-muted)' }}; transition: all 0.2s ease; white-space: nowrap; box-shadow: {{ $fmtKey === 'all' ? '0 2px 8px rgba(37, 99, 235, 0.3)' : 'none' }};">
+                            {{ $fmtLabel }}
+                        </button>
+                    @endforeach
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     
@@ -414,41 +442,41 @@
                             <div style="font-weight: 800; font-size: 0.95rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
                                 <span>🏏</span> Batting Record
                             </div>
-                            <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">All Formats</span>
+                            <span id="batting-format-badge" style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px;">ALL FORMATS</span>
                         </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">TOTAL RUNS</span>
-                                <strong style="font-size: 1.25rem; color: var(--text-main); font-weight: 900;">{{ number_format($stats['runs'] ?? 0) }}</strong>
+                                <strong id="stat-bat-runs" style="font-size: 1.25rem; color: var(--text-main); font-weight: 900;">{{ number_format($formatStats['all']['total_runs'] ?? ($stats['runs'] ?? 0)) }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BALLS FACED</span>
-                                <strong style="font-size: 1.25rem; color: #38bdf8; font-weight: 900;">{{ number_format($stats['balls'] ?? 0) }}</strong>
+                                <strong id="stat-bat-balls" style="font-size: 1.25rem; color: #38bdf8; font-weight: 900;">{{ number_format($formatStats['all']['total_balls'] ?? ($stats['balls'] ?? 0)) }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">HIGHEST SCORE</span>
-                                <strong style="font-size: 1.25rem; color: #f59e0b; font-weight: 900;">{{ $stats['highest'] ?? $stats['highestScore'] ?? 0 }}</strong>
+                                <strong id="stat-bat-highest" style="font-size: 1.25rem; color: #38bdf8; font-weight: 900;">{{ $formatStats['all']['highest_score'] ?? ($stats['highest'] ?? 0) }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">STRIKE RATE</span>
-                                <strong style="font-size: 1.15rem; color: #22c55e; font-weight: 800;">{{ $stats['strike_rate'] ?? $stats['strikeRate'] ?? '0.00' }}</strong>
+                                <strong id="stat-bat-sr" style="font-size: 1.15rem; color: #22c55e; font-weight: 800;">{{ $formatStats['all']['strike_rate'] ?? ($stats['strike_rate'] ?? '0.00') }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">AVERAGE</span>
-                                <strong style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $stats['average'] ?? '0.00' }}</strong>
+                                <strong id="stat-bat-avg" style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $formatStats['all']['batting_avg'] ?? ($stats['average'] ?? '0.00') }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">FOURS (4s)</span>
-                                <strong style="font-size: 1.15rem; color: #10b981; font-weight: 800;">{{ number_format($stats['fours'] ?? 0) }}</strong>
+                                <strong id="stat-bat-fours" style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ number_format($formatStats['all']['fours'] ?? ($stats['fours'] ?? 0)) }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">SIXES (6s)</span>
-                                <strong style="font-size: 1.15rem; color: #8b5cf6; font-weight: 800;">{{ number_format($stats['sixes'] ?? 0) }}</strong>
+                                <strong id="stat-bat-sixes" style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ number_format($formatStats['all']['sixes'] ?? ($stats['sixes'] ?? 0)) }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">50s / 100s</span>
-                                <strong style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $stats['fifties'] ?? 0 }} / {{ $stats['hundreds'] ?? 0 }}</strong>
+                                <strong id="stat-bat-50-100" style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $formatStats['all']['fifties'] ?? ($stats['fifties'] ?? 0) }} / {{ $formatStats['all']['hundreds'] ?? ($stats['hundreds'] ?? 0) }}</strong>
                             </div>
                         </div>
                     </div>
@@ -456,36 +484,36 @@
                     <!-- BOWLING STATS CARD -->
                     <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                            <div style="font-weight: 800; font-size: 0.95rem; color: #f59e0b; display: flex; align-items: center; gap: 6px;">
+                            <div style="font-weight: 800; font-size: 0.95rem; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
                                 <span>🎯</span> Bowling Record
                             </div>
-                            <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">All Formats</span>
+                            <span id="bowling-format-badge" style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 6px;">ALL FORMATS</span>
                         </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-center">
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">WICKETS</span>
-                                <strong style="font-size: 1.25rem; color: var(--text-main); font-weight: 900;">{{ number_format($stats['wickets'] ?? 0) }}</strong>
+                                <strong id="stat-bowl-wkts" style="font-size: 1.25rem; color: var(--text-main); font-weight: 900;">{{ number_format($formatStats['all']['wickets'] ?? ($stats['wickets'] ?? 0)) }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BEST BOWLING</span>
-                                <strong style="font-size: 1.25rem; color: #f59e0b; font-weight: 900;">{{ $stats['best_bowling'] ?? $stats['bestBowling'] ?? '-' }}</strong>
+                                <strong id="stat-bowl-best" style="font-size: 1.25rem; color: #38bdf8; font-weight: 900;">{{ $formatStats['all']['best_bowling_figures'] ?? ($stats['best_bowling'] ?? '-') }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">ECONOMY</span>
-                                <strong style="font-size: 1.25rem; color: var(--text-main); font-weight: 900;">{{ $stats['economy'] ?? '0.00' }}</strong>
+                                <strong id="stat-bowl-econ" style="font-size: 1.25rem; color: var(--text-main); font-weight: 900;">{{ $formatStats['all']['bowling_economy'] ?? ($stats['economy'] ?? '0.00') }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">OVERS BOWLED</span>
-                                <strong style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $stats['overs'] ?? '0.0' }}</strong>
+                                <strong id="stat-bowl-overs" style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $formatStats['all']['total_overs'] ?? ($stats['overs'] ?? '0.0') }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">BOWLING AVG</span>
-                                <strong style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $stats['bowlingAvg'] ?? '-' }}</strong>
+                                <strong id="stat-bowl-avg" style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $formatStats['all']['bowling_avg'] ?? ($stats['bowlingAvg'] ?? '-') }}</strong>
                             </div>
                             <div style="background: var(--bg-card-secondary); padding: 10px 8px; border-radius: 8px;">
                                 <span style="font-size: 0.68rem; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 4px;">MAIDENS</span>
-                                <strong style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $stats['maidens'] ?? 0 }}</strong>
+                                <strong id="stat-bowl-maidens" style="font-size: 1.15rem; color: var(--text-main); font-weight: 800;">{{ $formatStats['all']['maidens'] ?? ($stats['maidens'] ?? 0) }}</strong>
                             </div>
                         </div>
                     </div>
@@ -557,7 +585,7 @@
                                     @endphp
                                     <tr style="border-bottom: 1px solid var(--border-color, #f1f5f9);">
                                         <td style="padding: 13px 10px; font-weight: 700; color: var(--text-main);">
-                                            {{ $fmtLabel }}
+                                             {{ $fmtLabel }}
                                         </td>
                                         <td style="padding: 13px 10px; text-align: center; {{ $isRankedCurr ? 'font-weight: 900; color: var(--text-main); font-size: 0.98rem;' : 'font-weight: 600; color: var(--text-dim);' }}">
                                             {{ $curr }}
@@ -578,6 +606,79 @@
     </div>
 
     <script>
+        const playerFormatStatsData = @json($formatStats ?? []);
+        const formatNamesMap = {
+            'all': 'ALL FORMATS',
+            'ipl': 'IPL',
+            'test': 'TEST',
+            'odi': 'ODI',
+            't20': 'T20',
+            't10': 'T10',
+            't20i': 'T20I'
+        };
+
+        function switchPlayerCareerFormat(fmtKey) {
+            // Update tab button styles
+            document.querySelectorAll('.player-format-tab-btn').forEach(btn => {
+                const isTarget = btn.getAttribute('data-format') === fmtKey;
+                if (isTarget) {
+                    btn.style.background = '#2563eb';
+                    btn.style.color = '#ffffff';
+                    btn.style.borderColor = '#2563eb';
+                    btn.style.boxShadow = '0 2px 8px rgba(37, 99, 235, 0.3)';
+                } else {
+                    btn.style.background = 'var(--bg-card)';
+                    btn.style.color = 'var(--text-muted)';
+                    btn.style.borderColor = 'var(--border-color)';
+                    btn.style.boxShadow = 'none';
+                }
+            });
+
+            // Update badge text
+            const fmtTitle = formatNamesMap[fmtKey] || fmtKey.toUpperCase();
+            const batBadge = document.getElementById('batting-format-badge');
+            const bowlBadge = document.getElementById('bowling-format-badge');
+            if (batBadge) batBadge.innerText = fmtTitle;
+            if (bowlBadge) bowlBadge.innerText = fmtTitle;
+
+            // Fetch data for selected format
+            const fData = playerFormatStatsData[fmtKey] || {};
+
+            // Update Batting numbers
+            const elBatRuns = document.getElementById('stat-bat-runs');
+            const elBatBalls = document.getElementById('stat-bat-balls');
+            const elBatHighest = document.getElementById('stat-bat-highest');
+            const elBatSr = document.getElementById('stat-bat-sr');
+            const elBatAvg = document.getElementById('stat-bat-avg');
+            const elBatFours = document.getElementById('stat-bat-fours');
+            const elBatSixes = document.getElementById('stat-bat-sixes');
+            const elBat50100 = document.getElementById('stat-bat-50-100');
+
+            if (elBatRuns) elBatRuns.innerText = Number(fData.total_runs || 0).toLocaleString();
+            if (elBatBalls) elBatBalls.innerText = Number(fData.total_balls || 0).toLocaleString();
+            if (elBatHighest) elBatHighest.innerText = fData.highest_score || 0;
+            if (elBatSr) elBatSr.innerText = (fData.strike_rate !== undefined) ? fData.strike_rate : '0.00';
+            if (elBatAvg) elBatAvg.innerText = (fData.batting_avg !== undefined) ? fData.batting_avg : '0.00';
+            if (elBatFours) elBatFours.innerText = Number(fData.fours || 0).toLocaleString();
+            if (elBatSixes) elBatSixes.innerText = Number(fData.sixes || 0).toLocaleString();
+            if (elBat50100) elBat50100.innerText = (fData.fifties || 0) + ' / ' + (fData.hundreds || 0);
+
+            // Update Bowling numbers
+            const elBowlWkts = document.getElementById('stat-bowl-wkts');
+            const elBowlBest = document.getElementById('stat-bowl-best');
+            const elBowlEcon = document.getElementById('stat-bowl-econ');
+            const elBowlOvers = document.getElementById('stat-bowl-overs');
+            const elBowlAvg = document.getElementById('stat-bowl-avg');
+            const elBowlMaidens = document.getElementById('stat-bowl-maidens');
+
+            if (elBowlWkts) elBowlWkts.innerText = Number(fData.wickets || 0).toLocaleString();
+            if (elBowlBest) elBowlBest.innerText = fData.best_bowling_figures || '-';
+            if (elBowlEcon) elBowlEcon.innerText = (fData.bowling_economy !== undefined) ? fData.bowling_economy : '0.00';
+            if (elBowlOvers) elBowlOvers.innerText = fData.total_overs || '0.0';
+            if (elBowlAvg) elBowlAvg.innerText = fData.bowling_avg || '-';
+            if (elBowlMaidens) elBowlMaidens.innerText = fData.maidens || 0;
+        }
+
         function switchIccRankingTab(activeKey) {
             document.querySelectorAll('.icc-ranking-tab-btn').forEach(btn => {
                 const isTarget = btn.getAttribute('data-tab') === activeKey;

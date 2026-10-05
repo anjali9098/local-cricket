@@ -4,10 +4,10 @@
         <!-- # EDIT -->
         <td style="padding: 12px 10px; vertical-align: middle;">
             <div style="display: flex; align-items: center; gap: 4px;">
-                <a href="{{ route('admin.players', ['edit' => $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
+                <a href="{{ route('admin.players', ['edit' => $item->slug . '-' . $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
                      {{ $item->id }}
                 </a>
-                <a href="{{ route('admin.players', ['edit' => $item->id]) }}" title="Edit Player" style="color: #0284c7; text-decoration: none;">
+                <a href="{{ route('admin.players', ['edit' => $item->slug . '-' . $item->id]) }}" title="Edit Player" style="color: #0284c7; text-decoration: none;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 </a>
             </div>

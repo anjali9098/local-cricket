@@ -9,7 +9,7 @@
     $seoTitle = $mTitle . ' Live Scorecard & Match Details | CricketKaScore';
     $seoDesc  = 'Live cricket score, ball-by-ball commentary, scorecard, overs, run rates, win probability, venue info, and status for ' . $mTitle . ' at ' . $vName . ' on CricketKaScore.';
     $seoKeywords = strtolower($mTitle) . ', ' . strtolower($t1Name) . ' vs ' . strtolower($t2Name) . ', live cricket score, scorecard, commentary, ' . strtolower($vName) . ', CricketKaScore match center';
-    $canonicalUrl = route('matches.detail', $match->id);
+    $canonicalUrl = $match->url;
 @endphp
 
 @section('pageTitle', $seoTitle)
@@ -194,9 +194,8 @@
                     <tbody>
                         @forelse($match->battingStats as $b)
                             <tr>
-                                <td class="text-left">
-                                    <strong>{{ $b->player_name }}</strong>
-                                    <span class="text-gray-400 font-normal text-xs ml-1.5">{{ $b->status_text }}</span>
+                                <td class="text-left font-semibold text-white">
+                                    {{ $b->player_name }}
                                 </td>
                                 <td><strong>{{ $b->runs }}</strong></td>
                                 <td>{{ $b->balls }}</td>
@@ -300,22 +299,28 @@
                                 </div>
                             </div>
 
-                            <!-- Descriptive Commentary Line -->
+                            <!-- Descriptive Commentary Line in Easy English -->
                             <p class="text-xs sm:text-sm text-gray-300/90 leading-relaxed font-normal m-0">
                                 @if(strtoupper($ball->outcome) === 'W')
-                                    <strong class="text-red-400 font-bold">OUT!</strong> {{ $ball->batsman_name }} is dismissed off the delivery from {{ $ball->bowler_name }}.
+                                    <strong class="text-red-400 font-bold">OUT!</strong> {{ $ball->batsman_name }} is out! {{ $ball->bowler_name }} takes the wicket.
                                 @elseif($ball->outcome === '4')
-                                    <strong class="text-emerald-400 font-bold">FOUR!</strong> {{ $ball->batsman_name }} cracks a gorgeous boundary off {{ $ball->bowler_name }}.
+                                    <strong class="text-emerald-400 font-bold">FOUR!</strong> {{ $ball->batsman_name }} hits a four.
                                 @elseif($ball->outcome === '6')
-                                    <strong class="text-purple-400 font-bold">SIX!</strong> {{ $ball->batsman_name }} lofts it high over the boundary ropes for a maximum off {{ $ball->bowler_name }}!
+                                    <strong class="text-purple-400 font-bold">SIX!</strong> Big six by {{ $ball->batsman_name }}!
                                 @elseif(str_contains(strtolower($ball->outcome), 'wide'))
-                                    <strong class="text-amber-400 font-bold">WIDE!</strong> {{ $ball->bowler_name }} slips down the leg/off side, wide signalled by the umpire.
+                                    <strong class="text-amber-400 font-bold">WIDE!</strong> Wide ball bowled by {{ $ball->bowler_name }}.
                                 @elseif(str_contains(strtolower($ball->outcome), 'no ball'))
-                                    <strong class="text-amber-400 font-bold">NO BALL!</strong> {{ $ball->bowler_name }} oversteps the crease, free hit upcoming.
-                                @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot')
-                                    {{ $ball->bowler_name }} bowls a disciplined delivery to {{ $ball->batsman_name }}, defended safely, no run.
+                                    <strong class="text-amber-400 font-bold">NO BALL!</strong> No ball by {{ $ball->bowler_name }}. Free hit next!
+                                @elseif($ball->outcome === '0' || strtolower($ball->outcome) === 'dot' || strtolower($ball->outcome) === 'dot ball')
+                                    No run. {{ $ball->batsman_name }} defends safely.
+                                @elseif($ball->outcome === '1')
+                                    1 run. {{ $ball->batsman_name }} takes a single.
+                                @elseif($ball->outcome === '2')
+                                    2 runs. {{ $ball->batsman_name }} runs two.
+                                @elseif($ball->outcome === '3')
+                                    3 runs. Good running between the wickets.
                                 @elseif(is_numeric($ball->outcome))
-                                    {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }} {{ (int)$ball->outcome === 1 ? 'run taken smartly' : 'runs scored' }}.
+                                    {{ $ball->outcome }} runs scored.
                                 @else
                                     {{ $ball->bowler_name }} to {{ $ball->batsman_name }}, {{ $ball->outcome }}.
                                 @endif

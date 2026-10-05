@@ -158,18 +158,7 @@
                     </div>
 
                     @php
-                        $detailRoute = null;
-                        if (($item->content_type ?? '') === 'article') {
-                            $detailRoute = route('article.show', $item->id);
-                        } elseif (($item->content_type ?? '') === 'news') {
-                            $detailRoute = route('news.show', $item->id);
-                        } elseif (($item->content_type ?? '') === 'prediction') {
-                            $detailRoute = route('prediction.show', $item->id);
-                        } elseif (($item->content_type ?? '') === 'fantasy') {
-                            $detailRoute = route('fantasy.show', $item->id);
-                        } elseif (($item->content_type ?? '') === 'preview') {
-                            $detailRoute = route('preview.show', $item->id);
-                        }
+                        $detailRoute = $item->url ?? null;
                     @endphp
 
                     @if(!empty($item->image_url))

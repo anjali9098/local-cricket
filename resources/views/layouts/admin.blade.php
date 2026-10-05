@@ -1260,8 +1260,8 @@
                 <a href="{{ route('admin.news') }}" class="admin-subnav-item {{ request()->routeIs('admin.news') ? 'active' : '' }}">
                     <span class="subnav-icon">📢</span> Latest News
                 </a>
-                <a href="{{ route('admin.popular') }}" class="admin-subnav-item {{ request()->routeIs('admin.popular*') || request()->routeIs('admin.teams*') ? 'active' : '' }}">
-                    <span class="subnav-icon">🏏</span> Most Popular Teams
+                <a href="{{ route('admin.teams') }}" class="admin-subnav-item {{ request()->routeIs('admin.popular*') || request()->routeIs('admin.teams*') ? 'active' : '' }}">
+                    <span class="subnav-icon">🏏</span> Teams
                 </a>
                 <a href="{{ route('admin.ranking') }}" class="admin-subnav-item {{ request()->routeIs('admin.ranking') ? 'active' : '' }}">
                     <span class="subnav-icon">📊</span> Team Rankings

@@ -116,15 +116,9 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;">
                 @foreach(($type === 'all' ? $players->take(4) : $players) as $player)
-                    <a href="{{ route('player.profile', $player->id) }}" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $player->url }}" style="text-decoration: none; display: flex; align-items: center; gap: 14px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
-                        @if($player->profile_image)
-                            <img src="{{ $player->profile_image }}" alt="{{ $player->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8;">
-                        @else
-                            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; color: #38bdf8;">
-                                {{ strtoupper(substr($player->name, 0, 2)) }}
-                            </div>
-                        @endif
+                        <img src="{{ $player->profile_image ?: $player->default_avatar }}" alt="{{ $player->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; background: var(--bg-card-secondary); flex-shrink: 0;" onerror="this.onerror=null; this.src='{{ $player->default_avatar }}';">
                         <div style="overflow: hidden;">
                             <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $player->name }}</div>
                             <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">{{ $player->role ?: 'Player' }}</div>
@@ -181,7 +175,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
                 @foreach(($type === 'all' ? $matches->take(3) : $matches) as $match)
-                    <a href="{{ route('matches.detail', $match->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $match->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; {{ $match->status === 'live' ? 'background: #ef4444; color: white;' : ($match->status === 'completed' ? 'background: #10b981; color: white;' : 'background: #f59e0b; color: white;') }}">
@@ -222,7 +216,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                 @foreach(($type === 'all' ? $tournaments->take(3) : $tournaments) as $tour)
-                    <a href="{{ route('tournament.public', $tour->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $tour->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         <div>
                             <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px;">
@@ -249,7 +243,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                 @foreach($articles->take($type === 'all' ? 2 : 10) as $art)
-                    <a href="{{ route('article.show', $art->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $art->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         @if($art->image_url)
                             <div style="position: relative; width: 100%; height: 160px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -268,7 +262,7 @@
                 @endforeach
 
                 @foreach($news->take($type === 'all' ? 2 : 10) as $nw)
-                    <a href="{{ route('news.show', $nw->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $nw->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         @if($nw->image_url)
                             <div style="position: relative; width: 100%; height: 160px; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -299,8 +293,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                 @foreach($predictions->take($type === 'all' ? 2 : 10) as $pred)
-                    @php $predRoute = $pred->tag === 'MATCH PREVIEW' ? route('preview.show', $pred->id) : route('prediction.show', $pred->id); @endphp
-                    <a href="{{ $predRoute }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $pred->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         <div>
                             <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #f59e0b; display: block; margin-bottom: 4px;">
@@ -313,7 +306,7 @@
                 @endforeach
 
                 @foreach($fantasyTips->take($type === 'all' ? 2 : 10) as $tip)
-                    <a href="{{ route('fantasy.show', $tip->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $tip->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         <div>
                             <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #10b981; display: block; margin-bottom: 4px;">
@@ -341,7 +334,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
                 @foreach(($type === 'all' ? $venues->take(3) : $venues) as $venue)
-                    <a href="{{ route('venues.show', $venue->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $venue->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         @if($venue->image_url)
                             <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" style="width: 100%; height: 120px; object-fit: cover;">
@@ -374,7 +367,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
                 @foreach(($type === 'all' ? $webStories->take(4) : $webStories) as $story)
-                    <a href="{{ route('webstories.show', $story->id) }}" style="text-decoration: none; position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 9/16; max-height: 280px; display: block; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.15s;"
+                    <a href="{{ $story->url }}" style="text-decoration: none; position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 9/16; max-height: 280px; display: block; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.15s;"
                        onmouseover="this.style.transform='scale(1.02)';" onmouseout="this.style.transform='scale(1)';">
                         @if($story->image_url || $story->first_slide_image)
                             <img src="{{ $story->image_url ?: $story->first_slide_image }}" alt="{{ $story->title }}" onerror="if (!this.dataset.tried && '{{ $story->first_slide_image }}') { this.dataset.tried='1'; this.src='{{ $story->first_slide_image }}'; } else { this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80'; }" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85;">
@@ -401,7 +394,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px;">
                 @foreach(($type === 'all' ? $glossary->take(4) : $glossary) as $term)
-                    <a href="{{ route('glossary.show', $term->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; transition: transform 0.15s, border-color 0.15s;"
+                    <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         <div style="font-weight: 800; font-size: 1rem; color: #38bdf8; margin-bottom: 4px;">{{ $term->term }}</div>
                         <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">{{ Str::limit($term->definition, 90) }}</div>

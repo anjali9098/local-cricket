@@ -33,5 +33,39 @@ class Tournament extends Model
     public function matches() {
         return $this->hasMany(CricketMatch::class, 'tournament_id');
     }
+
+    public function getSlugAttribute()
+    {
+        if (!empty($this->attributes['slug'])) {
+            return $this->attributes['slug'];
+        }
+        $slug = \Illuminate\Support\Str::slug($this->name ?: 'tournament');
+        return !empty($slug) ? $slug : 'tournament';
+    }
+
+    public function getUrlAttribute()
+    {
+        return route('tournament.public.slug', ['slug' => $this->slug, 'id' => $this->id]);
+    }
+
+    public function getManageUrlAttribute()
+    {
+        return route('local.manage-tournament.slug', ['slug' => $this->slug, 'id' => $this->id]);
+    }
+
+    public function getAdminManageUrlAttribute()
+    {
+        return route('admin.manage-tournament.slug', ['slug' => $this->slug, 'id' => $this->id]);
+    }
+
+    public function getPreviewUrlAttribute()
+    {
+        return route('local.tournament.preview.slug', ['slug' => $this->slug, 'id' => $this->id]);
+    }
+
+    public function getAdminPreviewUrlAttribute()
+    {
+        return route('admin.tournament.preview.slug', ['slug' => $this->slug, 'id' => $this->id]);
+    }
 }
 

@@ -5,7 +5,7 @@
     $pageTitle = $articleTitle . ' — CricketKaScore';
     $metaDesc = trim($article->meta_description ?: ($article->summary ? \Illuminate\Support\Str::limit(strip_tags($article->summary), 160) : 'Read full cricket analysis and feature article on CricketKaScore.'));
     $metaKeywords = $article->keywords ?: ($articleTitle . ', cricket article, cricket analysis, CricketKaScore');
-    $canonicalUrl = route('article.show', $article->id);
+    $canonicalUrl = $article->url;
     $ogImage = $article->image_url ?: asset('images/logo.png');
 @endphp
 
@@ -99,7 +99,7 @@
                     </div>
                     <div class="sidebar-articles-list">
                         @foreach($recentArticles as $ra)
-                            <a href="{{ route('article.show', $ra->id) }}" class="sidebar-article-item">
+                            <a href="{{ $ra->url }}" class="sidebar-article-item">
                                 @if(!empty($ra->image_url))
                                     <div class="sidebar-article-thumb">
                                         <img src="{{ $ra->image_url }}" alt="{{ $ra->title }}" onerror="this.parentElement.style.display='none';">

@@ -9,7 +9,7 @@
     $pageTitle = $venueName . ($venueLocation ? ' (' . $venueLocation . ')' : '') . ' — Cricket Stadium Profile, Pitch Report & Capacity | CricketKaScore';
     $metaDesc = "Explore {$venueName}" . ($venueLocation ? " located in {$venueLocation}" : "") . " on CricketKaScore. View seating capacity, pitch condition reports, stadium biography, and match records.";
     $metaKeywords = "{$venueName}, {$venueName} capacity, {$venueName} pitch report, {$venueName} location, {$venueName} matches, cricket stadium, CricketKaScore";
-    $canonicalUrl = route('venue.show', $venue->id);
+    $canonicalUrl = $venue->url;
     
     $ogImage = asset('images/logo.png');
     if (!empty($venue->image_url) && !str_starts_with($venue->image_url, 'data:')) {
@@ -189,7 +189,7 @@
                             <span style="font-size: 0.76rem; color: var(--text-dim);">
                                 📅 {{ $m->match_date ? \Carbon\Carbon::parse($m->match_date)->format('d M, Y') : 'Scheduled' }}
                             </span>
-                            <a href="{{ route('matches.detail', $m->id) }}" style="font-size: 0.8rem; font-weight: 800; color: #0284c7; text-decoration: none;">
+                            <a href="{{ $m->url }}" style="font-size: 0.8rem; font-weight: 800; color: #0284c7; text-decoration: none;">
                                 Match Scorecard &rarr;
                             </a>
                         </div>

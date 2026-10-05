@@ -132,7 +132,7 @@
                         @endif
                         @if($m->tournament)
                             <h2 class="text-xs font-bold text-sky-400 hover:underline truncate m-0" style="display:inline;">
-                                <a href="{{ route('tournament.public', $m->tournament->id) }}" class="text-sky-400 hover:underline truncate" title="{{ $m->tournament->name }}">
+                                <a href="{{ $m->tournament->url }}" class="text-sky-400 hover:underline truncate" title="{{ $m->tournament->name }}">
                                     {{ $m->tournament->short_name ?? Str::limit($m->tournament->name, 16) }}
                                 </a>
                             </h2>
@@ -140,14 +140,16 @@
                             <h2 class="text-xs font-bold truncate m-0 text-gray-400" style="display:inline;">{{ $m->level_type ?? $m->match_type }}</h2>
                         @endif
                     </div>
-                    @if($m->status === 'live')
+                    @if($m->effective_status === 'live')
                         <span class="badge-live">LIVE</span>
+                    @elseif($m->effective_status === 'completed')
+                        <span class="tag-badge text-[10px] px-2 py-0.5 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">COMPLETED</span>
                     @else
-                        <span class="tag-badge text-[10px] px-2 py-0.5">{{ strtoupper($m->status) }}</span>
+                        <span class="tag-badge text-[10px] px-2 py-0.5">{{ strtoupper($m->effective_status) }}</span>
                     @endif
                 </div>
 
-                <a href="{{ route('matches.detail', $m->id) }}" class="block no-underline">
+                <a href="{{ $m->url }}" class="block no-underline">
                     <div class="match-card-teams flex flex-col gap-3 my-3">
                         <div class="team-row flex items-center justify-between gap-3">
                             <div class="team-info flex items-center gap-2">
@@ -157,7 +159,7 @@
                                 <h3 class="team-name text-sm sm:text-base font-semibold text-white truncate max-w-[160px] m-0">{{ $m->team1?->name ?? '' }}</h3>
                             </div>
                             <div class="team-score text-sm font-bold text-white">
-                                @if($m->status === 'completed' || $m->status === 'live' || $m->team1_score > 0)
+                                @if($m->effective_status === 'completed' || $m->effective_status === 'live' || $m->team1_score > 0)
                                     {{ $m->team1_score }}/{{ $m->team1_wickets }} <span class="text-xs text-gray-400">({{ $m->team1_overs }} ov)</span>
                                 @else
                                     -
@@ -173,7 +175,7 @@
                                 <h3 class="team-name text-sm sm:text-base font-semibold text-white truncate max-w-[160px] m-0">{{ $m->team2?->name ?? '' }}</h3>
                             </div>
                             <div class="team-score text-sm font-bold text-white">
-                                @if($m->status === 'completed' || $m->status === 'live' || $m->team2_score > 0)
+                                @if($m->effective_status === 'completed' || $m->effective_status === 'live' || $m->team2_score > 0)
                                     {{ $m->team2_score }}/{{ $m->team2_wickets }} <span class="text-xs text-gray-400">({{ $m->team2_overs }} ov)</span>
                                 @else
                                     -
@@ -192,8 +194,10 @@
                         <span class="truncate max-w-[150px]">📍 Venue TBA</span>
                     @endif
 
-                    @if($m->status === 'completed')
+                    @if($m->effective_status === 'completed')
                         <span class="text-emerald-400 font-bold truncate max-w-[140px]">🏆 {{ $m->winning_title ?? 'Completed' }}</span>
+                    @elseif($m->effective_status === 'live')
+                        <span class="text-sky-400 font-bold truncate max-w-[140px]">🔴 In Progress</span>
                     @elseif($m->match_date)
                         <span class="truncate max-w-[140px] text-amber-300/90 font-semibold" title="{{ \Carbon\Carbon::parse($m->match_date)->format('d M Y, h:i A') }}">
                             🕒 {{ \Carbon\Carbon::parse($m->match_date)->format('d M, h:i A') }}

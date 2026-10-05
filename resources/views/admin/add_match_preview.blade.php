@@ -13,19 +13,24 @@
                 Home
             </a>
 
-            <!-- Search input & buttons -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <div class="admin-search-wrapper">
-                    <input type="text" id="preview-search-input" class="admin-search-input" oninput="filterPreviewTable()" onkeyup="filterPreviewTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterPreviewTable();}" placeholder="Search previews..." style="width: 220px;">
-                    <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
+            <!-- Server Search Form -->
+            <form id="preview-filter-form" method="GET" action="{{ route('admin.match-preview') }}" style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                @if(request('edit'))
+                    <input type="hidden" name="edit" value="{{ request('edit') }}">
+                @endif
+                <div style="position: relative; display: inline-flex; align-items: center;">
+                    <input type="text" name="search" id="preview-search-input" value="{{ $search ?? '' }}" placeholder="Search previews..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                    @if(!empty($search))
+                        <a href="{{ route('admin.match-preview') }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
+                    @endif
                 </div>
-                <button type="button" onclick="filterPreviewTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                <button type="submit" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
                     Search
                 </button>
-                <button type="button" onclick="resetPreviewSearch()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                <a href="{{ route('admin.match-preview') }}" style="display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
                     Reset
-                </button>
-            </div>
+                </a>
+            </form>
         </div>
 
         <!-- Right: + Add New Match Preview Button -->
@@ -178,10 +183,10 @@
                                 <!-- # EDIT -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; gap: 4px;">
-                                        <a href="{{ route('admin.match-preview', ['edit' => $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
+                                        <a href="{{ route('admin.match-preview', ['edit' => $item->slug . '-' . $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
                                             {{ $item->id }}
                                         </a>
-                                        <a href="{{ route('admin.match-preview', ['edit' => $item->id]) }}" title="Edit Preview" style="color: #0284c7; text-decoration: none;">
+                                        <a href="{{ route('admin.match-preview', ['edit' => $item->slug . '-' . $item->id]) }}" title="Edit Preview" style="color: #0284c7; text-decoration: none;">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </a>
                                     </div>
@@ -260,8 +265,10 @@
                     </tbody>
                 </table>
             </div>
-            <!-- 10-item Pagination Container -->
-            <div id="preview-table-pagination"></div>
+            <!-- 20-item Pagination Container -->
+            <div style="margin-top: 20px; display: flex; justify-content: center;">
+                {{ $previews->links() }}
+            </div>
         @else
             <div style="text-align: center; padding: 48px; color: #94a3b8; font-weight: 600;">
                 No match previews available yet. Click <strong>+ Add New Match Preview</strong> above to add one!

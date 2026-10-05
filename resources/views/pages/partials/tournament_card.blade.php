@@ -35,7 +35,7 @@
         </div>
 
         <!-- Tournament Name -->
-        <a href="{{ route('tournament.public', $s->id) }}" class="block text-decoration-none mb-2.5">
+        <a href="{{ $s->url }}" class="block text-decoration-none mb-2.5">
             <h3 class="text-lg font-black text-white group-hover:text-sky-400 transition-colors m-0 tracking-tight leading-snug">
                 {{ $s->name }}
             </h3>
@@ -103,11 +103,11 @@
 
         <div class="flex items-center gap-2">
             @if(Auth::check() && (Auth::id() == $s->user_id || Auth::user()->role === 'superadmin'))
-                <a href="{{ Auth::user()->role === 'superadmin' || !$isLocal ? route('admin.manage-tournament', $s->id) : route('local.manage-tournament', $s->id) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 px-3 rounded-xl inline-flex items-center justify-center gap-1 transition-all shadow-sm flex-1 text-decoration-none">
+                <a href="{{ Auth::user()->role === 'superadmin' || !$isLocal ? route('admin.manage-tournament.slug', ['slug' => $s->slug, 'id' => $s->id]) : route('local.manage-tournament.slug', ['slug' => $s->slug, 'id' => $s->id]) }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 px-3 rounded-xl inline-flex items-center justify-center gap-1 transition-all shadow-sm flex-1 text-decoration-none">
                     <span>⚙️ Manage</span>
                 </a>
             @endif
-            <a href="{{ route('tournament.public', $s->id) }}" class="font-bold text-xs py-2 px-3 rounded-xl inline-flex items-center justify-center gap-1.5 transition-all flex-1 text-decoration-none text-center" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
+            <a href="{{ $s->url }}" class="font-bold text-xs py-2 px-3 rounded-xl inline-flex items-center justify-center gap-1.5 transition-all flex-1 text-decoration-none text-center" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
                 <span>View Tournament &rarr;</span>
             </a>
         </div>

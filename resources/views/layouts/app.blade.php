@@ -111,7 +111,7 @@
                 <li><a href="{{ route('live') }}" class="nav-link {{ request()->routeIs('live') ? 'active' : '' }}">Live</a></li>
                 <li><a href="{{ route('matches') }}" class="nav-link {{ request()->routeIs('matches') ? 'active' : '' }}">Matches</a></li>
                 <li><a href="{{ route('stats') }}" class="nav-link {{ request()->routeIs('stats') ? 'active' : '' }}">Stats</a></li>
-                <li><a href="{{ route('tournaments') }}" class="nav-link {{ request()->routeIs('tournaments') ? 'active' : '' }}">Tournaments</a></li>
+                <li><a href="{{ route('series') }}" class="nav-link {{ request()->routeIs('series*') || request()->routeIs('tournaments*') ? 'active' : '' }}">Series</a></li>
                 <li><a href="{{ route('news') }}" class="nav-link {{ request()->routeIs('news') && (!request('type') || request('type') === 'news') ? 'active' : '' }}">News</a></li>
                 <li><a href="{{ route('local.dashboard') }}" class="nav-link {{ request()->routeIs('local.*') ? 'active' : '' }}">Local Cricket</a></li>
                 <li><a href="{{ route('compare') }}" class="nav-link {{ request()->routeIs('compare') ? 'active' : '' }}">Compare</a></li>
@@ -170,7 +170,7 @@
                 </a>
                 <a href="{{ route('matches') }}" class="mobile-nav-pill {{ request()->routeIs('matches*') ? 'active' : '' }}">Matches</a>
                 <a href="{{ route('stats') }}" class="mobile-nav-pill {{ request()->routeIs('stats') ? 'active' : '' }}">Stats</a>
-                <a href="{{ route('tournaments') }}" class="mobile-nav-pill {{ request()->routeIs('tournaments*') ? 'active' : '' }}">Tournaments</a>
+                <a href="{{ route('series') }}" class="mobile-nav-pill {{ request()->routeIs('series*') || request()->routeIs('tournaments*') ? 'active' : '' }}">Series</a>
                 <a href="{{ route('news') }}" class="mobile-nav-pill {{ request()->routeIs('news*') && (!request('type') || request('type') === 'news') ? 'active' : '' }}">News</a>
                 <a href="{{ route('local.dashboard') }}" class="mobile-nav-pill {{ request()->routeIs('local.*') ? 'active' : '' }}">Local Cricket</a>
                 <a href="{{ route('compare') }}" class="mobile-nav-pill {{ request()->routeIs('compare') ? 'active' : '' }}">Compare</a>
@@ -204,6 +204,10 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px;">
+                    <a href="{{ route('series') }}" class="side-menu-link">
+                        <span class="side-arrow">&rsaquo;</span>
+                        <span>Cricket Series</span>
+                    </a>
                     <a href="{{ route('fantasy') }}" class="side-menu-link">
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Fantasy Tips</span>

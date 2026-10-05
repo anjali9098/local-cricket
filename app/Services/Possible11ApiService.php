@@ -327,11 +327,64 @@ class Possible11ApiService
             }
         }
 
+        // Automatic state lifecycle: transition expired matches to completed, lock scores & winning results
+        $this->autoUpdateAllMatchStatuses();
+
         return [
             'success' => true,
             'stats' => $stats,
             'message' => "Synced {$stats['series_fetched']} series, {$stats['teams_synced']} teams, {$stats['matches_synced']} matches, and {$stats['players_synced']} players from Possible11 API."
         ];
+    }
+
+    /**
+     * Automatic State Engine: Re-evaluates all matches in database,
+     * transitions expired live/upcoming matches to completed, locks final scores,
+     * and sets winning result summaries (winner, loser, margin).
+     */
+    public function autoUpdateAllMatchStatuses(): int
+    {
+        $matches = CricketMatch::with(['team1', 'team2', 'tournament'])->get();
+        $updated = 0;
+        $now = time();
+
+        foreach ($matches as $match) {
+            $format = strtoupper($match->match_type ?: 'T20');
+            $maxHours = ($format === 'TEST') ? 120 : (($format === 'ODI') ? 10 : 5);
+            $mTime = !empty($match->match_date) ? strtotime($match->match_date) : null;
+            $hoursPassed = $mTime ? ($now - $mTime) / 3600 : null;
+
+            $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($match->team1_score ?? '0'))[0] ?? '0');
+            $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($match->team2_score ?? '0'))[0] ?? '0');
+            $w2 = (int) ($match->team2_wickets ?? 0);
+
+            $targetStatus = $match->status;
+
+            if ($match->status === 'completed') {
+                $targetStatus = 'completed';
+            } elseif ($mTime !== null) {
+                if ($hoursPassed > $maxHours) {
+                    $targetStatus = 'completed';
+                } elseif ($hoursPassed >= 0 && $hoursPassed <= $maxHours) {
+                    $targetStatus = 'live';
+                } else {
+                    $targetStatus = 'upcoming';
+                }
+            }
+
+            // Score based completion check
+            if ($s1 > 0 && ($s2 > $s1 || $w2 >= 10)) {
+                $targetStatus = 'completed';
+            }
+
+            if ($targetStatus !== $match->status || ($targetStatus === 'completed' && empty($match->result_text))) {
+                $match->status = $targetStatus;
+                $this->populateMatchScorecard($match);
+                $updated++;
+            }
+        }
+
+        return $updated;
     }
 
     /**
@@ -623,7 +676,7 @@ class Possible11ApiService
                     'fours' => $fours,
                     'sixes' => $sixes,
                     'strike_rate' => $sr,
-                    'status_text' => ($idx < $w1) ? 'c & b Bowler' : 'not out',
+                    'status_text' => ($idx < $w1) ? 'out' : 'not out',
                     'created_at' => now(),
                 ]);
             }
@@ -631,7 +684,8 @@ class Possible11ApiService
             // Team 2 Bowling
             $t2Bowlers = $t2Players->filter(fn($pl) => stripos($pl->role, 'Bowl') !== false || stripos($pl->role, 'All') !== false);
             if ($t2Bowlers->isEmpty()) $t2Bowlers = $t2Players->slice(5);
-            foreach ($t2Bowlers->take(5) as $bw) {
+            $bowlerList = $t2Bowlers->take(5)->values();
+            foreach ($bowlerList as $bw) {
                 $bOvers = $isODI ? 10.0 : 4.0;
                 $bRuns = mt_rand(25, 48);
                 $bWickets = mt_rand(0, 3);
@@ -646,23 +700,42 @@ class Possible11ApiService
                 ]);
             }
 
-            // Ball by ball commentary
+            // Ball by ball commentary with rotating batters and bowlers
             $commentaryOvers = $isODI ? [48, 49, 50] : [18, 19, 20];
-            $t1Lead = $t1Players->first()?->name ?? 'Batsman';
-            $t2Lead = $t2Bowlers->first()?->name ?? 'Bowler';
-            foreach ($commentaryOvers as $ov) {
+            $battersList = $t1Players->take(5)->values();
+            $strikerIdx = 0;
+            $nonStrikerIdx = 1;
+            $nextBatterIdx = 2;
+
+            foreach ($commentaryOvers as $ovIdx => $ov) {
+                $curBowler = $bowlerList->get($ovIdx % max(1, $bowlerList->count()))?->name ?? 'Bowler';
                 for ($b = 1; $b <= 6; $b++) {
                     $outcomes = ['1', '2', '4', '0', '1', '6', 'W'];
                     $outcome = $outcomes[array_rand($outcomes)];
+                    $curStriker = $battersList->get($strikerIdx)?->name ?? 'Batsman';
+
                     BallByBall::create([
                         'match_id' => $match->id,
                         'over_num' => "{$ov}.{$b}",
                         'outcome' => $outcome,
-                        'bowler_name' => $t2Lead,
-                        'batsman_name' => $t1Lead,
+                        'bowler_name' => $curBowler,
+                        'batsman_name' => $curStriker,
                         'created_at' => now(),
                     ]);
+
+                    if ($outcome === 'W') {
+                        $strikerIdx = $nextBatterIdx;
+                        $nextBatterIdx++;
+                    } elseif (in_array($outcome, ['1', '3'])) {
+                        $tmp = $strikerIdx;
+                        $strikerIdx = $nonStrikerIdx;
+                        $nonStrikerIdx = $tmp;
+                    }
                 }
+                // End of over: switch strike
+                $tmp = $strikerIdx;
+                $strikerIdx = $nonStrikerIdx;
+                $nonStrikerIdx = $tmp;
             }
         }
     }
@@ -790,9 +863,9 @@ class Possible11ApiService
     }
 
     /**
-     * Upsert Player / Squad member
+     * Upsert Player / Squad member with complete profile information
      */
-    protected function upsertPlayer(array $pData, int $teamId): ?Player
+    public function upsertPlayer(array $pData, int $teamId): ?Player
     {
         $name = trim($pData['name'] ?? '');
         if (empty($name)) return null;
@@ -807,8 +880,6 @@ class Possible11ApiService
             $player->slug = Str::slug($name);
             $player->initials = Str::upper(Str::substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 2)) ?: 'CR';
             $player->days_left = '0';
-            $player->nationality = 'International';
-            $player->is_popular = !empty($pData['is_cap']) || !empty($pData['is_cvc']) ? 1 : 0;
             $player->display_order = 1;
             $player->created_at = now();
         }
@@ -821,9 +892,20 @@ class Possible11ApiService
                 $existingTeams[] = $team->name;
                 $player->played_teams = implode(', ', $existingTeams);
             }
+            if (empty($player->country) && !empty($team->country)) {
+                $player->country = $team->country;
+            }
+            if (empty($player->nationality)) {
+                $player->nationality = $team->country ?: ($team->team_type === 'international' ? $team->name : 'International');
+            }
         }
 
-        $role = $pData['role'] ?? 'Batsman';
+        if (empty($player->nationality)) {
+            $player->nationality = 'International';
+        }
+
+        // Role mapping
+        $role = $pData['role'] ?? ($pData['role_str'] ?? 'Batsman');
         if (stripos($role, 'All') !== false) $role = 'All-Rounder';
         elseif (stripos($role, 'Bowl') !== false) $role = 'Bowler';
         elseif (stripos($role, 'Keep') !== false || stripos($role, 'WK') !== false) $role = 'Wicket-Keeper';
@@ -837,18 +919,208 @@ class Possible11ApiService
             $player->short_name = Str::limit($name, 15);
         }
 
-        if (empty($player->profile_image) && !empty($pData['icon'])) {
+        // Profile Image (update if currently default or empty)
+        if (!empty($pData['icon']) && (empty($player->profile_image) || str_contains($player->profile_image, 'default-player-image'))) {
             $player->profile_image = $pData['icon'];
         }
 
+        // Batting Style
         if (empty($player->batting_style)) {
             $player->batting_style = (!empty($pData['rh']) && $pData['rh'] === 'Y') ? 'Right-hand bat' : 'Left-hand bat';
+        }
+
+        // Bowling Style
+        if (empty($player->bowling_style)) {
+            if ($role === 'Bowler' || $role === 'All-Rounder') {
+                $player->bowling_style = (!empty($pData['dobowler']) && $pData['dobowler'] == 1) ? 'Right-arm fast' : 'Right-arm medium';
+            }
+        }
+
+        // Popular flag
+        if (!empty($pData['is_cap']) || !empty($pData['is_cvc']) || (!empty($pData['credits']) && (float)$pData['credits'] >= 8.5)) {
+            $player->is_popular = 1;
+        }
+
+        // Save DOB, Birthplace, and Family Details if provided in payload
+        if (!empty($pData['dob']) && empty($player->date_of_birth)) {
+            $player->date_of_birth = $pData['dob'];
+        }
+        if (!empty($pData['birth_place']) && empty($player->birthplace)) {
+            $player->birthplace = $pData['birth_place'];
+        }
+        if (!empty($pData['father_name']) && empty($player->father_name)) {
+            $player->father_name = $pData['father_name'];
+        }
+        if (!empty($pData['mother_name']) && empty($player->mother_name)) {
+            $player->mother_name = $pData['mother_name'];
+        }
+        if (!empty($pData['spouse_name']) && empty($player->spouse_name)) {
+            $player->spouse_name = $pData['spouse_name'];
+        }
+        if (!empty($pData['bio']) && empty($player->bio)) {
+            $player->bio = $pData['bio'];
         }
 
         $player->updated_at = now();
         $player->save();
 
+        \App\Services\PlayerEnrichmentService::enrichPlayer($player);
+
         return $player;
+    }
+
+    /**
+     * Dedicated Player Sync from all active Possible11 series squads
+     */
+    public function syncPlayers(string $status = 'all'): array
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+        @ini_set('max_execution_time', '300');
+        @ini_set('memory_limit', '512M');
+
+        $statuses = ($status === 'all') ? ['live', 'upcoming', 'completed'] : [$status];
+        $totalPlayers = 0;
+        $teamsCount = 0;
+
+        foreach ($statuses as $st) {
+            $seriesList = $this->getSeriesList($st, 'Cricket', 25);
+            foreach ($seriesList as $sItem) {
+                $seriesId = (int)$sItem['id'];
+                $squadData = $this->getSeriesSquad($seriesId);
+                
+                foreach ($squadData['teams'] ?? [] as $teamObj) {
+                    $teamName = trim($teamObj['name'] ?? ($teamObj['teamName'] ?? ''));
+                    if (empty($teamName)) continue;
+                    
+                    $team = Team::where('name', $teamName)->first();
+                    if (!$team) {
+                        $team = Team::create([
+                            'name' => $teamName,
+                            'slug' => Str::slug($teamName),
+                            'short_name' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $teamName), 0, 3)),
+                            'team_type' => 'international',
+                            'color_code' => '#0284c7',
+                            'logo' => $teamObj['logo'] ?? ($teamObj['icon'] ?? ''),
+                            'logo_url' => $teamObj['logo'] ?? ($teamObj['icon'] ?? ''),
+                            'country' => $teamName,
+                            'display_order' => 1
+                        ]);
+                    }
+                    $teamsCount++;
+
+                    $pList = [];
+                    if (!empty($teamObj['formats'])) {
+                        foreach ($teamObj['formats'] as $fmt) {
+                            foreach ($fmt['players'] ?? [] as $pl) {
+                                $pList[$pl['id']] = $pl;
+                            }
+                        }
+                    }
+                    if (!empty($teamObj['players'])) {
+                        foreach ($teamObj['players'] as $pl) {
+                            $pList[$pl['id']] = $pl;
+                        }
+                    }
+
+                    foreach ($pList as $pData) {
+                        $p = $this->upsertPlayer($pData, $team->id);
+                        if ($p) $totalPlayers++;
+                    }
+                }
+            }
+        }
+
+        return [
+            'success' => true,
+            'message' => "Successfully synchronized {$totalPlayers} players across {$teamsCount} teams from Possible11 API."
+        ];
+    }
+
+    /**
+     * Dedicated Venue Sync from Possible11 API & prominent international grounds
+     */
+    public function syncVenues(): array
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(300);
+        }
+        @ini_set('max_execution_time', '300');
+        @ini_set('memory_limit', '512M');
+
+        $venuesCount = 0;
+        
+        // 1. Extract venues from all Series & Matches
+        foreach (['live', 'upcoming', 'completed'] as $st) {
+            $seriesList = $this->getSeriesList($st, 'Cricket', 25);
+            foreach ($seriesList as $sItem) {
+                $detail = $this->getSeriesDetail((int)$sItem['id']);
+                if (!empty($detail['matches'])) {
+                    foreach ($detail['matches'] as $m) {
+                        $venueName = trim($m['venue'] ?? ($m['ground'] ?? ($m['location'] ?? '')));
+                        if (!empty($venueName) && strlen($venueName) > 2) {
+                            $v = \App\Models\Venue::where('name', $venueName)->first();
+                            if (!$v) {
+                                \App\Models\Venue::create([
+                                    'name' => $venueName,
+                                    'slug' => Str::slug($venueName),
+                                    'city' => trim($m['city'] ?? ''),
+                                    'country' => trim($m['country'] ?? ($sItem['host'] ?? 'International')),
+                                    'capacity' => '35,000',
+                                    'floodlights' => 1,
+                                    'display_order' => 1
+                                ]);
+                                $venuesCount++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Prominent International Grounds pool
+        $prominentVenues = [
+            ['name' => 'Wankhede Stadium', 'city' => 'Mumbai', 'country' => 'India', 'capacity' => '33,108', 'floodlights' => 1, 'pitch_type' => 'Batting friendly, true bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Narendra Modi Stadium', 'city' => 'Ahmedabad', 'country' => 'India', 'capacity' => '132,000', 'floodlights' => 1, 'pitch_type' => 'Balanced, good for pace & spin', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Eden Gardens', 'city' => 'Kolkata', 'country' => 'India', 'capacity' => '68,000', 'floodlights' => 1, 'pitch_type' => 'High scoring, aids spin in 2nd innings', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'M. Chinnaswamy Stadium', 'city' => 'Bengaluru', 'country' => 'India', 'capacity' => '40,000', 'floodlights' => 1, 'pitch_type' => 'Fast outfield, excellent for T20 batting', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Melbourne Cricket Ground (MCG)', 'city' => 'Melbourne', 'country' => 'Australia', 'capacity' => '100,024', 'floodlights' => 1, 'pitch_type' => 'Big boundaries, great carry and bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Sydney Cricket Ground (SCG)', 'city' => 'Sydney', 'country' => 'Australia', 'capacity' => '48,000', 'floodlights' => 1, 'pitch_type' => 'Traditional spinning pitch, batting friendly', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => "Lord's Cricket Ground", 'city' => 'London', 'country' => 'England', 'capacity' => '31,100', 'floodlights' => 1, 'pitch_type' => 'Slope feature, seam & swing friendly', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'The Oval', 'city' => 'London', 'country' => 'England', 'capacity' => '27,500', 'floodlights' => 1, 'pitch_type' => 'True bounce, excellent for fast bowling & strokeplay', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Dubai International Cricket Stadium', 'city' => 'Dubai', 'country' => 'United Arab Emirates', 'capacity' => '25,000', 'floodlights' => 1, 'pitch_type' => 'Ring of Fire lights, favors chasing teams under lights', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Sharjah Cricket Stadium', 'city' => 'Sharjah', 'country' => 'United Arab Emirates', 'capacity' => '16,000', 'floodlights' => 1, 'pitch_type' => 'Short boundaries, high run rates', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'SuperSport Park', 'city' => 'Centurion', 'country' => 'South Africa', 'capacity' => '22,000', 'floodlights' => 1, 'pitch_type' => 'Fast and bouncy, favors pace attacks', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Newlands Cricket Ground', 'city' => 'Cape Town', 'country' => 'South Africa', 'capacity' => '25,000', 'floodlights' => 1, 'pitch_type' => 'Picturesque Table Mountain backdrop, swing & seam', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Gaddafi Stadium', 'city' => 'Lahore', 'country' => 'Pakistan', 'capacity' => '27,000', 'floodlights' => 1, 'pitch_type' => 'Flat batting track, high scoring games', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'National Stadium', 'city' => 'Karachi', 'country' => 'Pakistan', 'capacity' => '34,228', 'floodlights' => 1, 'pitch_type' => 'Assists reverse swing and spinners', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'R. Premadasa Stadium', 'city' => 'Colombo', 'country' => 'Sri Lanka', 'capacity' => '35,000', 'floodlights' => 1, 'pitch_type' => 'Subcontinental spin, slow and low bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Eden Park', 'city' => 'Auckland', 'country' => 'New Zealand', 'capacity' => '42,000', 'floodlights' => 1, 'pitch_type' => 'Unique straight boundaries, exciting T20 cricket', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800']
+        ];
+
+        foreach ($prominentVenues as $pv) {
+            $existing = \App\Models\Venue::where('name', $pv['name'])->first();
+            if (!$existing) {
+                \App\Models\Venue::create([
+                    'name' => $pv['name'],
+                    'slug' => Str::slug($pv['name']),
+                    'city' => $pv['city'],
+                    'country' => $pv['country'],
+                    'capacity' => $pv['capacity'],
+                    'floodlights' => $pv['floodlights'],
+                    'pitch_type' => $pv['pitch_type'],
+                    'image_url' => $pv['image_url'],
+                    'display_order' => 1
+                ]);
+                $venuesCount++;
+            }
+        }
+
+        return [
+            'success' => true,
+            'message' => "Successfully synchronized {$venuesCount} new venues with full information from Possible11 API."
+        ];
     }
 
     /**

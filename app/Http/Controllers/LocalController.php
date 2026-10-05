@@ -259,9 +259,16 @@ class LocalController extends Controller
           ->header('Expires', '0');
     }
 
-    public function manageTournament($id)
+    public function manageTournament($slug = null, $id = null)
     {
-        $tournament = $this->authorizeTournament($id);
+        $resolvedId = $id ?? $slug;
+        $tournament = $this->authorizeTournament($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('local.manage-tournament.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]);
+        }
+
+        $id = $resolvedId;
         $teams = \App\Models\Team::where('tournament_id', $id)->get();
         $teamIds = $teams->pluck('id');
 
@@ -425,7 +432,7 @@ class LocalController extends Controller
                 'reward_tier' => 'ROOKIE'
             ]);
 
-            return redirect()->route('local.manage-tournament', $createdTournament->id)->with('success', 'Tournament created successfully! You can now add teams and schedule matches.');
+            return redirect()->route('local.manage-tournament.slug', ['slug' => $createdTournament->slug, 'id' => $createdTournament->id])->with('success', 'Tournament created successfully! You can now add teams and schedule matches.');
         }
 
         return redirect()->route('local.dashboard')->with('error', 'Tournament name is required.');
@@ -474,8 +481,6 @@ class LocalController extends Controller
             }
         }
 
-        $customNote = $status === 'live' ? ($venueName ? $venueName . ' • In Progress' : 'Match in progress') : ($venueName ?: 'Match Scheduled');
-        
         $tournament->matches()->create([
             'team1_id' => $team1Id,
             'team2_id' => $team2Id,
@@ -484,7 +489,8 @@ class LocalController extends Controller
             'status' => $status,
             'custom_note' => $customNote,
             'match_date' => $request->input('scheduled_at') ?: now(),
-            'level_type' => 'LOCAL'
+            'level_type' => 'LOCAL',
+            'is_approved' => true
         ]);
 
         if ($status === 'live' && $tournament->status !== 'ongoing') {
@@ -503,6 +509,7 @@ class LocalController extends Controller
         $status = $request->input('status', 'live');
         if (in_array($status, ['live', 'scheduled', 'completed'])) {
             $match->status = $status;
+            $match->is_approved = true;
             if ($status === 'live' && (empty($match->custom_note) || $match->custom_note === 'Match Scheduled')) {
                 $match->custom_note = 'Match in progress';
             } elseif ($status === 'scheduled' && $match->custom_note === 'Match in progress') {
@@ -556,10 +563,17 @@ class LocalController extends Controller
         return back()->with('success', 'Tournament marked as completed!');
     }
 
-    public function scorer($id)
+    public function scorer($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($resolvedId);
         $this->authorizeTournament($match->tournament_id);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('local.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]);
+        }
+
+        $id = $resolvedId;
         $isLocal = true;
         
         // Fetch ALL balls of the match (ordered chronologically)
@@ -683,7 +697,7 @@ class LocalController extends Controller
             $innings
         );
 
-        return redirect()->route('local.scorer', $id)->with('success', "Innings $innings started!");
+        return redirect()->route('local.scorer.slug', ['slug' => $match->slug, 'id' => $id])->with('success', "Innings $innings started!");
     }
         
     public function addPrediction(Request $request, $id)
@@ -852,10 +866,16 @@ class LocalController extends Controller
         return back()->with('success', "Player '{$playerName}' successfully added to {$team->name}!");
     }
 
-    public function toss($id)
+    public function toss($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($resolvedId);
         $this->authorizeTournament($match->tournament_id);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('local.toss.slug', ['slug' => $match->slug, 'id' => $match->id]);
+        }
+
         $isLocal = true;
         return view('admin.toss', compact('match', 'isLocal'));
     }
@@ -878,13 +898,19 @@ class LocalController extends Controller
         $match->current_innings = 1;
         $match->save();
 
-        return redirect()->route('local.opening-players', ['id' => $id, 'batting_team_id' => $battingTeamId]);
+        return redirect()->route('local.opening-players.slug', ['slug' => $match->slug, 'id' => $id, 'batting_team_id' => $battingTeamId]);
     }
 
-    public function openingPlayers($id)
+    public function openingPlayers($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $match = CricketMatch::with(['team1', 'team2', 'tournament'])->findOrFail($resolvedId);
         $this->authorizeTournament($match->tournament_id);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('local.opening-players.slug', array_merge(['slug' => $match->slug, 'id' => $match->id], request()->query()));
+        }
+
         $battingTeamId = request('batting_team_id');
         $battingTeam   = \App\Models\Team::with('players')->findOrFail($battingTeamId);
         $bowlingTeamId = ($battingTeamId == $match->team1_id) ? $match->team2_id : $match->team1_id;
@@ -906,20 +932,33 @@ class LocalController extends Controller
             1
         );
 
-        return redirect()->route('local.scorer', $id)->with('success', 'Innings 1 started! Striker and Bowler active.');
+        return redirect()->route('local.scorer.slug', ['slug' => $match->slug, 'id' => $id])->with('success', 'Innings 1 started! Striker and Bowler active.');
     }
 
-    public function matchDetail($id)
+    public function matchDetail($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1', 'team2', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($id);
-        $balls = \App\Models\BallByBall::where('match_id', $id)->orderBy('created_at', 'desc')->get();
+        $resolvedId = $id ?? $slug;
+        $match = CricketMatch::with(['team1', 'team2', 'tournament', 'battingStats', 'bowlingStats'])->findOrFail($resolvedId);
+        $this->authorizeTournament($match->tournament_id);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('local.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]);
+        }
+
+        $balls = \App\Models\BallByBall::where('match_id', $match->id)->orderBy('created_at', 'desc')->get();
         $isLocal = true;
         return view('admin.match_detail', compact('match', 'balls', 'isLocal'));
     }
 
-    public function tournamentPreview($id)
+    public function tournamentPreview($slug = null, $id = null)
     {
-        $tournament = Tournament::with(['teams', 'matches.team1', 'matches.team2'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $tournament = Tournament::with(['teams', 'matches.team1', 'matches.team2'])->findOrFail($resolvedId);
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->route('local.tournament.preview.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]);
+        }
+
         $teams = $tournament->teams;
         $matches = $tournament->matches;
 

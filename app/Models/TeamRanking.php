@@ -13,4 +13,12 @@ class TeamRanking extends Model
     {
         return self::formatImageUrl($value);
     }
+
+    public function getSlugAttribute()
+    {
+        if (!empty($this->attributes['slug'] ?? null)) {
+            return $this->attributes['slug'];
+        }
+        return \Illuminate\Support\Str::slug($this->team_name ?? ('ranking-' . $this->id));
+    }
 }

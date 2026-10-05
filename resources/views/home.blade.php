@@ -12,10 +12,101 @@
     <!-- ========================================================
          SECTION 1: LIVE & UPCOMING MATCHES CAROUSEL
          ======================================================== -->
+    <!-- ========================================================
+         SECTION 1: LIVE & UPCOMING MATCHES CAROUSEL
+         ======================================================== -->
     @if($allMatches->isNotEmpty())
+    @php
+        $matchChunks = $allMatches->chunk(8);
+        $totalSlides = $matchChunks->count();
+    @endphp
+
+    <style>
+    .matches-carousel-section {
+        position: relative;
+        margin-bottom: 28px;
+    }
+    .matches-carousel-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .matches-carousel-viewport {
+        overflow: hidden;
+        width: 100%;
+        border-radius: 14px;
+        position: relative;
+    }
+    .matches-carousel-track {
+        display: flex;
+        transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        width: 100%;
+        will-change: transform;
+    }
+    .matches-carousel-slide {
+        min-width: 100%;
+        width: 100%;
+        flex-shrink: 0;
+        box-sizing: border-box;
+    }
+    .carousel-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+    @media (max-width: 1100px) {
+        .carousel-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+        .carousel-grid { grid-template-columns: 1fr; }
+    }
+    .carousel-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 35;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #0d1117 !important;
+        border: 2px solid #38bdf8 !important;
+        color: #ffffff !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(56, 189, 248, 0.4) !important;
+        transition: all 0.2s ease;
+        user-select: none;
+        outline: none;
+    }
+    .carousel-nav-btn:hover:not(:disabled) {
+        background: #2563eb !important;
+        border-color: #60a5fa !important;
+        color: #ffffff !important;
+        box-shadow: 0 6px 25px rgba(37, 99, 235, 0.8), 0 0 18px rgba(56, 189, 248, 0.7) !important;
+        transform: translateY(-50%) scale(1.1);
+    }
+    .carousel-nav-btn:disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+        border-color: #30363d !important;
+        box-shadow: none !important;
+    }
+    .carousel-nav-prev {
+        left: -18px;
+    }
+    .carousel-nav-next {
+        right: -18px;
+    }
+    @media (max-width: 768px) {
+        .carousel-nav-prev { left: -8px; width: 36px; height: 36px; }
+        .carousel-nav-next { right: -8px; width: 36px; height: 36px; }
+    }
+    </style>
+
     <section id="matches" class="matches-carousel-section">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                     <span class="section-title-icon">⚡</span>
                     @if($allMatches->where('effective_status', 'live')->count() > 0)
@@ -25,68 +116,113 @@
                         <span>UPCOMING MATCHES</span>
                     @endif
                 </h2>
-                <a href="{{ route('matches') }}" class="view-all-link">FULL SCHEDULE &rarr;</a>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    @if($totalSlides > 1)
+                        <!-- Header Arrow Controls -->
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <button type="button" onclick="moveMatchesCarousel(-1)" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 900; font-size: 1rem;" title="Previous Slide">‹</button>
+                            <div id="matchesSlideIndicator" style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; min-width: 44px; text-align: center;">
+                                <span id="currentSlideNum">1</span> / <span>{{ $totalSlides }}</span>
+                            </div>
+                            <button type="button" onclick="moveMatchesCarousel(1)" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 900; font-size: 1rem;" title="Next Slide">›</button>
+                        </div>
+                    @endif
+                    <a href="{{ route('matches') }}" class="view-all-link" style="font-weight: 800; color: #38bdf8; text-decoration: none; font-size: 0.82rem;">FULL SCHEDULE &rarr;</a>
+                </div>
             </div>
 
-            <div class="carousel-grid">
-                @foreach($allMatches as $m)
-                    <a href="{{ route('matches.detail', $m->id) }}" class="match-card" style="text-decoration:none;display:block;">
-                        <div class="match-card-header">
-                            <span>{{ $m->tournament->name ?? ($m->level_type ?? ($m->match_type . ' - ' . ($m->venue->name ?? 'MATCH'))) }}</span>
-                            @if($m->effective_status === 'live')
-                                <span class="badge-live" style="font-size:0.6rem;padding:2px 6px;">LIVE</span>
-                            @elseif($m->effective_status === 'completed')
-                                <span class="tag-badge" style="background:#059669;color:white;font-size:0.6rem;padding:2px 6px;">COMPLETED</span>
-                            @else
-                                <span class="tag-badge" style="background:#2563eb;color:white;font-size:0.6rem;padding:2px 6px;">UPCOMING</span>
-                            @endif
-                        </div>
+            <div class="matches-carousel-wrapper">
+                @if($totalSlides > 1)
+                    <!-- Left / Previous Floating Navigation Arrow Button -->
+                    <button type="button" id="matchesCarouselPrev" class="carousel-nav-btn carousel-nav-prev" onclick="moveMatchesCarousel(-1)" aria-label="Previous Matches" title="Previous Matches">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                @endif
 
-                        <div class="match-card-teams">
-                            <div class="team-row">
-                                <div class="team-info">
-                                    <div class="team-avatar" style="border-color: {{ $m->team1?->color_code ?? 'var(--primary)' }};">
-                                        {{ $m->team1?->short_name ?? ($m->team1?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team1->name), 0, 3)) : '') }}
-                                    </div>
-                                    <span class="team-name">{{ $m->team1?->name ?? '' }}</span>
-                                </div>
-                                <div class="team-score">
-                                    @if($m->effective_status === 'completed' || $m->effective_status === 'live' || $m->team1_score > 0)
-                                        {{ $m->team1_score }}/{{ $m->team1_wickets }} <span style="font-size:0.7rem;color:var(--text-dim);">({{ $m->team1_overs }} ov)</span>
-                                    @else
-                                        -
-                                    @endif
+                <!-- Carousel Viewport & Sliding Track -->
+                <div class="matches-carousel-viewport" id="matchesCarouselViewport">
+                    <div class="matches-carousel-track" id="matchesCarouselTrack">
+                        @foreach($matchChunks as $slideIdx => $chunk)
+                            <div class="matches-carousel-slide" data-slide="{{ $slideIdx }}">
+                                <div class="carousel-grid">
+                                    @foreach($chunk as $m)
+                                        <a href="{{ $m->url }}" class="match-card" style="text-decoration:none;display:block;">
+                                            <div class="match-card-header">
+                                                <span>{{ $m->tournament->name ?? ($m->level_type ?? ($m->match_type . ' - ' . ($m->venue->name ?? 'MATCH'))) }}</span>
+                                                @if($m->effective_status === 'live')
+                                                    <span class="badge-live" style="font-size:0.6rem;padding:2px 6px;">LIVE</span>
+                                                @elseif($m->effective_status === 'completed')
+                                                    <span class="tag-badge" style="background:#059669;color:white;font-size:0.6rem;padding:2px 6px;">COMPLETED</span>
+                                                @else
+                                                    <span class="tag-badge" style="background:#2563eb;color:white;font-size:0.6rem;padding:2px 6px;">UPCOMING</span>
+                                                @endif
+                                            </div>
+
+                                            <div class="match-card-teams">
+                                                <div class="team-row">
+                                                    <div class="team-info">
+                                                        <div class="team-avatar" style="border-color: {{ $m->team1?->color_code ?? 'var(--primary)' }}; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                                            @if(!empty($m->team1?->logo))
+                                                                <img src="{{ $m->team1->logo }}" alt="{{ $m->team1->name }}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentElement.innerText='{{ $m->team1?->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team1?->name ?? 'TM'), 0, 3)) }}';">
+                                                            @else
+                                                                {{ $m->team1?->short_name ?? ($m->team1?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team1->name), 0, 3)) : '') }}
+                                                            @endif
+                                                        </div>
+                                                        <span class="team-name">{{ $m->team1?->name ?? '' }}</span>
+                                                    </div>
+                                                    <div class="team-score">
+                                                        @if($m->effective_status === 'completed' || $m->effective_status === 'live' || $m->team1_score > 0)
+                                                            {{ $m->team1_score }}/{{ $m->team1_wickets }} <span style="font-size:0.7rem;color:var(--text-dim);">({{ $m->team1_overs }} ov)</span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <div class="team-row">
+                                                    <div class="team-info">
+                                                        <div class="team-avatar" style="border-color: {{ $m->team2?->color_code ?? '#38bdf8' }}; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                                            @if(!empty($m->team2?->logo))
+                                                                <img src="{{ $m->team2->logo }}" alt="{{ $m->team2->name }}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentElement.innerText='{{ $m->team2?->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team2?->name ?? 'TM'), 0, 3)) }}';">
+                                                            @else
+                                                                {{ $m->team2?->short_name ?? ($m->team2?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team2->name), 0, 3)) : '') }}
+                                                            @endif
+                                                        </div>
+                                                        <span class="team-name">{{ $m->team2?->name ?? '' }}</span>
+                                                    </div>
+                                                    <div class="team-score">
+                                                        @if($m->effective_status === 'completed' || $m->effective_status === 'live' || $m->team2_score > 0)
+                                                            {{ $m->team2_score }}/{{ $m->team2_wickets }} <span style="font-size:0.7rem;color:var(--text-dim);">({{ $m->team2_overs }} ov)</span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="match-card-footer">
+                                                @if($m->effective_status === 'completed')
+                                                    <span style="color: #4ade80; font-weight: 800;">🏆 {{ $m->winning_title }}</span>
+                                                @elseif($m->effective_status === 'live')
+                                                    <span style="color: #38bdf8; font-weight: 700;">🔴 {{ $m->custom_note && strlen($m->custom_note) < 60 && !str_contains($m->custom_note, '<p>') ? $m->custom_note : 'Innings 2 in progress' }}</span>
+                                                @else
+                                                    <span style="color: var(--text-dim);">📅 {{ $m->match_date ? date('M d, h:i A', strtotime($m->match_date)) : 'Match Scheduled' }}</span>
+                                                @endif
+                                            </div>
+                                        </a>
+                                    @endforeach
                                 </div>
                             </div>
+                        @endforeach
+                    </div>
+                </div>
 
-                            <div class="team-row">
-                                <div class="team-info">
-                                    <div class="team-avatar" style="border-color: {{ $m->team2?->color_code ?? '#38bdf8' }};">
-                                        {{ $m->team2?->short_name ?? ($m->team2?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team2->name), 0, 3)) : '') }}
-                                    </div>
-                                    <span class="team-name">{{ $m->team2?->name ?? '' }}</span>
-                                </div>
-                                <div class="team-score">
-                                    @if($m->effective_status === 'completed' || $m->effective_status === 'live' || $m->team2_score > 0)
-                                        {{ $m->team2_score }}/{{ $m->team2_wickets }} <span style="font-size:0.7rem;color:var(--text-dim);">({{ $m->team2_overs }} ov)</span>
-                                    @else
-                                        -
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="match-card-footer">
-                            @if($m->effective_status === 'completed')
-                                <span style="color: #4ade80; font-weight: 800;">🏆 {{ $m->winning_title }}</span>
-                            @elseif($m->effective_status === 'live')
-                                <span style="color: #38bdf8; font-weight: 700;">🔴 {{ $m->custom_note && strlen($m->custom_note) < 60 && !str_contains($m->custom_note, '<p>') ? $m->custom_note : 'Innings 2 in progress' }}</span>
-                            @else
-                                <span style="color: var(--text-dim);">📅 {{ $m->match_date ? date('M d, h:i A', strtotime($m->match_date)) : 'Match Scheduled' }}</span>
-                            @endif
-                        </div>
-                    </a>
-                @endforeach
+                @if($totalSlides > 1)
+                    <!-- Right / Next Floating Navigation Arrow Button -->
+                    <button type="button" id="matchesCarouselNext" class="carousel-nav-btn carousel-nav-next" onclick="moveMatchesCarousel(1)" aria-label="Next Matches" title="Next Matches">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                @endif
             </div>
         </div>
     </section>
@@ -102,7 +238,7 @@
                     <span class="section-title-icon">🏆</span>
                     <span>SERIES</span>
                 </h2>
-                <a href="{{ route('tournaments') }}" class="view-all-link">ALL SERIES &rarr;</a>
+                <a href="{{ route('series') }}" class="view-all-link">ALL SERIES &rarr;</a>
             </div>
 
             @php
@@ -160,7 +296,7 @@
             <div id="series-tab-live" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'live' ? 'display:none;' : '' }}">
                 @foreach($liveSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
-                    <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
+                    <div class="series-card" onclick="window.location.href='{{ $s->url }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }} &bull; {{ $s->year ?? '2026' }}</span>
@@ -200,7 +336,7 @@
             <div id="series-tab-upcoming" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'upcoming' ? 'display:none;' : '' }}">
                 @forelse($upcomingSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
-                    <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
+                    <div class="series-card" onclick="window.location.href='{{ $s->url }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }} &bull; {{ $s->year ?? '2026' }}</span>
@@ -241,7 +377,7 @@
             <div id="series-tab-ongoing" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'ongoing' ? 'display:none;' : '' }}">
                 @forelse($ongoingSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
-                    <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
+                    <div class="series-card" onclick="window.location.href='{{ $s->url }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }} &bull; {{ $s->year ?? '2026' }}</span>
@@ -282,7 +418,7 @@
             <div id="series-tab-completed" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'completed' ? 'display:none;' : '' }}">
                 @forelse($completedSeries->take(6) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
-                    <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
+                    <div class="series-card" onclick="window.location.href='{{ $s->url }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->venue ?? $s->city ?? $s->hosting_country ?? 'International' }}</span>
@@ -323,7 +459,7 @@
             <div id="series-tab-local" class="series-grid series-tab-content" style="{{ $activeSeriesTab !== 'local' ? 'display:none;' : '' }}">
                 @forelse($localSeries->take(3) as $s)
                     @php $mb = seriesMatchBlock($s); @endphp
-                    <div class="series-card" onclick="window.location.href='{{ route('tournament.public', $s->id) }}'" style="cursor: pointer;">
+                    <div class="series-card" onclick="window.location.href='{{ $s->url }}'" style="cursor: pointer;">
                         <div class="series-info">
                             <div class="series-title">{{ $s->name }}</div>
                             <span class="series-location">{{ $s->city ?? 'Multiple' }} &bull; {{ $s->year ?? '2026' }}</span>
@@ -369,7 +505,7 @@
                         <a href="{{ route('predictions') }}" class="view-all-link">ALL PREDICTIONS &rarr;</a>
                     </div>
                     @forelse($predictions->take(6) as $p)
-                        <a href="{{ route('prediction.show', $p->id) }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #f97316; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                        <a href="{{ $p->url }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #f97316; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(249, 115, 22, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                             <div>
                                 <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">{{ $p->tag && $p->tag !== 'PREDICTION' ? $p->tag : 'MATCH PREDICTION' }}</span>
@@ -399,7 +535,7 @@
                         <a href="{{ route('fantasy') }}" class="view-all-link">ALL FANTASY TIPS &rarr;</a>
                     </div>
                     @forelse($fantasyTips->take(6) as $f)
-                        <a href="{{ route('fantasy.show', $f->id) }}" class="fantasy-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #22c55e; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                        <a href="{{ $f->url }}" class="fantasy-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #22c55e; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(34, 197, 94, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                             <div>
                                 <span class="card-tag fantasy" style="font-size: 0.68rem; padding: 2px 7px;">{{ $f->tag ?? 'FANTASY' }}</span>
@@ -443,7 +579,7 @@
                             $previewImg = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';
                         }
                     @endphp
-                    <a href="{{ route('preview.show', $preview->id) }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                    <a href="{{ $preview->url }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #38bdf8; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(56, 189, 248, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                         <div>
                             <div style="width: 100%; height: 140px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-card-secondary);">
@@ -479,7 +615,7 @@
 
             <div class="articles-grid">
                 @foreach($articles->take(6) as $art)
-                    <a href="{{ route('article.show', $art->id) }}" class="article-item" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <a href="{{ $art->url }}" class="article-item" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
                         @if(!empty($art->image_url))
                             <div class="article-img-box" style="position: relative; width: 100%; aspect-ratio: 16 / 9; background: #0b1120; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                                 <div style="position: absolute; inset: -10px; background-image: url('{{ $art->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
@@ -514,7 +650,7 @@
 
             <div class="news-grid-2col">
                 @foreach($newsList->take(6) as $n)
-                    <a href="{{ route('news.show', $n->id) }}" class="news-card-horizontal" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <a href="{{ $n->url }}" class="news-card-horizontal" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
                         <div style="flex: 1;">
                             <span class="card-tag prediction">{{ $n->category }}</span>
                             <h3 class="article-title" style="margin-top:6px; color: var(--text-main); font-size: 0.95rem; font-weight: 700; line-height: 1.35;">{{ $n->title }}</h3>
@@ -575,7 +711,7 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px;">
                 @foreach($venues as $venue)
-                    <a href="{{ route('venues.show', $venue->id) }}" style="text-decoration: none; display: block; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                    <a href="{{ $venue->url }}" style="text-decoration: none; display: block; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
                         onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 24px rgba(0,0,0,0.35)';this.style.borderColor='rgba(34, 197, 94, 0.4)';"
                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='var(--border)';">
                         @if(!empty($venue->image_url))
@@ -620,7 +756,7 @@
                     <!-- Stories Scroll Container -->
                     <div id="storiesContainer" style="display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 4px 0; width: 100%; -ms-overflow-style: none; scrollbar-width: none;">
                         @foreach($webStories as $story)
-                            <a href="{{ route('webstories.show', $story->id) }}" style="text-decoration: none; flex: 0 0 170px; height: 250px; border-radius: 12px; position: relative; overflow: hidden; border: none; cursor: pointer; display: block; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)';" onmouseout="this.style.transform='translateY(0)';">
+                            <a href="{{ $story->url }}" style="text-decoration: none; flex: 0 0 170px; height: 250px; border-radius: 12px; position: relative; overflow: hidden; border: none; cursor: pointer; display: block; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)';" onmouseout="this.style.transform='translateY(0)';">
                                 <!-- Play Badge -->
                                 <div style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 22px; height: 22px; border-radius: 50%; background: rgba(15, 23, 42, 0.6); border: 1.5px solid #22c55e; display: flex; align-items: center; justify-content: center;">
                                     <svg width="8" height="8" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2">
@@ -745,7 +881,7 @@
 
                         <div class="popular-players-bar-grid">
                             @foreach($popularPlayers->take(3) as $pop)
-                                <a href="{{ route('player.profile', $pop->id) }}" class="popular-players-bar-card">
+                                <a href="{{ $pop->url }}" class="popular-players-bar-card">
                                     <div style="position: relative; width: 48px; height: 48px; margin: 0 auto 10px;">
                                         @if(!empty($pop->profile_image))
                                             <img src="{{ $pop->profile_image }}" alt="{{ $pop->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -816,7 +952,7 @@
                         <div class="dashboard-panel-card" style="padding: 12px 18px;">
                             <div style="display: flex; flex-direction: column;">
                                 @forelse($playerBirthdays->take(4) as $pb)
-                                    <a href="{{ route('player.profile', $pb->id) }}" class="birthday-list-item" style="text-decoration: none;">
+                                    <a href="{{ $pb->url }}" class="birthday-list-item" style="text-decoration: none;">
                                         <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
                                             <div style="position: relative; width: 34px; height: 34px; flex-shrink: 0;">
                                                 @if(!empty($pb->profile_image))
@@ -875,7 +1011,7 @@
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px;">
                     @foreach($glossaryTerms as $term)
-                        <a href="{{ route('glossary.show', $term->id) }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
+                        <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
                             <!-- Poster Image or Letter Badge -->
                             @if(!empty($term->poster_image))
                                 <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -965,6 +1101,40 @@
 </main>
 
 <script>
+let currentMatchSlide = 0;
+const totalMatchSlides = {{ isset($totalSlides) ? $totalSlides : 1 }};
+
+function moveMatchesCarousel(direction) {
+    if (totalMatchSlides <= 1) return;
+    currentMatchSlide += direction;
+    if (currentMatchSlide < 0) {
+        currentMatchSlide = 0;
+    } else if (currentMatchSlide >= totalMatchSlides) {
+        currentMatchSlide = totalMatchSlides - 1;
+    }
+    updateMatchesCarouselUI();
+}
+
+function updateMatchesCarouselUI() {
+    const track = document.getElementById('matchesCarouselTrack');
+    const prevBtn = document.getElementById('matchesCarouselPrev');
+    const nextBtn = document.getElementById('matchesCarouselNext');
+    const currNum = document.getElementById('currentSlideNum');
+
+    if (track) {
+        track.style.transform = `translateX(-${currentMatchSlide * 100}%)`;
+    }
+    if (prevBtn) {
+        prevBtn.disabled = (currentMatchSlide === 0);
+    }
+    if (nextBtn) {
+        nextBtn.disabled = (currentMatchSlide >= totalMatchSlides - 1);
+    }
+    if (currNum) {
+        currNum.innerText = currentMatchSlide + 1;
+    }
+}
+
 function switchSeriesTab(tabName, btn) {
     document.querySelectorAll('.series-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -979,6 +1149,8 @@ function switchSeriesTab(tabName, btn) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    updateMatchesCarouselUI();
+
     const activeTab = document.querySelector('.series-tab.active');
     if (activeTab && typeof activeTab.scrollIntoView === 'function') {
         activeTab.scrollIntoView({ behavior: 'auto', inline: 'start', block: 'nearest' });

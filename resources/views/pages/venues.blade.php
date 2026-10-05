@@ -72,7 +72,7 @@
                 
                 <div>
                     <!-- Image with click to detail -->
-                    <a href="{{ route('venues.show', $venue->id) }}" style="display: block; position: relative; height: 160px; overflow: hidden;">
+                    <a href="{{ $venue->url }}" style="display: block; position: relative; height: 160px; overflow: hidden;">
                         @if(!empty($venue->image_url))
                             <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';" onerror="this.outerHTML='<div style=\'width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: center; font-size: 3rem;\'>🏟️</div>';">
                         @else
@@ -91,7 +91,7 @@
                     <!-- Venue Info -->
                     <div style="padding: 16px 18px 12px;">
                         <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0; line-height: 1.3;">
-                            <a href="{{ route('venues.show', $venue->id) }}" style="text-decoration: none; color: inherit;">
+                            <a href="{{ $venue->url }}" style="text-decoration: none; color: inherit;">
                                 {{ $venue->name }}
                             </a>
                         </h3>
@@ -122,7 +122,7 @@
                     </a>
 
                     <!-- Detail Link -->
-                    <a href="{{ route('venues.show', $venue->id) }}" style="text-decoration: none; font-size: 0.8rem; font-weight: 800; color: white; background: #0284c7; padding: 6px 14px; border-radius: 6px; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
+                    <a href="{{ $venue->url }}" style="text-decoration: none; font-size: 0.8rem; font-weight: 800; color: white; background: #0284c7; padding: 6px 14px; border-radius: 6px; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
                         Stadium Details &rarr;
                     </a>
                 </div>

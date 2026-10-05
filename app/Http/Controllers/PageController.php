@@ -36,36 +36,79 @@ class PageController extends Controller
             })
             ->get();
 
-        // 1. Upcoming Matches (Future scheduled fixtures, excluding active live)
-        $upcomingMatches = $allMatches->filter(function($m) use ($todayDate) {
-            if ($m->effective_status === 'completed' || $m->effective_status === 'live') {
-                return false;
-            }
-            $mDate = !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->toDateString() : null;
-            return in_array($m->effective_status, ['upcoming', 'scheduled']) || ($mDate && $mDate >= $todayDate);
+        // 1. Upcoming Matches (Future scheduled fixtures only)
+        $upcomingMatchesAll = $allMatches->filter(function($m) {
+            return $m->effective_status === 'upcoming';
         })->sortBy('match_date')->values();
 
-        // 2. Today's & Live Matches (STRICTLY any LIVE match or match occurring today)
-        $todayMatches = $allMatches->filter(function($m) use ($todayDate) {
+        // 2. Today's & Live Matches (STRICTLY active LIVE matches or matches scheduled for today)
+        $todayMatchesAll = $allMatches->filter(function($m) use ($todayDate) {
             if ($m->effective_status === 'live') {
                 return true;
             }
-            return !empty($m->match_date) && \Carbon\Carbon::parse($m->match_date)->toDateString() === $todayDate;
+            $mDate = !empty($m->match_date) ? \Carbon\Carbon::parse($m->match_date)->toDateString() : null;
+            return $mDate === $todayDate && $m->effective_status !== 'completed';
         })->sortBy(function($m) {
             return $m->effective_status === 'live' ? 1 : 2;
         })->values();
 
-        // 3. Completed Matches (Finished / Result scorecards)
-        $completedMatches = $allMatches->filter(function($m) {
+        // 3. Completed Matches (Finished / Result scorecards with winner and final scores)
+        $completedMatchesAll = $allMatches->filter(function($m) {
             return $m->effective_status === 'completed';
         })->sortByDesc('match_date')->values();
 
-        $activeTab = $request->query('tab', 'today');
+        $perPage = 20;
+
+        $pageUpcoming = max(1, (int)$request->query('page_upcoming', 1));
+        $pageToday = max(1, (int)$request->query('page_today', 1));
+        $pageCompleted = max(1, (int)$request->query('page_completed', 1));
+
+        $upcomingMatches = new \Illuminate\Pagination\LengthAwarePaginator(
+            $upcomingMatchesAll->forPage($pageUpcoming, $perPage)->values(),
+            $upcomingMatchesAll->count(),
+            $perPage,
+            $pageUpcoming,
+            ['path' => $request->url(), 'pageName' => 'page_upcoming']
+        );
+        $upcomingMatches->appends($request->except('page_upcoming'));
+
+        $todayMatches = new \Illuminate\Pagination\LengthAwarePaginator(
+            $todayMatchesAll->forPage($pageToday, $perPage)->values(),
+            $todayMatchesAll->count(),
+            $perPage,
+            $pageToday,
+            ['path' => $request->url(), 'pageName' => 'page_today']
+        );
+        $todayMatches->appends($request->except('page_today'));
+
+        $completedMatches = new \Illuminate\Pagination\LengthAwarePaginator(
+            $completedMatchesAll->forPage($pageCompleted, $perPage)->values(),
+            $completedMatchesAll->count(),
+            $perPage,
+            $pageCompleted,
+            ['path' => $request->url(), 'pageName' => 'page_completed']
+        );
+        $completedMatches->appends($request->except('page_completed'));
+
+        $activeTab = $request->query('tab');
+        if (empty($activeTab)) {
+            if ($request->has('page_completed')) {
+                $activeTab = 'completed';
+            } elseif ($request->has('page_upcoming')) {
+                $activeTab = 'upcoming';
+            } else {
+                $activeTab = 'today';
+            }
+        }
         if (!in_array($activeTab, ['upcoming', 'today', 'completed'])) {
             $activeTab = 'today';
         }
 
-        return view('pages.live', compact('upcomingMatches', 'todayMatches', 'completedMatches', 'activeTab'));
+        $upcomingTotal = $upcomingMatchesAll->count();
+        $todayTotal = $todayMatchesAll->count();
+        $completedTotal = $completedMatchesAll->count();
+
+        return view('pages.live', compact('upcomingMatches', 'todayMatches', 'completedMatches', 'upcomingTotal', 'todayTotal', 'completedTotal', 'activeTab'));
     }
 
     public function matches(Request $request)
@@ -76,9 +119,6 @@ class PageController extends Controller
         $state = $request->query('state');
         $search = $request->query('search');
 
-        $todayDate = \Carbon\Carbon::today()->toDateString();
-        $testStartLimit = \Carbon\Carbon::parse($todayDate)->subDays(4)->toDateString();
-
         $query = CricketMatch::approved()
             ->has('team1')->has('team2')
             ->with(['team1', 'team2', 'venue', 'tournament'])
@@ -88,20 +128,6 @@ class PageController extends Controller
                       $tq->where('is_approved', true);
                   });
             });
-
-        if (!empty($status)) {
-            if ($status === 'upcoming' || $status === 'scheduled') {
-                $query->whereIn('status', ['upcoming', 'scheduled'])
-                      ->where(function($dq) use ($todayDate) {
-                          $dq->whereNull('match_date')
-                             ->orWhereDate('match_date', '>=', $todayDate);
-                      });
-            } elseif ($status === 'live') {
-                $query->where('status', 'live');
-            } else {
-                $query->where('status', $status);
-            }
-        }
 
         if ($category === 'local') {
             $query->where(function($q) {
@@ -131,9 +157,25 @@ class PageController extends Controller
             });
         }
 
-        $matches = $query->orderByRaw("CASE WHEN status = 'live' THEN 1 WHEN status IN ('scheduled', 'upcoming') THEN 2 ELSE 3 END")
-                         ->orderBy('id', 'desc')
-                         ->get();
+        $allFiltered = $query->orderBy('id', 'desc')->get();
+
+        if (!empty($status)) {
+            if ($status === 'upcoming' || $status === 'scheduled') {
+                $matches = $allFiltered->filter(fn($m) => $m->effective_status === 'upcoming')->sortBy('match_date')->values();
+            } elseif ($status === 'live') {
+                $matches = $allFiltered->filter(fn($m) => $m->effective_status === 'live')->values();
+            } elseif ($status === 'completed') {
+                $matches = $allFiltered->filter(fn($m) => $m->effective_status === 'completed')->sortByDesc('match_date')->values();
+            } else {
+                $matches = $allFiltered;
+            }
+        } else {
+            // Sort: Live (1st), Upcoming (2nd), Completed (3rd)
+            $live = $allFiltered->filter(fn($m) => $m->effective_status === 'live')->values();
+            $upcoming = $allFiltered->filter(fn($m) => $m->effective_status === 'upcoming')->sortBy('match_date')->values();
+            $completed = $allFiltered->filter(fn($m) => $m->effective_status === 'completed')->sortByDesc('match_date')->values();
+            $matches = $live->merge($upcoming)->merge($completed);
+        }
 
         return view('pages.matches', compact('matches', 'status', 'category', 'city', 'state', 'search'));
     }
@@ -233,20 +275,152 @@ class PageController extends Controller
         })->filter()->sortBy('days_until_birthday')->values();
     }
 
-    public function tournamentDetail($id)
+    public function tournamentDetail($slug = null, $id = null)
     {
-        $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $tournament = is_numeric($resolvedId) 
+            ? Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($resolvedId)
+            : Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->where('slug', $resolvedId)->first();
+        
+        if (!$tournament && is_numeric($slug)) {
+            $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($slug);
+        }
+        if (!$tournament) {
+            $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->findOrFail($resolvedId);
+        }
         
         if ($tournament->status === 'draft') {
             abort(404, 'Tournament is not published yet.');
         }
 
-        if (!$tournament->is_approved) {
+        if (!$tournament->is_approved && $tournament->category !== 'local') {
             abort(404, 'Tournament is not approved yet.');
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('t/*')) {
+            return redirect()->to($tournament->url, 301);
         }
 
         // Increment the views count whenever the public page is opened
         $tournament->increment('views_count');
+
+        $allSeries = Tournament::where(function($q) {
+                $q->where('is_approved', true)
+                  ->orWhere('category', 'local');
+            })
+            ->where('status', '!=', 'draft')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return $this->renderTournamentPublicPage($tournament, $allSeries);
+    }
+
+    public function seriesStatDetail(Request $request, $slug = null, $id = null, $stat = null)
+    {
+        if ($stat === null) {
+            $stat = $id;
+            $id = $slug;
+            $slug = null;
+        }
+
+        $resolvedId = $id ?? $slug;
+        $tournament = is_numeric($resolvedId) 
+            ? Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($resolvedId)
+            : Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->where('slug', $resolvedId)->first();
+
+        if (!$tournament && is_numeric($slug)) {
+            $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($slug);
+        }
+        if (!$tournament) {
+            $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->findOrFail($resolvedId);
+        }
+
+        $allSeries = Tournament::where(function($q) {
+                $q->where('is_approved', true)
+                  ->orWhere('category', 'local');
+            })
+            ->where('status', '!=', 'draft')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $activeStat = strtolower(trim((string)$stat)) ?: 'most-runs';
+
+        return $this->renderTournamentPublicPage($tournament, $allSeries, 'pages.series_stat_detail', $activeStat);
+    }
+
+    public function series(Request $request)
+    {
+        $selectedId = $request->query('id') ?? $request->query('series_id');
+        if ($selectedId) {
+            $t = Tournament::find($selectedId);
+            if ($t) {
+                return redirect()->to($t->url);
+            }
+        }
+
+        $allSeries = Tournament::with(['teams.players', 'matches.team1', 'matches.team2'])
+            ->where(function($q) {
+                $q->where('is_approved', true)
+                  ->orWhere('category', 'local');
+            })
+            ->where('status', '!=', 'draft')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $today = \Carbon\Carbon::today()->toDateString();
+
+        $ongoingSeries = $allSeries->filter(function($t) use ($today) {
+            $st = strtolower(trim((string)$t->status));
+            if (in_array($st, ['ongoing', 'live', 'active'])) {
+                return true;
+            }
+            if ($t->start_date && $t->end_date) {
+                return $t->start_date <= $today && $t->end_date >= $today && $st !== 'completed';
+            }
+            return false;
+        })->values();
+
+        $upcomingSeries = $allSeries->filter(function($t) use ($today) {
+            $st = strtolower(trim((string)$t->status));
+            if ($st === 'upcoming') {
+                return true;
+            }
+            if ($t->start_date && $t->start_date > $today && $st !== 'completed') {
+                return true;
+            }
+            return false;
+        })->sortBy('start_date')->values();
+
+        $completedSeries = $allSeries->filter(function($t) use ($today) {
+            $st = strtolower(trim((string)$t->status));
+            if (in_array($st, ['completed', 'finished', 'archived'])) {
+                return true;
+            }
+            if ($t->end_date && $t->end_date < $today && !in_array($st, ['ongoing', 'live'])) {
+                return true;
+            }
+            return false;
+        })->sortByDesc('end_date')->values();
+
+        // If ongoing is empty, provide top active series
+        if ($ongoingSeries->isEmpty()) {
+            $ongoingSeries = $allSeries->take(6);
+        }
+
+        return view('pages.series', compact('allSeries', 'ongoingSeries', 'upcomingSeries', 'completedSeries'));
+    }
+
+    private function renderTournamentPublicPage($tournament, $allSeries = null, $viewName = 'pages.tournament_public', $activeStat = 'most-runs')
+    {
+        if ($allSeries === null) {
+            $allSeries = Tournament::where(function($q) {
+                    $q->where('is_approved', true)
+                      ->orWhere('category', 'local');
+                })
+                ->where('status', '!=', 'draft')
+                ->orderBy('id', 'desc')
+                ->get();
+        }
 
         // 1. Calculate Points Table dynamically from matches
         $pointsTable = [];
@@ -291,10 +465,12 @@ class PageController extends Controller
         // 2. Tournament Teams with dynamically resolved squad players
         $teams = $tournament->teams;
         $players = collect();
+        $playerTeamMap = []; // name_lower => ['team_id' => ..., 'team_name' => ..., 'team_short_name' => ..., 'team_logo' => ..., 'player' => ...]
 
         foreach ($teams as $team) {
             $teamName = trim($team->name);
             $shortName = trim($team->short_name ?? '');
+            $calcShort = strtoupper($shortName ?: substr(preg_replace('/[^A-Za-z]/', '', $teamName), 0, 3));
 
             $squad = \App\Models\Player::where(function($q) use ($team, $teamName, $shortName) {
                 $q->where('team_id', $team->id);
@@ -311,73 +487,348 @@ class PageController extends Controller
             foreach ($squad as $player) {
                 $pClone = clone $player;
                 $pClone->team_name = $team->name;
+                $pClone->team_short_name = $calcShort;
                 $pClone->team_logo = $team->logo;
                 $players->push($pClone);
+
+                $key = strtolower(trim($player->name));
+                $playerTeamMap[$key] = [
+                    'team_id' => $team->id,
+                    'team_name' => $team->name,
+                    'team_short_name' => $calcShort,
+                    'team_logo' => $team->logo,
+                    'player' => $player
+                ];
             }
         }
 
-        // 4. Highest Score / Most Runs (Batting Stats)
+        // Helper to resolve player and team details for any name
+        $resolvePlayerTeam = function($playerName) use ($playerTeamMap, $teams) {
+            $k = strtolower(trim($playerName));
+            if (isset($playerTeamMap[$k])) {
+                return $playerTeamMap[$k];
+            }
+            // Fallback: check if partial name match exists
+            foreach ($playerTeamMap as $nameKey => $data) {
+                if (str_contains($nameKey, $k) || str_contains($k, $nameKey)) {
+                    return $data;
+                }
+            }
+            // Default to empty team data
+            $defaultTeam = $teams->first();
+            return [
+                'team_id' => $defaultTeam ? $defaultTeam->id : 0,
+                'team_name' => $defaultTeam ? $defaultTeam->name : 'General',
+                'team_short_name' => $defaultTeam ? strtoupper($defaultTeam->short_name ?: substr($defaultTeam->name, 0, 3)) : 'CRIC',
+                'team_logo' => $defaultTeam ? $defaultTeam->logo : null,
+                'player' => null
+            ];
+        };
+
+        // 3. Batting Stats Aggregation (Most Runs, Fours, Sixes, Fifties, Centuries, SR, Highest Score, Avg, BF, Mat)
         $matchIds = $tournament->matches->pluck('id');
         $rawBatting = \App\Models\PlayerBattingStat::whereIn('match_id', $matchIds)->get();
-        $topBatters = $rawBatting->groupBy('player_name')->map(function($records, $playerName) {
+
+        $playerBatting = $rawBatting->groupBy('player_name')->map(function($records, $playerName) use ($resolvePlayerTeam) {
             $totalRuns = (int)$records->sum('runs');
             $totalBalls = (int)$records->sum('balls');
             $totalFours = (int)$records->sum('fours');
             $totalSixes = (int)$records->sum('sixes');
+            $fifties = $records->where('runs', '>=', 50)->where('runs', '<', 100)->count();
+            $centuries = $records->where('runs', '>=', 100)->count();
             $highestScore = (int)$records->max('runs');
             $innings = $records->count();
+            $matchesCount = $records->pluck('match_id')->unique()->count();
+
+            // Calculate dismissals for Batting Average
+            $dismissals = $records->filter(function($r) {
+                $st = strtolower(trim($r->status_text ?? ''));
+                return !in_array($st, ['not out', 'not out *', 'striker', 'non-striker', 'retired hurt', 'did not bat', 'dnb', '']);
+            })->count();
+
+            if ($dismissals > 0) {
+                $avg = round($totalRuns / $dismissals, 2);
+            } elseif ($innings > 0 && $totalRuns > 0) {
+                $avg = $totalRuns; // Not out throughout series
+            } else {
+                $avg = ($totalRuns > 0) ? $totalRuns : '--';
+            }
+
             $strikeRate = $totalBalls > 0 ? round(($totalRuns / $totalBalls) * 100, 2) : 0.00;
+            $ptData = $resolvePlayerTeam($playerName);
+            $pObj = $ptData['player'];
 
             return (object)[
                 'player_name' => $playerName,
+                'player_url' => $pObj ? $pObj->url : route('player.profile.slug', ['slug' => \Illuminate\Support\Str::slug($playerName), 'id' => 1]),
+                'player_image' => $pObj ? $pObj->profile_image : null,
+                'player_initials' => $pObj ? $pObj->initials : strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $playerName), 0, 2)),
+                'team_id' => $ptData['team_id'],
+                'team_name' => $ptData['team_name'],
+                'team_short_name' => $ptData['team_short_name'],
+                'team_logo' => $ptData['team_logo'],
+                'matches' => $matchesCount,
                 'innings' => $innings,
                 'runs' => $totalRuns,
                 'balls' => $totalBalls,
-                'fours' => $totalFours,
-                'sixes' => $totalSixes,
+                'average' => $avg,
                 'highest_score' => $highestScore,
                 'strike_rate' => $strikeRate,
+                'fours' => $totalFours,
+                'sixes' => $totalSixes,
+                'centuries' => $centuries,
+                'fifties' => $fifties,
             ];
-        })->sortByDesc('runs')->values();
+        });
 
-        // 5. Most Wickets (Bowling Stats)
+        $mostRuns = $playerBatting->sortByDesc('runs')->values();
+        $mostFours = $playerBatting->sortByDesc('fours')->values();
+        $mostSixes = $playerBatting->sortByDesc('sixes')->values();
+        $mostFifties = $playerBatting->where('fifties', '>', 0)->sortByDesc('fifties')->values();
+        if ($mostFifties->isEmpty() && $playerBatting->isNotEmpty()) {
+            $mostFifties = $playerBatting->sortByDesc('fifties')->values();
+        }
+        $mostCenturies = $playerBatting->where('centuries', '>', 0)->sortByDesc('centuries')->values();
+        if ($mostCenturies->isEmpty() && $playerBatting->isNotEmpty()) {
+            $mostCenturies = $playerBatting->sortByDesc('centuries')->values();
+        }
+        $highestInnings = $rawBatting->sortByDesc('runs')->map(function($r) use ($resolvePlayerTeam) {
+            $ptData = $resolvePlayerTeam($r->player_name);
+            $pObj = $ptData['player'];
+            $r->player_url = $pObj ? $pObj->url : route('player.profile.slug', ['slug' => \Illuminate\Support\Str::slug($r->player_name), 'id' => 1]);
+            $r->team_name = $ptData['team_name'];
+            $r->team_short_name = $ptData['team_short_name'];
+            $r->team_id = $ptData['team_id'];
+            return $r;
+        })->values();
+
+        $mostFoursInnings = $rawBatting->sortByDesc('fours')->map(function($r) use ($resolvePlayerTeam) {
+            $ptData = $resolvePlayerTeam($r->player_name);
+            $pObj = $ptData['player'];
+            $r->player_url = $pObj ? $pObj->url : route('player.profile.slug', ['slug' => \Illuminate\Support\Str::slug($r->player_name), 'id' => 1]);
+            $r->team_name = $ptData['team_name'];
+            $r->team_short_name = $ptData['team_short_name'];
+            $r->team_id = $ptData['team_id'];
+            return $r;
+        })->values();
+
+        $mostSixesInnings = $rawBatting->sortByDesc('sixes')->map(function($r) use ($resolvePlayerTeam) {
+            $ptData = $resolvePlayerTeam($r->player_name);
+            $pObj = $ptData['player'];
+            $r->player_url = $pObj ? $pObj->url : route('player.profile.slug', ['slug' => \Illuminate\Support\Str::slug($r->player_name), 'id' => 1]);
+            $r->team_name = $ptData['team_name'];
+            $r->team_short_name = $ptData['team_short_name'];
+            $r->team_id = $ptData['team_id'];
+            return $r;
+        })->values();
+
+        $bestStrikeRates = $playerBatting->where('balls', '>=', 5)->sortByDesc('strike_rate')->values();
+        if ($bestStrikeRates->isEmpty() && $playerBatting->isNotEmpty()) {
+            $bestStrikeRates = $playerBatting->sortByDesc('strike_rate')->values();
+        }
+
+        // 4. Bowling Stats Aggregation (Top Wicket Takers, 4W, 5W, Best Figures, Economy, Maidens, Avg)
         $rawBowling = \App\Models\PlayerBowlingStat::whereIn('match_id', $matchIds)->get();
-        $topBowlers = $rawBowling->groupBy('player_name')->map(function($records, $playerName) {
+        $playerBowling = $rawBowling->groupBy('player_name')->map(function($records, $playerName) use ($resolvePlayerTeam) {
             $totalWickets = (int)$records->sum('wickets');
             $totalRuns = (int)$records->sum('runs');
             $innings = $records->count();
-            
+            $matchesCount = $records->pluck('match_id')->unique()->count();
+            $fourW = $records->where('wickets', 4)->count();
+            $fiveW = $records->where('wickets', '>=', 5)->count();
+
             $totalBalls = 0;
+            $maidens = 0;
             foreach ($records as $r) {
                 $parts = explode('.', (string)$r->overs);
                 $fullOvers = (int)($parts[0] ?? 0);
                 $balls = (int)($parts[1] ?? 0);
                 $totalBalls += ($fullOvers * 6) + $balls;
+                if (isset($r->maidens)) {
+                    $maidens += (int)$r->maidens;
+                }
             }
             $totalOversFormatted = floor($totalBalls / 6) . '.' . ($totalBalls % 6);
             $economy = $totalBalls > 0 ? round(($totalRuns / ($totalBalls / 6)), 2) : 0.00;
+            $avg = $totalWickets > 0 ? round($totalRuns / $totalWickets, 2) : '--';
 
             $bestRecord = $records->sortByDesc('wickets')->sortBy('runs')->first();
             $bestFigure = $bestRecord ? "{$bestRecord->wickets}/{$bestRecord->runs}" : '0/0';
 
+            $ptData = $resolvePlayerTeam($playerName);
+            $pObj = $ptData['player'];
+
             return (object)[
                 'player_name' => $playerName,
+                'player_url' => $pObj ? $pObj->url : route('player.profile.slug', ['slug' => \Illuminate\Support\Str::slug($playerName), 'id' => 1]),
+                'player_image' => $pObj ? $pObj->profile_image : null,
+                'player_initials' => $pObj ? $pObj->initials : strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $playerName), 0, 2)),
+                'team_id' => $ptData['team_id'],
+                'team_name' => $ptData['team_name'],
+                'team_short_name' => $ptData['team_short_name'],
+                'team_logo' => $ptData['team_logo'],
+                'matches' => $matchesCount,
                 'innings' => $innings,
                 'overs' => $totalOversFormatted,
+                'balls' => $totalBalls,
+                'maidens' => $maidens,
                 'runs' => $totalRuns,
                 'wickets' => $totalWickets,
+                'average' => $avg,
                 'economy' => $economy,
                 'best_figure' => $bestFigure,
+                'four_wickets' => $fourW,
+                'five_wickets' => $fiveW,
             ];
-        })->sortByDesc('wickets')->sortBy('economy')->values();
+        });
 
-        return view('pages.tournament_public', compact(
+        $topBowlers = $playerBowling->sortByDesc('wickets')->sortBy('economy')->values();
+        $fourWickets = $playerBowling->where('four_wickets', '>', 0)->sortByDesc('four_wickets')->values();
+        if ($fourWickets->isEmpty() && $playerBowling->isNotEmpty()) {
+            $fourWickets = $playerBowling->sortByDesc('four_wickets')->values();
+        }
+        $fiveWickets = $playerBowling->where('five_wickets', '>', 0)->sortByDesc('five_wickets')->values();
+        if ($fiveWickets->isEmpty() && $playerBowling->isNotEmpty()) {
+            $fiveWickets = $playerBowling->sortByDesc('five_wickets')->values();
+        }
+        $bestFigures = $rawBowling->sortByDesc('wickets')->sortBy('runs')->map(function($r) use ($resolvePlayerTeam) {
+            $ptData = $resolvePlayerTeam($r->player_name);
+            $pObj = $ptData['player'];
+            $r->player_url = $pObj ? $pObj->url : route('player.profile.slug', ['slug' => \Illuminate\Support\Str::slug($r->player_name), 'id' => 1]);
+            $r->team_name = $ptData['team_name'];
+            $r->team_short_name = $ptData['team_short_name'];
+            $r->team_id = $ptData['team_id'];
+            return $r;
+        })->values();
+
+        $bestEconomies = $playerBowling->where('balls', '>=', 6)->sortBy('economy')->values();
+        if ($bestEconomies->isEmpty() && $playerBowling->isNotEmpty()) {
+            $bestEconomies = $playerBowling->sortBy('economy')->values();
+        }
+
+        $bestBowlingAverages = $playerBowling->where('wickets', '>', 0)->sortBy('average')->values();
+        if ($bestBowlingAverages->isEmpty() && $playerBowling->isNotEmpty()) {
+            $bestBowlingAverages = $playerBowling->values();
+        }
+
+        $mostMaidens = $playerBowling->sortByDesc('maidens')->values();
+
+        // 5. Team Stats Aggregation (Total Runs, Wickets, Highest Totals, 50s, 100s)
+        $teamStats = [];
+        foreach ($tournament->teams as $team) {
+            $shortName = trim($team->short_name ?? '');
+            $calcShort = strtoupper($shortName ?: substr(preg_replace('/[^A-Za-z]/', '', $team->name), 0, 3));
+            $teamStats[$team->id] = [
+                'team' => $team,
+                'team_id' => $team->id,
+                'team_name' => $team->name,
+                'team_short_name' => $calcShort,
+                'team_logo' => $team->logo,
+                'total_runs' => 0,
+                'total_wickets_lost' => 0,
+                'highest_total' => 0,
+                'matches_played' => 0,
+                'fifties' => 0,
+                'centuries' => 0,
+            ];
+        }
+
+        // Count individual 50s and 100s for each team
+        foreach ($playerBatting as $pb) {
+            if ($pb->team_id && isset($teamStats[$pb->team_id])) {
+                $teamStats[$pb->team_id]['fifties'] += $pb->fifties;
+                $teamStats[$pb->team_id]['centuries'] += $pb->centuries;
+            }
+        }
+
+        foreach ($tournament->matches as $m) {
+            if ($m->team1_id && isset($teamStats[$m->team1_id])) {
+                $runs = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($m->team1_score ?? '0'))[0] ?? '0');
+                $wkts = (int) ($m->team1_wickets ?? 0);
+                $teamStats[$m->team1_id]['total_runs'] += $runs;
+                $teamStats[$m->team1_id]['total_wickets_lost'] += $wkts;
+                if ($runs > $teamStats[$m->team1_id]['highest_total']) {
+                    $teamStats[$m->team1_id]['highest_total'] = $runs;
+                }
+                $teamStats[$m->team1_id]['matches_played']++;
+            }
+            if ($m->team2_id && isset($teamStats[$m->team2_id])) {
+                $runs = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($m->team2_score ?? '0'))[0] ?? '0');
+                $wkts = (int) ($m->team2_wickets ?? 0);
+                $teamStats[$m->team2_id]['total_runs'] += $runs;
+                $teamStats[$m->team2_id]['total_wickets_lost'] += $wkts;
+                if ($runs > $teamStats[$m->team2_id]['highest_total']) {
+                    $teamStats[$m->team2_id]['highest_total'] = $runs;
+                }
+                $teamStats[$m->team2_id]['matches_played']++;
+            }
+        }
+
+        $teamRuns = collect($teamStats)->sortByDesc('total_runs')->values();
+        $teamWickets = collect($teamStats)->sortByDesc('total_wickets_lost')->values();
+        $teamHighestTotals = collect($teamStats)->sortByDesc('highest_total')->values();
+        $teamFifties = collect($teamStats)->sortByDesc('fifties')->values();
+        $teamCenturies = collect($teamStats)->sortByDesc('centuries')->values();
+
+        // 6. Series News / Articles (matching tournament name or general recent)
+        $tourKeywords = array_filter(preg_split('/\s+/', $tournament->name), fn($w) => strlen($w) > 3);
+
+        $seriesNews = \App\Models\News::where(function($q) use ($tournament, $tourKeywords) {
+                $q->where('title', 'like', "%{$tournament->name}%")
+                  ->orWhere('content', 'like', "%{$tournament->name}%");
+                foreach ($tourKeywords as $kw) {
+                    $q->orWhere('title', 'like', "%{$kw}%");
+                }
+            })
+            ->orderBy('id', 'desc')->take(8)->get();
+
+        if ($seriesNews->isEmpty()) {
+            $seriesNews = \App\Models\News::orderBy('id', 'desc')->take(6)->get();
+        }
+
+        $seriesArticles = \App\Models\Article::where(function($q) use ($tournament, $tourKeywords) {
+                $q->where('title', 'like', "%{$tournament->name}%")
+                  ->orWhere('content', 'like', "%{$tournament->name}%");
+                foreach ($tourKeywords as $kw) {
+                    $q->orWhere('title', 'like', "%{$kw}%");
+                }
+            })
+            ->orderBy('id', 'desc')->take(8)->get();
+
+        if ($seriesArticles->isEmpty()) {
+            $seriesArticles = \App\Models\Article::orderBy('id', 'desc')->take(6)->get();
+        }
+
+        return view($viewName, compact(
             'tournament',
+            'allSeries',
+            'activeStat',
             'pointsTable',
             'teams',
             'players',
-            'topBatters',
-            'topBowlers'
+            'mostRuns',
+            'mostFours',
+            'mostSixes',
+            'mostFifties',
+            'mostCenturies',
+            'highestInnings',
+            'mostFoursInnings',
+            'mostSixesInnings',
+            'bestStrikeRates',
+            'topBowlers',
+            'fourWickets',
+            'fiveWickets',
+            'bestFigures',
+            'bestEconomies',
+            'bestBowlingAverages',
+            'mostMaidens',
+            'teamRuns',
+            'teamWickets',
+            'teamHighestTotals',
+            'teamFifties',
+            'teamCenturies',
+            'seriesNews',
+            'seriesArticles'
         ));
     }
 
@@ -1139,32 +1590,63 @@ class PageController extends Controller
         ];
     }
 
-    public function showNews($id)
+    public function showNews($slug = null, $id = null)
     {
-        $news = is_numeric($id) ? News::find($id) : News::where('slug', $id)->first();
-        if (!$news) {
-            $news = News::findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $news = is_numeric($resolvedId) ? News::find($resolvedId) : News::where('slug', $resolvedId)->first();
+        if (!$news && is_numeric($slug)) {
+            $news = News::find($slug);
         }
+        if (!$news) {
+            $news = News::findOrFail($resolvedId);
+        }
+
+        if ($id === null || is_numeric($slug)) {
+            return redirect()->to($news->url, 301);
+        }
+
         $recentNews = News::where('id', '!=', $news->id)->orderBy('id', 'desc')->take(5)->get();
         return view('pages.show_news', compact('news', 'recentNews'));
     }
 
-    public function showArticle($id)
+    public function showArticle($slug = null, $id = null)
     {
-        $article = is_numeric($id) ? Article::find($id) : Article::where('slug', $id)->first();
-        if (!$article) {
-            $article = Article::findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $article = is_numeric($resolvedId) ? Article::find($resolvedId) : Article::where('slug', $resolvedId)->first();
+        if (!$article && is_numeric($slug)) {
+            $article = Article::find($slug);
         }
+        if (!$article) {
+            $article = Article::findOrFail($resolvedId);
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('articles/*')) {
+            return redirect()->to($article->url, 301);
+        }
+
         $recentArticles = Article::where('id', '!=', $article->id)->orderBy('id', 'desc')->take(5)->get();
         return view('pages.show_article', compact('article', 'recentArticles'));
     }
 
-    public function showPrediction($id)
+    public function showPrediction($slug = null, $id = null)
     {
-        $prediction = is_numeric($id) ? Prediction::find($id) : Prediction::where('slug', $id)->first();
-        if (!$prediction) {
-            $prediction = Prediction::findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $prediction = is_numeric($resolvedId) ? Prediction::find($resolvedId) : Prediction::where('slug', $resolvedId)->first();
+        if (!$prediction && is_numeric($slug)) {
+            $prediction = Prediction::find($slug);
         }
+        if (!$prediction) {
+            $prediction = Prediction::findOrFail($resolvedId);
+        }
+
+        if ($prediction->tag === 'MATCH PREVIEW') {
+            return redirect()->to($prediction->url, 301);
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('predictions/*')) {
+            return redirect()->to($prediction->url, 301);
+        }
+
         $recentPredictions = Prediction::where('id', '!=', $prediction->id)
             ->where('tag', '!=', 'MATCH PREVIEW')
             ->orderBy('id', 'desc')
@@ -1173,12 +1655,21 @@ class PageController extends Controller
         return view('pages.show_prediction', compact('prediction', 'recentPredictions'));
     }
 
-    public function showMatchPreview($id)
+    public function showMatchPreview($slug = null, $id = null)
     {
-        $prediction = is_numeric($id) ? Prediction::find($id) : Prediction::where('slug', $id)->first();
-        if (!$prediction) {
-            $prediction = Prediction::findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $prediction = is_numeric($resolvedId) ? Prediction::find($resolvedId) : Prediction::where('slug', $resolvedId)->first();
+        if (!$prediction && is_numeric($slug)) {
+            $prediction = Prediction::find($slug);
         }
+        if (!$prediction) {
+            $prediction = Prediction::findOrFail($resolvedId);
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('match-preview/*')) {
+            return redirect()->to($prediction->url, 301);
+        }
+
         $recentPredictions = Prediction::where('id', '!=', $prediction->id)
             ->where('tag', 'MATCH PREVIEW')
             ->orderBy('id', 'desc')
@@ -1188,12 +1679,21 @@ class PageController extends Controller
         return view('pages.show_prediction', compact('prediction', 'recentPredictions', 'isPreview'));
     }
 
-    public function showFantasyTip($id)
+    public function showFantasyTip($slug = null, $id = null)
     {
-        $tip = is_numeric($id) ? FantasyTip::find($id) : FantasyTip::where('slug', $id)->first();
-        if (!$tip) {
-            $tip = FantasyTip::findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $tip = is_numeric($resolvedId) ? FantasyTip::find($resolvedId) : FantasyTip::where('slug', $resolvedId)->first();
+        if (!$tip && is_numeric($slug)) {
+            $tip = FantasyTip::find($slug);
         }
+        if (!$tip) {
+            $tip = FantasyTip::findOrFail($resolvedId);
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('fantasy-tips/*')) {
+            return redirect()->to($tip->url, 301);
+        }
+
         $recentTips = FantasyTip::where('id', '!=', $tip->id)->orderBy('id', 'desc')->take(4)->get();
         return view('pages.show_fantasy', compact('tip', 'recentTips'));
     }
@@ -1242,11 +1742,19 @@ class PageController extends Controller
         return view('pages.venues', compact('allVenues', 'countries', 'country', 'search'));
     }
 
-    public function showVenue($id)
+    public function showVenue($slug = null, $id = null)
     {
-        $venue = is_numeric($id) ? \App\Models\Venue::find($id) : \App\Models\Venue::where('slug', $id)->first();
+        $resolvedId = $id ?? $slug;
+        $venue = is_numeric($resolvedId) ? \App\Models\Venue::find($resolvedId) : \App\Models\Venue::where('slug', $resolvedId)->first();
+        if (!$venue && is_numeric($slug)) {
+            $venue = \App\Models\Venue::find($slug);
+        }
         if (!$venue) {
-            $venue = \App\Models\Venue::findOrFail($id);
+            $venue = \App\Models\Venue::findOrFail($resolvedId);
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('venues/*')) {
+            return redirect()->to($venue->url, 301);
         }
 
         $venueMatches = CricketMatch::where(function($q) use ($venue) {
@@ -1259,23 +1767,33 @@ class PageController extends Controller
         return view('pages.venue_detail', compact('venue', 'venueMatches', 'mapsLink'));
     }
 
-    public function playerProfile($id)
+    public function playerProfile($slug = null, $id = null)
     {
-        $player = is_numeric($id) ? \App\Models\Player::with('team')->find($id) : \App\Models\Player::with('team')->where('slug', $id)->first();
+        $resolvedId = $id ?? $slug;
+        $player = is_numeric($resolvedId) ? \App\Models\Player::with('team')->find($resolvedId) : \App\Models\Player::with('team')->where('slug', $resolvedId)->first();
+        if (!$player && is_numeric($slug)) {
+            $player = \App\Models\Player::with('team')->find($slug);
+        }
         if (!$player) {
-            $player = \App\Models\Player::with('team')->findOrFail($id);
+            $player = \App\Models\Player::with('team')->findOrFail($resolvedId);
         }
 
+        if ($id === null || is_numeric($slug) || request()->is('players/*')) {
+            return redirect()->to($player->url, 301);
+        }
+
+        $player = \App\Services\PlayerEnrichmentService::enrichPlayer($player);
         $stats = $this->getPlayerCalculatedStats($player);
+        $formatStats = \App\Services\PlayerEnrichmentService::getPlayerFormatCareerStats($player, $stats);
 
         $battingScores = \App\Models\PlayerBattingStat::where('player_name', $player->name)
-            ->with(['match.team1', 'match.team2'])
+            ->with(['match.team1', 'match.team2', 'match.tournament'])
             ->orderBy('id', 'desc')
             ->take(8)
             ->get();
 
         $bowlingScores = \App\Models\PlayerBowlingStat::where('player_name', $player->name)
-            ->with(['match.team1', 'match.team2'])
+            ->with(['match.team1', 'match.team2', 'match.tournament'])
             ->orderBy('id', 'desc')
             ->take(8)
             ->get();
@@ -1361,7 +1879,7 @@ class PageController extends Controller
             ];
         }
 
-        return view('pages.player_profile', compact('player', 'stats', 'battingScores', 'bowlingScores', 'teammates', 'articles', 'playedTeamsData'));
+        return view('pages.player_profile', compact('player', 'stats', 'formatStats', 'battingScores', 'bowlingScores', 'teammates', 'articles', 'playedTeamsData'));
     }
 
     public function webStories()
@@ -1372,19 +1890,27 @@ class PageController extends Controller
         return view('pages.web_stories', compact('webStories'));
     }
 
-    public function showWebStory($id = null)
+    public function showWebStory($slug = null, $id = null)
     {
-        if (empty($id)) {
+        $resolvedId = $id ?? $slug;
+        if (empty($resolvedId)) {
             return redirect()->route('webstories.all');
         }
 
-        $story = is_numeric($id) ? \App\Models\WebStory::find($id) : \App\Models\WebStory::where('slug', $id)->first();
+        $story = is_numeric($resolvedId) ? \App\Models\WebStory::find($resolvedId) : \App\Models\WebStory::where('slug', $resolvedId)->first();
+        if (!$story && is_numeric($slug)) {
+            $story = \App\Models\WebStory::find($slug);
+        }
         if (!$story) {
-            $story = \App\Models\WebStory::where('id', $id)->first();
+            $story = \App\Models\WebStory::where('id', $resolvedId)->first();
         }
 
         if (!$story) {
             return redirect()->route('webstories.all');
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('webstory/*') || request()->is('web-stories/*')) {
+            return redirect()->to($story->url, 301);
         }
 
         $slides = $story->slides;
@@ -1401,20 +1927,42 @@ class PageController extends Controller
         return view('pages.show_web_story', compact('story', 'slides'));
     }
 
-    public function showGlossaryTerm($id)
+    public function showGlossaryTerm($slug = null, $id = null)
     {
-        $term = is_numeric($id) ? \App\Models\GlossaryTerm::find($id) : \App\Models\GlossaryTerm::where('slug', $id)->first();
-        if (!$term) {
-            $term = \App\Models\GlossaryTerm::findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $term = is_numeric($resolvedId) ? \App\Models\GlossaryTerm::find($resolvedId) : \App\Models\GlossaryTerm::where('slug', $resolvedId)->first();
+        if (!$term && is_numeric($slug)) {
+            $term = \App\Models\GlossaryTerm::find($slug);
         }
+        if (!$term) {
+            $term = \App\Models\GlossaryTerm::findOrFail($resolvedId);
+        }
+
+        if ($id === null || is_numeric($slug) || request()->is('glossary-term/*')) {
+            return redirect()->to($term->url, 301);
+        }
+
         return view('pages.show_glossary', compact('term'));
     }
     
-    public function matchDetail($id)
+    public function matchDetail($slug = null, $id = null)
     {
-        $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats', 'venue'])->findOrFail($id);
+        $resolvedId = $id ?? $slug;
+        $match = is_numeric($resolvedId) 
+            ? CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats', 'venue'])->find($resolvedId)
+            : CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats', 'venue'])->where('slug', $resolvedId)->first();
+        if (!$match && is_numeric($slug)) {
+            $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats', 'venue'])->find($slug);
+        }
+        if (!$match) {
+            $match = CricketMatch::with(['team1.players', 'team2.players', 'tournament', 'battingStats', 'bowlingStats', 'venue'])->findOrFail($resolvedId);
+        }
 
-        $balls = \App\Models\BallByBall::where('match_id', $id)->orderBy('created_at', 'desc')->get();
+        if ($id === null || is_numeric($slug) || request()->is('match/*')) {
+            return redirect()->to($match->url, 301);
+        }
+
+        $balls = \App\Models\BallByBall::where('match_id', $match->id)->orderBy('created_at', 'desc')->get();
         
         // Calculate dynamic Cricbuzz stats via MatchService
         $matchService = new \App\Services\MatchService();

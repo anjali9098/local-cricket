@@ -13,27 +13,35 @@
                 Home
             </a>
 
-            <!-- Type Filter -->
-            <select id="filter-pred-type" onchange="filterPredictionTable()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px;">
-                <option value="">All Content</option>
-                <option value="prediction">Match Prediction</option>
-                <option value="fantasy">Fantasy Tips</option>
-                <option value="preview">Match Preview</option>
-            </select>
+            <!-- Server Search & Filter Form -->
+            <form id="pred-filter-form" method="GET" action="{{ route('admin.prediction') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
+                @if(request('edit'))
+                    <input type="hidden" name="edit" value="{{ request('edit') }}">
+                @endif
 
-            <!-- Search input & buttons -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <div class="admin-search-wrapper">
-                    <input type="text" id="pred-search-input" class="admin-search-input" oninput="filterPredictionTable()" onkeyup="filterPredictionTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterPredictionTable();}" placeholder="Search predictions..." style="width: 220px;">
-                    <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
+                <!-- Type Filter -->
+                <select name="type" id="filter-pred-type" onchange="filterPredictionTable()" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; font-weight: 600; color: #1e293b; background: white; outline: none; min-width: 140px; cursor: pointer;">
+                    <option value="">All Content</option>
+                    <option value="prediction">Match Prediction</option>
+                    <option value="fantasy">Fantasy Tips</option>
+                </select>
+
+                <!-- Search input & buttons -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="position: relative; display: inline-flex; align-items: center;">
+                        <input type="text" name="search" id="pred-search-input" value="{{ $search ?? '' }}" placeholder="Search predictions & tips..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        @if(!empty($search))
+                            <a href="{{ route('admin.prediction') }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
+                        @endif
+                    </div>
+                    <button type="submit" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                        Search
+                    </button>
+                    <a href="{{ route('admin.prediction') }}" style="display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
+                        Reset
+                    </a>
                 </div>
-                <button type="button" onclick="filterPredictionTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Search
-                </button>
-                <button type="button" onclick="resetPredictionSearch()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
-                    Reset
-                </button>
-            </div>
+            </form>
         </div>
 
         <!-- Right: + Add New Button -->
@@ -204,10 +212,10 @@
                                 <!-- # EDIT -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; gap: 4px;">
-                                        <a href="{{ route('admin.prediction', ['edit' => $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
+                                        <a href="{{ route('admin.prediction', ['edit' => $item->slug . '-' . $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
                                             {{ $item->id }}
                                         </a>
-                                        <a href="{{ route('admin.prediction', ['edit' => $item->id]) }}" title="Edit Prediction" style="color: #0284c7; text-decoration: none;">
+                                        <a href="{{ route('admin.prediction', ['edit' => $item->slug . '-' . $item->id]) }}" title="Edit Prediction" style="color: #0284c7; text-decoration: none;">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </a>
                                     </div>
@@ -291,10 +299,10 @@
                                 <!-- # EDIT -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; gap: 4px;">
-                                        <a href="{{ route('admin.prediction', ['edit' => $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
+                                        <a href="{{ route('admin.prediction', ['edit' => $item->slug . '-' . $item->id]) }}" style="font-weight: 800; color: #0284c7; text-decoration: none; font-size: 0.9rem;">
                                             {{ $item->id }}
                                         </a>
-                                        <a href="{{ route('admin.prediction', ['edit' => $item->id]) }}" title="Edit Fantasy Tip" style="color: #0284c7; text-decoration: none;">
+                                        <a href="{{ route('admin.prediction', ['edit' => $item->slug . '-' . $item->id]) }}" title="Edit Fantasy Tip" style="color: #0284c7; text-decoration: none;">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </a>
                                     </div>
@@ -370,8 +378,10 @@
                     </tbody>
                 </table>
             </div>
-            <!-- 10-item Pagination Container -->
-            <div id="prediction-table-pagination"></div>
+            <!-- 20-item Pagination Container -->
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+                {{ $predictions->appends(request()->except('pred_page'))->links() }}
+            </div>
         @else
             <div style="text-align: center; padding: 48px; color: #94a3b8; font-weight: 600;">
                 No predictions or fantasy tips available yet. Click <strong>+ Add Prediction / Tips</strong> above to add one!

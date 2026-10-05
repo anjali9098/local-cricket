@@ -97,7 +97,7 @@
 
                 <!-- Actions -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <a href="{{ route('admin.scorer', $m->id) }}" style="background: #0284c7; color: white; padding: 9px 18px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-decoration: none; box-shadow: 0 2px 4px rgba(2,132,199,0.25);">
+                    <a href="{{ route('admin.scorer.slug', ['slug' => $m->slug, 'id' => $m->id]) }}" style="background: #0284c7; color: white; padding: 9px 18px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-decoration: none; box-shadow: 0 2px 4px rgba(2,132,199,0.25);">
                         ⚡ Live Scorer
                     </a>
                     
@@ -105,7 +105,7 @@
                         ✓ Mark Completed
                     </button>
 
-                    <a href="{{ route('admin.match.detail', $m->id) }}" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
+                    <a href="{{ route('admin.match.detail.slug', ['slug' => $m->slug, 'id' => $m->id]) }}" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
                         Details
                     </a>
                 </div>
@@ -154,10 +154,10 @@
 
                 <!-- Actions -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <a href="{{ route('admin.toss', $m->id) }}" style="background: #0284c7; color: white; padding: 8px 18px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-decoration: none;">
+                    <a href="{{ route('admin.toss.slug', ['slug' => $m->slug, 'id' => $m->id]) }}" style="background: #0284c7; color: white; padding: 8px 18px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-decoration: none;">
                         Start Match / Toss
                     </a>
-                    <a href="{{ route('admin.match.detail', $m->id) }}" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
+                    <a href="{{ route('admin.match.detail.slug', ['slug' => $m->slug, 'id' => $m->id]) }}" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
                         Details
                     </a>
                 </div>
@@ -211,10 +211,10 @@
 
                 <!-- Actions -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <a href="{{ route('admin.scorer', $m->id) }}" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-decoration: none;">
+                    <a href="{{ route('admin.scorer.slug', ['slug' => $m->slug, 'id' => $m->id]) }}" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-decoration: none;">
                         Scorecard
                     </a>
-                    <a href="{{ route('admin.match.detail', $m->id) }}" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
+                    <a href="{{ route('admin.match.detail.slug', ['slug' => $m->slug, 'id' => $m->id]) }}" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">
                         Details
                     </a>
                 </div>

@@ -76,7 +76,7 @@ class SearchApiController extends Controller
                     'badge_class' => 'badge-player',
                     'image' => $p->profile_image ?: null,
                     'initials' => $p->initials ?: strtoupper(substr($p->name, 0, 2)),
-                    'url' => url('/player/' . $p->id)
+                    'url' => $p->url
                 ];
             });
 
@@ -141,7 +141,7 @@ class SearchApiController extends Controller
                     'badge' => $m->status === 'live' ? '🔴 LIVE' : ($m->status === 'completed' ? '🏁 COMPLETED' : '📅 UPCOMING'),
                     'badge_class' => $m->status === 'live' ? 'badge-live' : ($m->status === 'completed' ? 'badge-completed' : 'badge-upcoming'),
                     'image' => null,
-                    'url' => url('/matches/' . $m->id)
+                    'url' => $m->url
                 ];
             });
 
@@ -171,7 +171,7 @@ class SearchApiController extends Controller
                     'badge' => '🏆 ' . strtoupper($tour->category ?: 'SERIES'),
                     'badge_class' => 'badge-series',
                     'image' => $tour->banner_url ?: $tour->poster_image,
-                    'url' => url('/t/' . $tour->id)
+                    'url' => $tour->url
                 ];
             });
 
@@ -199,7 +199,7 @@ class SearchApiController extends Controller
                     'badge' => '📝 ' . strtoupper($a->category ?: 'ARTICLE'),
                     'badge_class' => 'badge-article',
                     'image' => $a->image_url ?: null,
-                    'url' => url('/article/' . $a->id)
+                    'url' => $a->url
                 ];
             });
 
@@ -227,7 +227,7 @@ class SearchApiController extends Controller
                     'badge' => '📰 ' . strtoupper($n->category ?: 'NEWS'),
                     'badge_class' => 'badge-news',
                     'image' => $n->image_url ?: null,
-                    'url' => url('/news/' . $n->id)
+                    'url' => $n->url
                 ];
             });
 
@@ -256,7 +256,7 @@ class SearchApiController extends Controller
                     'badge' => ($isMatchPreview ? '⚡ ' : '🎯 ') . strtoupper($pr->tag ?: 'PREDICTION'),
                     'badge_class' => $isMatchPreview ? 'badge-preview' : 'badge-prediction',
                     'image' => $pr->poster_image ?: ($pr->image_url ?: null),
-                    'url' => $isMatchPreview ? route('preview.show', $pr->id) : route('prediction.show', $pr->id)
+                    'url' => $pr->url
                 ];
             });
 
@@ -283,7 +283,7 @@ class SearchApiController extends Controller
                     'badge' => '⚡ ' . strtoupper($ft->tag ?: 'FANTASY TIP'),
                     'badge_class' => 'badge-fantasy',
                     'image' => $ft->poster_image ?: ($ft->image_url ?: null),
-                    'url' => route('fantasy.show', $ft->id)
+                    'url' => $ft->url
                 ];
             });
 
@@ -309,7 +309,7 @@ class SearchApiController extends Controller
                     'badge' => '🏟️ VENUE',
                     'badge_class' => 'badge-venue',
                     'image' => $v->image_url ?: null,
-                    'url' => url('/venues/' . $v->id)
+                    'url' => $v->url
                 ];
             });
 
@@ -335,7 +335,7 @@ class SearchApiController extends Controller
                     'badge' => '📱 STORY',
                     'badge_class' => 'badge-story',
                     'image' => $ws->image_url ?: null,
-                    'url' => url('/web-story/' . $ws->id)
+                    'url' => $ws->url
                 ];
             });
 
@@ -360,7 +360,7 @@ class SearchApiController extends Controller
                     'badge' => '📖 GLOSSARY',
                     'badge_class' => 'badge-glossary',
                     'image' => $g->poster_image ?: null,
-                    'url' => url('/glossary/' . $g->id)
+                    'url' => $g->url
                 ];
             });
 

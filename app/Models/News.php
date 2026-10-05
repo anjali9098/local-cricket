@@ -25,6 +25,20 @@ class News extends Model {
         return self::formatImageUrl($value);
     }
 
+    public function getSlugAttribute()
+    {
+        if (!empty($this->attributes['slug'] ?? null)) {
+            return $this->attributes['slug'];
+        }
+        return \Illuminate\Support\Str::slug($this->title ?? ('news-' . $this->id));
+    }
+
+    public function getUrlAttribute()
+    {
+        $slug = !empty($this->slug) ? $this->slug : \Illuminate\Support\Str::slug($this->title ?: 'cricket-news');
+        return route('news.show.slug', ['slug' => $slug, 'id' => $this->id]);
+    }
+
     public function user() {
         return $this->belongsTo(User::class);
     }

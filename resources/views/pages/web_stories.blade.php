@@ -31,7 +31,7 @@
             $itemListElements[] = [
                 chr(64) . 'type' => 'ListItem',
                 'position' => $index + 1,
-                'url' => route('webstories.show', $s->id),
+                'url' => $s->url,
                 'name' => $s->title,
                 'image' => $storyImg
             ];
@@ -68,7 +68,7 @@
     @if($webStories->isNotEmpty())
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
             @foreach($webStories as $story)
-                <a href="{{ route('webstories.show', $story->id) }}" style="text-decoration: none; height: 300px; border-radius: 12px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: block; transition: transform 0.2s, border-color 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='#22c55e';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+                <a href="{{ $story->url }}" style="text-decoration: none; height: 300px; border-radius: 12px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: block; transition: transform 0.2s, border-color 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='#22c55e';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,255,255,0.1)';">
                     <!-- Top Badges: Category & Slides Count -->
                     <div style="position: absolute; top: 12px; left: 12px; right: 12px; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                         <span style="background: rgba(34, 197, 94, 0.9); color: white; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em;">

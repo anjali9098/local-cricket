@@ -71,7 +71,7 @@
                     onclick="switchLiveTab('upcoming')" 
                     class="match-tab-btn {{ $activeTab === 'upcoming' ? 'active' : '' }}">
                 <span class="tab-label">Upcoming</span>
-                <span class="tab-badge">{{ $upcomingMatches->count() }}</span>
+                <span class="tab-badge">{{ $upcomingTotal ?? $upcomingMatches->total() }}</span>
             </button>
 
             <button type="button" 
@@ -85,7 +85,7 @@
                     <span class="live-dot-pulse"></span>
                 @endif
                 <span class="tab-label">Today's</span>
-                <span class="tab-badge">{{ $todayMatches->count() }}</span>
+                <span class="tab-badge">{{ $todayTotal ?? $todayMatches->total() }}</span>
             </button>
 
             <button type="button" 
@@ -96,7 +96,7 @@
                     onclick="switchLiveTab('completed')" 
                     class="match-tab-btn {{ $activeTab === 'completed' ? 'active' : '' }}">
                 <span class="tab-label">Completed</span>
-                <span class="tab-badge">{{ $completedMatches->count() }}</span>
+                <span class="tab-badge">{{ $completedTotal ?? $completedMatches->total() }}</span>
             </button>
         </div>
     </div>
@@ -117,6 +117,12 @@
                 </div>
             @endforelse
         </div>
+
+        @if($upcomingMatches->hasPages())
+            <div class="live-pagination-wrapper">
+                {{ $upcomingMatches->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- ========================================================
@@ -138,6 +144,12 @@
                 </div>
             @endforelse
         </div>
+
+        @if($todayMatches->hasPages())
+            <div class="live-pagination-wrapper">
+                {{ $todayMatches->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- ========================================================
@@ -156,6 +168,12 @@
                 </div>
             @endforelse
         </div>
+
+        @if($completedMatches->hasPages())
+            <div class="live-pagination-wrapper">
+                {{ $completedMatches->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- SEO Content & Live Scoring Information Section -->
@@ -632,6 +650,61 @@ body.light-theme .wtw-channel-link:hover, html.light-theme .wtw-channel-link:hov
 
 .empty-btn-outline:hover {
     background: var(--bg-card-secondary, #f1f5f9);
+}
+
+.live-pagination-wrapper {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.live-pagination-wrapper nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.live-pagination-wrapper nav svg {
+    width: 16px;
+    height: 16px;
+}
+
+.live-pagination-wrapper .pagination {
+    display: flex;
+    list-style: none;
+    gap: 6px;
+    padding: 0;
+    margin: 0;
+}
+
+.live-pagination-wrapper a, .live-pagination-wrapper span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    background: var(--bg-card, #161b22);
+    color: var(--text-main, #e6edf3);
+    border: 1px solid var(--border-color, #30363d);
+    transition: all 0.15s ease;
+}
+
+.live-pagination-wrapper a:hover {
+    background: var(--primary, #0284c7);
+    color: #ffffff;
+    border-color: var(--primary, #0284c7);
+}
+
+.live-pagination-wrapper [aria-current="page"] span,
+.live-pagination-wrapper .active span {
+    background: var(--primary, #0284c7);
+    color: #ffffff;
+    border-color: var(--primary, #0284c7);
 }
 
 /* Responsive adjustments */

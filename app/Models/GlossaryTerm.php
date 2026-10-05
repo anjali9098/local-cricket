@@ -14,4 +14,18 @@ class GlossaryTerm extends Model
     {
         return self::formatImageUrl($value);
     }
+
+    public function getSlugAttribute()
+    {
+        if (!empty($this->attributes['slug'] ?? null)) {
+            return $this->attributes['slug'];
+        }
+        return \Illuminate\Support\Str::slug($this->term ?? ('term-' . $this->id));
+    }
+
+    public function getUrlAttribute()
+    {
+        $slug = !empty($this->slug) ? $this->slug : \Illuminate\Support\Str::slug($this->term ?: 'term');
+        return route('glossary.show.slug', ['slug' => $slug, 'id' => $this->id]);
+    }
 }

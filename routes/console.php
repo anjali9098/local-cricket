@@ -18,6 +18,12 @@ Artisan::command('possible11:sync-series {--status=live : Status to sync: live, 
     }
 })->purpose('Fetch and update live/upcoming series, squads and matches from Possible11 API');
 
+Artisan::command('possible11:update-statuses', function (\App\Services\Possible11ApiService $service) {
+    $this->info("Re-evaluating and transitioning match lifecycle statuses (live, upcoming, completed)...");
+    $updated = $service->autoUpdateAllMatchStatuses();
+    $this->info("✓ Successfully updated {$updated} matches.");
+})->purpose('Auto transition expired live matches to completed and lock winning results');
+
 Artisan::command('cricket:sync-cloud', function () {
     $this->info("Connecting to Aiven Cloud Database...");
     try {

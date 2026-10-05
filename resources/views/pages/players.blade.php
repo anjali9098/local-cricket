@@ -125,24 +125,14 @@
                 onmouseover="this.style.borderColor='rgba(56, 189, 248, 0.4)'; this.style.transform='translateY(-2px)';"
                 onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='translateY(0)';"
             >
-                <div>
                     <!-- Avatar or Photo -->
-                    <a href="{{ route('player.profile', $player->id) }}" class="block mx-auto mb-3 w-16 h-16 no-underline">
-                        @if(!empty($player->profile_image))
-                            <img src="{{ $player->profile_image }}" alt="{{ $player->name }}" class="w-16 h-16 rounded-full object-cover border-2 border-sky-400 block mx-auto shadow-md" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="w-16 h-16 rounded-full border border-sky-400/40 hidden items-center justify-center font-black text-sky-400 text-lg mx-auto" style="background: var(--bg-card-secondary);">
-                                {{ strtoupper(substr($player->name, 0, 2)) }}
-                            </div>
-                        @else
-                            <div class="w-16 h-16 rounded-full border border-sky-400/40 flex items-center justify-center font-black text-sky-400 text-lg mx-auto" style="background: var(--bg-card-secondary);">
-                                {{ strtoupper(substr($player->name, 0, 2)) }}
-                            </div>
-                        @endif
+                    <a href="{{ $player->url }}" class="block mx-auto mb-3 w-16 h-16 no-underline">
+                        <img src="{{ $player->profile_image ?: $player->default_avatar }}" alt="{{ $player->name }}" class="w-16 h-16 rounded-full object-cover border-2 border-sky-400 block mx-auto shadow-md bg-slate-900" onerror="this.onerror=null; this.src='{{ $player->default_avatar }}';">
                     </a>
 
                     <!-- Player Name -->
                     <h3 class="font-extrabold text-base text-white mb-1 tracking-tight group-hover:text-sky-400 transition-colors truncate">
-                        <a href="{{ route('player.profile', $player->id) }}" class="text-inherit no-underline">
+                        <a href="{{ $player->url }}" class="text-inherit no-underline">
                             {{ $player->name }}
                         </a>
                     </h3>
@@ -174,7 +164,7 @@
 
                 <!-- Profile Action Button -->
                 <div class="pt-2 border-t" style="border-color: var(--border-color);">
-                    <a href="{{ route('player.profile', $player->id) }}" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm text-decoration-none">
+                    <a href="{{ $player->url }}" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm text-decoration-none">
                         <span>View Profile &rarr;</span>
                     </a>
                 </div>

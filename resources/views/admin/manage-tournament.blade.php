@@ -29,7 +29,7 @@
         </div>
         
         <div style="display: flex; gap: 12px;">
-            <a href="{{ route('admin.tournament.preview', $tournament->id) }}" style="background: #fff; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 700; padding: 10px 18px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;">
+            <a href="{{ route('admin.tournament.preview.slug', ['slug' => $tournament->slug, 'id' => $tournament->id]) }}" style="background: #fff; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 700; padding: 10px 18px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                 Public Page
             </a>
@@ -218,32 +218,45 @@
                 <button type="submit">+</button>
             </form>
             
-            <div class="grid-container" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start;">
+            @php
+                $teamCount = $teams->count();
+                $gridColsStyle = match(true) {
+                    $teamCount === 1 => '1fr',
+                    $teamCount === 2 => 'repeat(2, 1fr)',
+                    $teamCount === 3 => 'repeat(3, 1fr)',
+                    $teamCount === 4 => 'repeat(4, 1fr)',
+                    default          => 'repeat(auto-fit, minmax(240px, 1fr))'
+                };
+            @endphp
+            <div class="grid-container" style="display: grid; grid-template-columns: {{ $gridColsStyle }}; gap: 14px; align-items: start;">
                 @foreach($teams as $team)
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <h4 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 16px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; text-transform: uppercase;">
-                        {{ $team->name }}
-                    </h4>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px;">
+                        <h4 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $team->name }}">
+                            {{ $team->name }}
+                        </h4>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; flex-shrink: 0;">{{ $team->players->count() }}</span>
+                    </div>
                     
                     @if($team->players->count() > 0)
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
                             @foreach($team->players as $player)
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 8px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <span style="font-weight: 700; color: #334155;">{{ $player->name }}</span>
-                                        <span style="background: white; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #64748b;">{{ $player->role }}</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #f1f5f9;">
+                                    <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap;">
+                                        <span style="font-weight: 700; color: #334155; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="{{ $player->name }}">{{ $player->name }}</span>
+                                        <span style="background: white; border: 1px solid #e2e8f0; padding: 1px 6px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; color: #64748b; flex-shrink: 0;">{{ $player->role }}</span>
                                     </div>
-                                    <form method="POST" action="{{ route('admin.delete-player', $player->id) }}" style="margin:0;" onsubmit="return confirm('Delete player?')">
+                                    <form method="POST" action="{{ route('admin.delete-player', $player->id) }}" style="margin:0; flex-shrink: 0;" onsubmit="return confirm('Delete player?')">
                                         @csrf
-                                        <button type="submit" style="background:transparent; border:none; color:#ef4444; cursor:pointer; padding: 4px;">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        <button type="submit" style="background:transparent; border:none; color:#ef4444; cursor:pointer; padding: 2px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
                                     </form>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div style="font-size: 0.9rem; color: #94a3b8; font-style: italic;">No players yet</div>
+                        <div style="font-size: 0.82rem; color: #94a3b8; font-style: italic; text-align: center; padding: 16px 0;">No players yet</div>
                     @endif
                 </div>
                 @endforeach
@@ -300,16 +313,16 @@
 
                         {{-- Score button: go to toss if not started, else directly to scorer --}}
                         @if($match->status === 'live')
-                            <a href="{{ route('admin.scorer', $match->id) }}" style="background: #0f172a; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                            <a href="{{ route('admin.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" style="background: #0f172a; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Score
                             </a>
                         @else
-                            <a href="{{ route('admin.toss', $match->id) }}" style="background: #0f172a; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                            <a href="{{ route('admin.toss.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" style="background: #0f172a; color: white; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px;">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Score
                             </a>
                         @endif
 
-                        <a href="{{ route('admin.match.detail', $match->id) }}" style="background: white; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none;">View</a>
+                        <a href="{{ route('admin.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" style="background: white; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 700; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; text-decoration: none;">View</a>
 
                         <form method="POST" action="{{ route('admin.delete-match', $match->id) }}" style="margin:0;" onsubmit="return confirm('Delete this match?')">
                             @csrf

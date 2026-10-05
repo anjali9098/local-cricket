@@ -9,14 +9,14 @@
         $pageTitle = $cleanTitle . ' — Match Preview, Squads & Pitch Report | CricketKaScore';
         $defaultDesc = 'Complete match preview for ' . $cleanTitle . ' featuring pitch reports, head-to-head records, playing XI analysis, and key players on CricketKaScore.';
         $defaultKeywords = $cleanTitle . ', cricket match preview, pitch report, playing 11 prediction, head to head records, CricketKaScore preview';
-        $canonicalUrl = route('preview.show', $prediction->id);
+        $canonicalUrl = $prediction->url;
         $breadcrumbCategoryName = 'Match Previews';
         $breadcrumbCategoryUrl = route('previews');
     } else {
         $pageTitle = $cleanTitle . ' — Today Match Prediction & Win Probability | CricketKaScore';
         $defaultDesc = 'Today cricket match prediction for ' . $cleanTitle . ' with win probability, pitch condition, toss forecast, and match analysis on CricketKaScore.';
         $defaultKeywords = $cleanTitle . ', today match prediction, cricket prediction, win probability, pitch report, toss analysis, winning chances, CricketKaScore prediction';
-        $canonicalUrl = route('prediction.show', $prediction->id);
+        $canonicalUrl = $prediction->url;
         $breadcrumbCategoryName = 'Match Predictions';
         $breadcrumbCategoryUrl = route('predictions');
     }
@@ -169,8 +169,7 @@
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
                 @foreach($recentPredictions as $rp)
-                    @php $route = !empty($isPreview) ? route('preview.show', $rp->id) : route('prediction.show', $rp->id); @endphp
-                    <a href="{{ $route }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <a href="{{ $rp->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                         <div>
                             <div style="font-size: 0.72rem; font-weight: 700; color: {{ !empty($isPreview) ? '#0284c7' : '#ea580c' }}; text-transform: uppercase; margin-bottom: 4px;">
                                 {{ $rp->tag ?: (!empty($isPreview) ? 'PREVIEW' : 'PREDICTION') }}

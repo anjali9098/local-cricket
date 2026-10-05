@@ -18,7 +18,7 @@
     $_jsonTeam1      = addslashes($_team1);
     $_jsonTeam2      = addslashes($_team2);
     $_jsonTournament = addslashes($_tournamentName);
-    $_jsonUrl        = $_seoIsLocal ? route('local.scorer', $match->id) : route('admin.scorer', $match->id);
+    $_jsonUrl        = $_seoIsLocal ? route('local.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]) : route('admin.scorer.slug', ['slug' => $match->slug, 'id' => $match->id]);
     $_jsonSiteUrl    = url('/');
     $_jsonMatchDate  = $match->created_at ? $match->created_at->toIso8601String() : now()->toIso8601String();
 
@@ -39,20 +39,20 @@
 @endphp
 
 {{-- ═══════════════════════════════════════════════════════════ --}}
-@section('pageTitle'){{ $_metaTitle }}@endsection
-@section('meta_description'){{ $_metaDesc }}@endsection
-@section('meta_keywords'){{ $_metaKeywords }}@endsection
-@section('canonical_url'){{ $_jsonUrl }}@endsection
-@section('og_type')article@endsection
-@section('og_title'){{ $_ogTitle }}@endsection
-@section('og_description'){{ $_ogDesc }}@endsection
-@section('og_url'){{ $_jsonUrl }}@endsection
+@section('pageTitle', $_metaTitle)
+@section('meta_description', $_metaDesc)
+@section('meta_keywords', $_metaKeywords)
+@section('canonical_url', $_jsonUrl)
+@section('og_type', 'article')
+@section('og_title', $_ogTitle)
+@section('og_description', $_ogDesc)
+@section('og_url', $_jsonUrl)
 
 {{-- SEO: JSON-LD block echoed from raw PHP to prevent Blade from treating JSON-LD keys as template directives. --}}
 @section('additional_schema')
 @php
-    $_tourUrl = $_seoIsLocal && isset($match->tournament_id)
-        ? route('local.manage-tournament', $match->tournament_id)
+    $_tourUrl = $_seoIsLocal && isset($match->tournament_id) && $match->tournament
+        ? route('local.manage-tournament.slug', ['slug' => $match->tournament->slug, 'id' => $match->tournament_id])
         : url('/');
     $_jsonld = '{
   "@context": "https://schema.org",
@@ -231,10 +231,10 @@
             </div>
             
             <div class="flex gap-2 items-center">
-                <a href="{{ $isLocalMode ? route('local.match.detail', $match->id) : route('admin.match.detail', $match->id) }}" target="_blank" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm' }} border text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition-all">
+                <a href="{{ $isLocalMode ? route('local.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]) : route('admin.match.detail.slug', ['slug' => $match->slug, 'id' => $match->id]) }}" target="_blank" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-white' : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-sm' }} border text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl inline-flex items-center gap-1.5 transition-all">
                     <span>📊</span> <span class="hidden sm:inline">Full</span> Scorecard
                 </a>
-                <a href="{{ $isLocalMode ? route('local.manage-tournament', $match->tournament_id ?? 1) : ($match->tournament_id ? route('admin.manage-tournament', $match->tournament_id) : route('admin.dashboard')) }}" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] text-gray-300 hover:text-white border-[#30363d]' : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-300 shadow-sm' }} border text-xs sm:text-sm font-bold px-3 py-2 rounded-xl transition-all">
+                <a href="{{ $isLocalMode ? ($match->tournament ? route('local.manage-tournament.slug', ['slug' => $match->tournament->slug, 'id' => $match->tournament_id]) : route('local.dashboard')) : ($match->tournament ? route('admin.manage-tournament.slug', ['slug' => $match->tournament->slug, 'id' => $match->tournament_id]) : route('admin.dashboard')) }}" class="{{ $isLocalMode ? 'bg-[#161b22] hover:bg-[#21262d] text-gray-300 hover:text-white border-[#30363d]' : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border-slate-300 shadow-sm' }} border text-xs sm:text-sm font-bold px-3 py-2 rounded-xl transition-all">
                     ← Back
                 </a>
             </div>
