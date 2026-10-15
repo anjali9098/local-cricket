@@ -177,7 +177,7 @@ class SitemapController extends Controller
 
         foreach ($tournaments as $t) {
             $slug = $t->slug;
-            $tourUrl = route('tournament.public.slug', ['slug' => $slug, 'id' => $t->id]);
+            $tourUrl = route('series.public.slug', ['slug' => $slug, 'id' => $t->id]);
             $banner = $t->banner_url ?: ($t->poster_image ?: url('/images/logo.png'));
             $lastmod = $this->nowIso();
 
@@ -460,7 +460,7 @@ class SitemapController extends Controller
         $tournaments = Tournament::where('status', '!=', 'draft')->orderBy('id', 'desc')->get();
         foreach ($tournaments as $t) {
             $slug = $t->slug;
-            $tourUrl = route('tournament.public.slug', ['slug' => $slug, 'id' => $t->id]);
+            $tourUrl = route('series.public.slug', ['slug' => $slug, 'id' => $t->id]);
             $banner = $t->banner_url ?: ($t->poster_image ?: url('/images/logo.png'));
             $lastmod = $this->nowIso();
 

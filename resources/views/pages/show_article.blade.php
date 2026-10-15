@@ -7,6 +7,11 @@
     $metaKeywords = $article->keywords ?: ($articleTitle . ', cricket article, cricket analysis, CricketKaScore');
     $canonicalUrl = $article->url;
     $ogImage = $article->image_url ?: asset('images/logo.png');
+    $authorName = !empty($article->author) ? $article->author : (!empty($article->user?->name) ? $article->user->name : 'Anjali Malviya');
+    $publishedDate = $article->created_at ? \Carbon\Carbon::parse($article->created_at)->format('l, M d, Y') : ($article->published_date ?: 'Today');
+    $updatedDate = $article->updated_at ? \Carbon\Carbon::parse($article->updated_at)->format('M d, Y h:i A') : $publishedDate;
+    $publishedIso = $article->created_at ? \Carbon\Carbon::parse($article->created_at)->toIso8601String() : now()->toIso8601String();
+    $modifiedIso = $article->updated_at ? \Carbon\Carbon::parse($article->updated_at)->toIso8601String() : $publishedIso;
 @endphp
 
 @section('pageTitle', $pageTitle)
@@ -19,54 +24,126 @@
 @section('og_url', $canonicalUrl)
 @section('og_image', $ogImage)
 
+@section('additional_schema')
+<script type="application/ld+json">
+{!! json_encode([
+    chr(64) . 'context' => 'https://schema.org',
+    chr(64) . 'type' => 'NewsArticle',
+    'headline' => $articleTitle,
+    'description' => $metaDesc,
+    'image' => [$ogImage],
+    'datePublished' => $publishedIso,
+    'dateModified' => $modifiedIso,
+    'mainEntityOfPage' => [
+        chr(64) . 'type' => 'WebPage',
+        chr(64) . 'id' => $canonicalUrl
+    ],
+    'author' => [
+        chr(64) . 'type' => 'Person',
+        'name' => $authorName,
+        'url' => url('/')
+    ],
+    'publisher' => [
+        chr(64) . 'type' => 'SportsOrganization',
+        'name' => 'CricketKaScore',
+        'url' => url('/'),
+        'logo' => [
+            chr(64) . 'type' => 'ImageObject',
+            'url' => asset('images/logo.png')
+        ]
+    ],
+    'breadcrumb' => [
+        chr(64) . 'type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Article',
+                'item' => route('articles')
+            ],
+            [
+                chr(64) . 'type' => 'ListItem',
+                'position' => 3,
+                'name' => $articleTitle,
+                'item' => $canonicalUrl
+            ]
+        ]
+    ]
+], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+</script>
+@endsection
+
 @section('content')
-<main class="container" style="padding: 40px 20px 80px; max-width: 1240px; margin: 0 auto;">
+<main class="container article-page-container">
 
-    <!-- Back Navigation -->
-    <div style="margin-bottom: 24px;">
-        <a href="{{ route('articles') }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--primary-text, #38bdf8); font-weight: 700; text-decoration: none; font-size: 0.9rem;">
-            &larr; Back to All Articles
-        </a>
-    </div>
+    <!-- Breadcrumbs Navigation -->
+    <nav class="editorial-breadcrumbs" aria-label="Breadcrumb">
+        <a href="{{ url('/') }}">Home</a>
+        <span class="breadcrumb-sep">&raquo;</span>
+        <a href="{{ route('articles') }}">Article</a>
+        <span class="breadcrumb-sep">&raquo;</span>
+        <span class="breadcrumb-active">{{ Str::limit($articleTitle, 65) }}</span>
+    </nav>
 
-    <!-- 2-Column Responsive Layout -->
+    <!-- 70% / 30% Responsive Grid Layout -->
     <div class="article-layout-grid">
         
-        <!-- Main Column (Left) -->
+        <!-- Main Column (70%) -->
         <div class="article-main-col">
             <article class="article-card">
                 
-                <!-- Category & Read Time -->
+                <!-- Category Tag -->
                 <div class="article-meta-row">
                     <span class="card-tag">
-                        {{ $article->category ?: 'CRICKET ARTICLE' }}
+                        {{ $article->category ?: 'SPORTS ARTICLE' }}
                     </span>
                     <div class="article-meta-time">
-                        ⏱️ {{ $article->read_time ?: '4 MIN READ' }} &bull; {{ $article->created_at ? \Carbon\Carbon::parse($article->created_at)->format('M d, Y') : ($article->published_date ?: 'Today') }}
+                        ⏱️ {{ $article->read_time ?: '4 MIN READ' }}
                     </div>
                 </div>
 
-                <!-- Title -->
+                <!-- Main Title -->
                 <h1 class="article-title">
-                    {{ $article->h1_heading ?: $article->title }}
+                    {{ $articleTitle }}
                 </h1>
 
-                <!-- Short Summary / Meta description -->
+                <!-- Author & Date Row -->
+                <div class="article-author-meta-row">
+                    <div class="author-info-block">
+                        <div class="author-avatar-badge">{{ strtoupper(substr($authorName, 0, 1)) }}</div>
+                        <div class="author-text-meta">
+                            <div class="author-byline">
+                                <strong>By {{ $authorName }}</strong> <span class="meta-dot">&bull;</span> <span class="pub-date">{{ $publishedDate }}</span>
+                            </div>
+                            <div class="update-byline">
+                                Last Updated on {{ $updatedDate }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Poster Banner Image (100% full width, NEVER cropped, natural aspect ratio) -->
+                @if(!empty($article->image_url))
+                    <div class="article-poster-container">
+                        <img src="{{ $article->image_url }}" alt="{{ $articleTitle }}" class="article-full-poster" onerror="this.parentElement.style.display='none';">
+                        <div class="image-source-caption">Image Source: {{ $article->image_source ?: 'X' }}</div>
+                    </div>
+                @endif
+
+                <!-- Short Summary / Lead Paragraph -->
                 @if(!empty($article->meta_description) || !empty($article->summary))
                     <div class="article-summary-lead">
                         {{ $article->meta_description ?: $article->summary }}
                     </div>
                 @endif
 
-                <!-- Poster Banner Image (No cut off, smart ambient background) -->
-                @if(!empty($article->image_url))
-                    <div class="article-hero-banner-wrap">
-                        <div class="article-hero-backdrop" style="background-image: url('{{ $article->image_url }}');"></div>
-                        <img src="{{ $article->image_url }}" alt="{{ $article->title }}" class="article-hero-image" onerror="this.closest('.article-hero-banner-wrap').style.display='none';">
-                    </div>
-                @endif
-
-                <!-- Full Content Body (Rich formatted HTML & Markdown with prominent H1, H2, H3, P, Lists) -->
+                <!-- Full Content Body (Rich formatted HTML & Markdown) -->
                 <div class="rich-article-body">
                     {!! \Illuminate\Support\Str::markdown($article->content ?: $article->summary) !!}
                 </div>
@@ -88,103 +165,120 @@
             </article>
         </div>
 
-        <!-- Sidebar Column (Right) - Fills the empty right side! -->
+        <!-- Sidebar Column (30%) - ONLY Related Articles -->
         <aside class="article-sidebar-col">
-            <!-- More Featured Articles -->
+            
+            <!-- SECTION 1: Sports Related Articles -->
             @if(isset($recentArticles) && $recentArticles->isNotEmpty())
-                <div class="sidebar-card">
-                    <div class="sidebar-card-header">
-                        <h3 class="sidebar-card-title">More Featured Articles</h3>
-                        <a href="{{ route('articles') }}" class="sidebar-view-all">View All &rarr;</a>
+                <div class="sidebar-section-block">
+                    <div class="sidebar-cyan-banner">
+                        Sports Related Articles
                     </div>
-                    <div class="sidebar-articles-list">
-                        @foreach($recentArticles as $ra)
-                            <a href="{{ $ra->url }}" class="sidebar-article-item">
+                    <div class="sidebar-cards-stream">
+                        @foreach($recentArticles->take(6) as $ra)
+                            <a href="{{ $ra->url }}" class="sidebar-stream-card" title="{{ $ra->title }}">
                                 @if(!empty($ra->image_url))
-                                    <div class="sidebar-article-thumb">
-                                        <img src="{{ $ra->image_url }}" alt="{{ $ra->title }}" onerror="this.parentElement.style.display='none';">
+                                    <div class="stream-card-thumb">
+                                        <img src="{{ $ra->image_url }}" alt="{{ $ra->title }}" loading="lazy" onerror="this.parentElement.style.display='none';">
                                     </div>
                                 @endif
-                                <div class="sidebar-article-info">
-                                    <span class="sidebar-article-cat">{{ $ra->category ?: 'ARTICLE' }}</span>
-                                    <h4 class="sidebar-article-heading">{{ Str::limit($ra->title, 60) }}</h4>
-                                    <span class="sidebar-article-date">{{ $ra->created_at ? \Carbon\Carbon::parse($ra->created_at)->format('M d, Y') : ($ra->read_time ?: '3 min read') }}</span>
+                                <div class="stream-card-content">
+                                    <h4 class="stream-card-title">{{ $ra->title }}</h4>
                                 </div>
                             </a>
                         @endforeach
                     </div>
                 </div>
             @endif
-
-            <!-- Cricket Quick Hub -->
-            <div class="sidebar-card" style="margin-top: 20px;">
-                <div class="sidebar-card-header">
-                    <h3 class="sidebar-card-title">Cricket Hub</h3>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <a href="{{ route('live') }}" class="sidebar-quick-link">
-                        <span>🔴 Live Scores &amp; Matches</span>
-                        <span>&rarr;</span>
-                    </a>
-                    <a href="{{ route('news') }}" class="sidebar-quick-link">
-                        <span>📰 Cricket News &amp; Updates</span>
-                        <span>&rarr;</span>
-                    </a>
-                    <a href="{{ route('compare') }}" class="sidebar-quick-link">
-                        <span>⚔️ Player vs Player Compare</span>
-                        <span>&rarr;</span>
-                    </a>
-                    <a href="{{ route('search') }}" class="sidebar-quick-link">
-                        <span>🔍 Search Players &amp; Stats</span>
-                        <span>&rarr;</span>
-                    </a>
-                </div>
-            </div>
         </aside>
     </div>
 
 </main>
 
 <style>
-/* Layout Grid */
-.article-layout-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 350px;
-    gap: 32px;
-    align-items: start;
+/* Page Container & Breadcrumbs */
+.article-page-container {
+    padding: 24px 20px 80px;
+    max-width: 1260px;
+    margin: 0 auto;
+    font-family: var(--font-body, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
 }
 
-@media (max-width: 1024px) {
+.editorial-breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.86rem;
+    color: var(--text-dim, #64748b);
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+.editorial-breadcrumbs a {
+    color: #0284c7;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.editorial-breadcrumbs a:hover {
+    color: #0369a1;
+    text-decoration: underline;
+}
+.breadcrumb-sep {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+.breadcrumb-active {
+    color: var(--text-muted, #475569);
+    font-weight: 500;
+}
+
+/* 70% / 30% Layout Grid */
+.article-layout-grid {
+    display: grid;
+    grid-template-columns: 7fr 3fr;
+    gap: 28px;
+    align-items: start;
+    width: 100%;
+}
+
+@media (max-width: 991px) {
     .article-layout-grid {
         grid-template-columns: 1fr;
-    }
-    .article-sidebar-col {
-        position: static !important;
-        margin-top: 24px;
+        gap: 32px;
     }
 }
 
 .article-main-col {
     min-width: 0;
+    width: 100%;
 }
 
 .article-sidebar-col {
     position: sticky;
-    top: 90px;
+    top: 86px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+@media (max-width: 991px) {
+    .article-sidebar-col {
+        position: static !important;
+    }
 }
 
 /* Article Card */
 .article-card {
     background: var(--bg-card, #ffffff);
     border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: var(--radius-lg, 16px);
-    padding: 36px 36px 44px;
+    border-radius: 16px;
+    padding: 32px 32px 40px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
 
 @media (max-width: 640px) {
     .article-card {
-        padding: 22px 18px;
+        padding: 20px 16px;
     }
 }
 
@@ -192,7 +286,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
     gap: 10px;
 }
@@ -214,11 +308,12 @@
     font-weight: 600;
 }
 
+/* Title */
 .article-title {
     font-size: 2.15rem;
     font-weight: 900;
     color: var(--text-main, #0f172a);
-    line-height: 1.3;
+    line-height: 1.28;
     margin: 0 0 16px 0;
     letter-spacing: -0.02em;
 }
@@ -229,6 +324,139 @@
     }
 }
 
+/* Author & Meta Row with Social Badges (Screenshot 1 Match) */
+.article-author-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.author-info-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.author-avatar-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.author-text-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.author-byline {
+    font-size: 0.86rem;
+    color: var(--text-main, #0f172a);
+}
+.author-byline strong {
+    color: #0284c7;
+    font-weight: 750;
+}
+.meta-dot {
+    color: #94a3b8;
+    margin: 0 4px;
+}
+.pub-date {
+    color: var(--text-dim, #64748b);
+    font-weight: 500;
+}
+
+.update-byline {
+    font-size: 0.74rem;
+    color: var(--text-dim, #94a3b8);
+    font-weight: 500;
+}
+
+.article-social-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.social-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.badge-google-news {
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    color: #3c4043;
+    box-shadow: 0 1px 3px rgba(60,64,67,0.1);
+}
+.badge-google-news:hover {
+    background: #f8fafc;
+    border-color: #4285f4;
+    transform: translateY(-1px);
+}
+
+.badge-telegram {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #0088cc;
+}
+.badge-telegram:hover {
+    background: #0088cc;
+    color: #ffffff;
+    border-color: #0088cc;
+    transform: translateY(-1px);
+}
+.badge-telegram:hover svg path {
+    fill: #ffffff;
+}
+
+/* Poster Image (100% full width, NEVER cropped, Screenshot 1 & 2 Match) */
+.article-poster-container {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.article-full-poster {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    display: block;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+    background: var(--bg-card-secondary, #f8fafc);
+}
+
+.image-source-caption {
+    font-size: 0.75rem;
+    color: var(--text-dim, #94a3b8);
+    text-align: center;
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+/* Summary Lead */
 .article-summary-lead {
     font-size: 1.05rem;
     color: var(--text-muted, #475569);
@@ -237,47 +465,8 @@
     font-weight: 500;
     border-left: 4px solid #0284c7;
     background: var(--bg-card-secondary, #f8fafc);
-    padding: 12px 16px;
+    padding: 14px 18px;
     border-radius: 0 8px 8px 0;
-}
-
-/* Smart Banner Container (No cut off, ambient backdrop) */
-.article-hero-banner-wrap {
-    position: relative;
-    width: 100%;
-    max-height: 480px;
-    min-height: 240px;
-    border-radius: 14px;
-    overflow: hidden;
-    margin-bottom: 30px;
-    background: #090d16;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-
-.article-hero-backdrop {
-    position: absolute;
-    inset: -20px;
-    background-size: cover;
-    background-position: center;
-    filter: blur(25px) brightness(0.45);
-    opacity: 0.85;
-    transform: scale(1.1);
-    pointer-events: none;
-}
-
-.article-hero-image {
-    position: relative;
-    z-index: 2;
-    max-width: 100%;
-    max-height: 480px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    display: block;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
 }
 
 /* Rich Article Body (ChatGPT / Markdown / HTML Styling) */
@@ -286,6 +475,30 @@
     font-size: 1.05rem;
     line-height: 1.85;
     word-break: break-word;
+}
+
+/* CRITICAL: ALL IMAGES INSIDE DESCRIPTION COVER 100% WIDTH, NEVER CROPPED (Screenshot 2 Match) */
+.rich-article-body img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 24px auto 6px auto !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.06) !important;
+    background: var(--bg-card-secondary, #f8fafc);
+}
+
+.rich-article-body figcaption,
+.rich-article-body .image-source,
+.rich-article-body p:has(img) + p {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 4px;
+    margin-bottom: 22px;
+    font-weight: 500;
 }
 
 .rich-article-body h1 {
@@ -355,92 +568,15 @@
     color: var(--text-main, #0f172a) !important;
 }
 
-.rich-article-body blockquote,
-.rich-article-body div[style*="background"],
-.rich-article-body div[style*="border-left"] {
+.rich-article-body blockquote {
     margin: 24px 0 !important;
     padding: 16px 20px !important;
-    background: rgba(30, 41, 59, 0.75) !important;
-    border-left: 4px solid #38bdf8 !important;
-    border-top: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    border-radius: 8px !important;
-    font-style: normal !important;
-    color: var(--text-main, #f8fafc) !important;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.2) !important;
-}
-
-.rich-article-body div[style*="background"] *,
-.rich-article-body div[style*="border-left"] *,
-.rich-article-body blockquote * {
-    color: var(--text-main, #f8fafc) !important;
-}
-
-.rich-article-body div[style*="background"] strong,
-.rich-article-body div[style*="background"] b,
-.rich-article-body div[style*="border-left"] strong,
-.rich-article-body div[style*="border-left"] b,
-.rich-article-body blockquote strong,
-.rich-article-body blockquote b {
-    color: #38bdf8 !important;
-    font-weight: 800 !important;
-}
-
-/* Light Theme overrides */
-body.light-theme .rich-article-body blockquote,
-body.light-theme .rich-article-body div[style*="background"],
-body.light-theme .rich-article-body div[style*="border-left"] {
     background: #f0f7ff !important;
     border-left: 4px solid #0284c7 !important;
-    color: #1e293b !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-}
-
-body.light-theme .rich-article-body div[style*="background"] *,
-body.light-theme .rich-article-body div[style*="border-left"] *,
-body.light-theme .rich-article-body blockquote * {
-    color: #1e293b !important;
-}
-
-body.light-theme .rich-article-body div[style*="background"] strong,
-body.light-theme .rich-article-body div[style*="background"] b,
-body.light-theme .rich-article-body div[style*="border-left"] strong,
-body.light-theme .rich-article-body div[style*="border-left"] b,
-body.light-theme .rich-article-body blockquote strong,
-body.light-theme .rich-article-body blockquote b {
-    color: #0369a1 !important;
-    font-weight: 800 !important;
-}
-
-.rich-article-body hr {
-    border: none !important;
-    border-top: 1px solid var(--border-color, #e2e8f0) !important;
-    margin: 28px 0 !important;
-}
-
-.rich-article-body a {
-    color: #0284c7 !important;
-    text-decoration: underline !important;
-    font-weight: 600 !important;
-}
-
-.rich-article-body table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    margin: 24px 0 !important;
-    font-size: 0.95rem !important;
-}
-
-.rich-article-body th, .rich-article-body td {
-    padding: 10px 14px !important;
-    border: 1px solid var(--border-color, #e2e8f0) !important;
-    text-align: left !important;
-}
-
-.rich-article-body th {
-    background: var(--bg-card-secondary, #f8fafc) !important;
-    font-weight: 700 !important;
+    border-radius: 8px !important;
+    font-style: normal !important;
+    color: var(--text-main, #1e293b) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;
 }
 
 /* Tags Wrap */
@@ -469,107 +605,95 @@ body.light-theme .rich-article-body blockquote b {
     font-weight: 600;
 }
 
-/* Sidebar Styles */
-.sidebar-card {
-    background: var(--bg-card, #ffffff);
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: var(--radius-lg, 16px);
-    padding: 22px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+/* 30% Sidebar Components (Screenshot 1 & 2 Match) */
+.sidebar-section-block {
+    width: 100%;
 }
 
-.sidebar-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color, #e2e8f0);
-}
-
-.sidebar-card-title {
-    font-size: 1.05rem;
+/* Cyan Header Banner (Screenshot 1 Match) */
+.sidebar-cyan-banner {
+    background: #67e8f9;
+    color: #082f49;
     font-weight: 800;
-    color: var(--text-main, #0f172a);
-    margin: 0;
-    letter-spacing: -0.01em;
+    font-size: 0.88rem;
+    letter-spacing: 0.02em;
+    text-align: center;
+    padding: 9px 14px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(6, 182, 212, 0.2);
+    text-transform: capitalize;
 }
 
-.sidebar-view-all {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #0284c7;
-    text-decoration: none;
-}
-.sidebar-view-all:hover {
-    text-decoration: underline;
-}
-
-.sidebar-articles-list {
+/* Cards Stream List */
+.sidebar-cards-stream {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-}
-
-.sidebar-article-item {
-    display: flex;
     gap: 12px;
-    text-decoration: none;
-    padding: 8px;
-    border-radius: 10px;
-    transition: background 0.15s, transform 0.15s;
 }
 
-.sidebar-article-item:hover {
-    background: var(--bg-card-secondary, #f8fafc);
-    transform: translateX(3px);
-}
-
-.sidebar-article-thumb {
-    width: 68px;
-    height: 68px;
-    flex-shrink: 0;
+/* Single Stream Card (Thumbnail Image on Top, Headline Below) */
+.sidebar-stream-card {
+    display: block;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, #e2e8f0);
     border-radius: 8px;
     overflow: hidden;
-    background: #0f172a;
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.sidebar-article-thumb img {
+.sidebar-stream-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    border-color: #38bdf8;
+}
+
+.stream-card-thumb {
+    width: 100%;
+    height: 140px;
+    background: var(--bg-card-secondary, #f8fafc);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stream-card-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center top;
+    display: block;
+    transition: transform 0.3s ease;
 }
 
-.sidebar-article-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 3px;
-    min-width: 0;
+.sidebar-stream-card:hover .stream-card-thumb img {
+    transform: scale(1.03);
 }
 
-.sidebar-article-cat {
-    font-size: 0.68rem;
-    font-weight: 800;
-    color: #0284c7;
-    text-transform: uppercase;
+.stream-card-content {
+    padding: 10px 12px 12px;
 }
 
-.sidebar-article-heading {
-    font-size: 0.86rem;
-    font-weight: 700;
+.stream-card-title {
+    font-size: 0.84rem;
+    font-weight: 750;
     color: var(--text-main, #0f172a);
-    line-height: 1.35;
+    line-height: 1.38;
     margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.15s ease;
 }
 
-.sidebar-article-date {
-    font-size: 0.74rem;
-    color: var(--text-dim, #94a3b8);
-    font-weight: 500;
+.sidebar-stream-card:hover .stream-card-title {
+    color: #0284c7;
 }
 
+/* Quick Hub Links */
 .sidebar-quick-link {
     display: flex;
     justify-content: space-between;

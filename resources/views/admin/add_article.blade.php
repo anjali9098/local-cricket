@@ -32,7 +32,7 @@
                 <!-- Search input & buttons -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="position: relative; display: inline-flex; align-items: center;">
-                        <input type="text" name="search" id="article-search-input" value="{{ $search ?? '' }}" placeholder="Search articles..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        <input type="text" name="search" id="article-search-input" value="{{ $search ?? '' }}" style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
                         @if(!empty($search))
                             <a href="{{ route('admin.article', array_filter(['category' => $category ?? null])) }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
                         @endif
@@ -68,15 +68,15 @@
         <form method="POST" action="{{ $editItem ? route('admin.article.update', $editItem->id) : route('admin.article.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Article Title & Slug | Category | Read Time | Display Order -->
-            <div style="display: grid; grid-template-columns: 2.2fr 1fr 1fr 0.8fr; gap: 16px; align-items: flex-start;">
+            <!-- ROW 1: Article Title & Slug | Category | Author | Read Time -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 14px; align-items: flex-start;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Article Title <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="article_title" name="title" value="{{ old('title', $editItem->title ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="text" id="article_title" name="title" value="{{ old('title', $editItem->title ?? '') }}" required onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                     
-                    <input type="text" id="article_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                    <input type="text" id="article_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
                 </div>
 
                 <div>
@@ -95,16 +95,16 @@
 
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Read Time
+                        Author Name
                     </label>
-                    <input type="text" name="read_time" value="{{ old('read_time', $editItem->read_time ?? '4 MIN READ') }}" placeholder="e.g. 4 MIN READ" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="author" value="{{ old('author', $editItem->author ?? 'Anjali Malviya') }}" placeholder="e.g. Anjali Malviya" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
 
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Display Order
+                        Read Time
                     </label>
-                    <input type="number" name="display_order" value="{{ old('display_order', $editItem->display_order ?? '') }}" min="1" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="read_time" value="{{ old('read_time', $editItem->read_time ?? '4 MIN READ') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -114,19 +114,19 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Short Meta Description
                     </label>
-                    <input type="text" name="meta_description" value="{{ old('meta_description', $editItem->meta_description ?? ($editItem->summary ?? '')) }}" placeholder="" maxlength="255" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="meta_description" value="{{ old('meta_description', $editItem->meta_description ?? ($editItem->summary ?? '')) }}" maxlength="255" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Keywords
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Page Heading H1
                     </label>
-                    <input type="text" name="h1_heading" value="{{ old('h1_heading', $editItem->h1_heading ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="h1_heading" value="{{ old('h1_heading', $editItem->h1_heading ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -160,7 +160,7 @@
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('article_content', 'article_content_preview')">👁️ Live Preview</button>
                     </div>
-                    <textarea id="article_content" name="content" class="html-editor-textarea" rows="7" placeholder="Write full analytical cricket article content here..." style="min-height: 140px;">{{ old('content', $editItem->content ?? ($editItem->summary ?? '')) }}</textarea>
+                    <textarea id="article_content" name="content" class="html-editor-textarea" rows="7" style="min-height: 140px;">{{ old('content', $editItem->content ?? ($editItem->summary ?? '')) }}</textarea>
                     <div id="article_content_preview" class="html-editor-preview"></div>
                 </div>
             </div>
@@ -178,7 +178,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <input type="file" name="poster_file" accept=".webp, .avif, image/webp, image/avif, image/*" onchange="previewAndConvertImage(this, 'article_image_url_input', 'article-poster-preview', 'article-poster-badge')" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" id="article_image_url_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="previewUrlImage(this, 'article-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <input type="text" id="article_image_url_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="previewUrlImage(this, 'article-poster-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                         <img id="article-poster-preview" src="{{ old('image_url', $editItem->image_url ?? '') }}" alt="Poster" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('image_url', $editItem->image_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
@@ -208,7 +208,6 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                            <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                             <th style="padding: 10px 12px; width: 90px;">POSTER</th>
                             <th style="padding: 10px 14px; min-width: 250px;">NAME / TITLE</th>
                             <th style="padding: 10px 14px; min-width: 220px;">PAGE LINK</th>
@@ -235,11 +234,6 @@
                                         <span>0</span>
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                     </div>
-                                </td>
-
-                                <!-- ORDER -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    <input type="number" value="{{ $item->display_order ?? 1 }}" min="1" style="width: 44px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; text-align: center; color: #1e293b; outline: none;">
                                 </td>
 
                                 <!-- POSTER -->

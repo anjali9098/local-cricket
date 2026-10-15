@@ -184,26 +184,26 @@
                         
                         <div class="sm:col-span-4">
                             <label class="block text-[11px] font-bold text-gray-400 mb-1">Batter Name</label>
-                            <input type="text" name="player_name" placeholder="Batter Name" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3 py-2 text-xs focus:border-blue-500 outline-none">
+                            <input type="text" name="player_name" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3 py-2 text-xs focus:border-blue-500 outline-none">
                         </div>
                         <div class="sm:col-span-2 grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-400 mb-1">Runs</label>
-                                <input type="number" name="runs" placeholder="0" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
+                                <input type="number" name="runs" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-400 mb-1">Balls</label>
-                                <input type="number" name="balls" placeholder="0" min="1" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
+                                <input type="number" name="balls" min="1" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
                             </div>
                         </div>
                         <div class="sm:col-span-2 grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-400 mb-1">4s</label>
-                                <input type="number" name="fours" placeholder="0" min="0" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
+                                <input type="number" name="fours" min="0" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-400 mb-1">6s</label>
-                                <input type="number" name="sixes" placeholder="0" min="0" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
+                                <input type="number" name="sixes" min="0" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
                             </div>
                         </div>
                         <div class="sm:col-span-2">
@@ -267,20 +267,20 @@
                         
                         <div class="sm:col-span-5">
                             <label class="block text-[11px] font-bold text-gray-400 mb-1">Bowler Name</label>
-                            <input type="text" name="player_name" placeholder="Bowler Name" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3 py-2 text-xs focus:border-blue-500 outline-none">
+                            <input type="text" name="player_name" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3 py-2 text-xs focus:border-blue-500 outline-none">
                         </div>
                         <div class="sm:col-span-5 grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-400 mb-1">Overs</label>
-                                <input type="number" name="overs" placeholder="4.0" step="0.1" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
+                                <input type="number" name="overs" step="0.1" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-400 mb-1">Runs</label>
-                                <input type="number" name="runs" placeholder="0" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
+                                <input type="number" name="runs" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-400 mb-1">Wickets</label>
-                                <input type="number" name="wickets" placeholder="0" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
+                                <input type="number" name="wickets" min="0" required class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-2.5 py-2 text-xs focus:border-blue-500 outline-none text-center">
                             </div>
                         </div>
                         <div class="sm:col-span-2">

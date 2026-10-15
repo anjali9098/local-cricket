@@ -59,7 +59,7 @@
             @csrf
             <div class="auth-input-group">
                 <label class="auth-label">Registered Email Address *</label>
-                <input type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="name@example.com" class="auth-input">
+                <input type="email" name="email" value="{{ old('email') }}" required autofocus class="auth-input">
             </div>
 
             <button type="submit" class="auth-btn-primary">

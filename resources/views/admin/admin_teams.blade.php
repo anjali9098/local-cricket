@@ -30,7 +30,7 @@
                 <!-- Search input & buttons -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="position: relative; display: inline-flex; align-items: center;">
-                        <input type="text" name="search" id="team-search-input" value="{{ $search ?? '' }}" placeholder="Search teams..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        <input type="text" name="search" id="team-search-input" value="{{ $search ?? '' }}" style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
                         @if(!empty($search))
                             <a href="{{ route('admin.teams', array_filter(['type' => $typeFilter ?? null])) }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
                         @endif
@@ -66,22 +66,22 @@
         <form method="POST" action="{{ $editItem ? route('admin.teams.update', $editItem->id) : route('admin.teams.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Team Name & Slug | Short Name | Team Type | Display Order -->
-            <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr 0.8fr; gap: 16px; align-items: flex-start;">
+            <!-- ROW 1: Team Name & Slug | Short Name | Team Type -->
+            <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr; gap: 16px; align-items: flex-start;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Team Name <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="team_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="text" id="team_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                     
-                    <input type="text" id="team_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                    <input type="text" id="team_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
                 </div>
 
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Short Name
                     </label>
-                    <input type="text" name="short_name" maxlength="6" value="{{ old('short_name', $editItem->short_name ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="short_name" maxlength="6" value="{{ old('short_name', $editItem->short_name ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
 
                 <div>
@@ -95,13 +95,6 @@
                         <option value="local" {{ strcasecmp($curType, 'local') === 0 ? 'selected' : '' }}>Local Grassroots</option>
                     </select>
                 </div>
-
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Display Order
-                    </label>
-                    <input type="number" name="display_order" value="{{ old('display_order', $editItem->display_order ?? '') }}" min="1" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                </div>
             </div>
 
             <!-- ROW 2: City | Country | Color Code | Link Tournament -->
@@ -110,13 +103,13 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         City
                     </label>
-                    <input type="text" name="city" value="{{ old('city', $editItem->city ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="city" value="{{ old('city', $editItem->city ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Country
                     </label>
-                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? 'India') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? 'India') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
@@ -137,19 +130,22 @@
                 </div>
             </div>
 
-            <!-- ROW 3: Team Description / Keywords -->
+            <!-- ROW 3: Team Description / Keywords (Loop Engineering) -->
             <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px;">
                 <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Team Short Description
-                    </label>
-                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: #1e293b; margin: 0;">
+                            Team Description &amp; Bio <span style="font-size: 0.72rem; color: #64748b; font-weight: 500;">(Detailed Overview)</span>
+                        </label>
+                    </div>
+                    <textarea id="team_description_input" name="description" rows="3" placeholder="Enter detailed team description, squad background, history, and achievements..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical; min-height: 75px; font-family: inherit;">{{ old('description', $editItem->description ?? '') }}</textarea>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Keywords
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="e.g. India cricket, team squad, BCCI, men in blue" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <span style="display: block; font-size: 0.72rem; color: #64748b; margin-top: 4px;">Comma-separated search keywords</span>
                 </div>
             </div>
 
@@ -166,7 +162,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <input type="file" name="logo_file" accept="image/*" onchange="previewAndConvertImage(this, 'team_logo_url_input', 'team-logo-preview', 'team-logo-badge')" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" id="team_logo_url_input" name="logo_url" value="{{ old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? '')) }}" oninput="previewUrlImage(this, 'team-logo-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <input type="text" id="team_logo_url_input" name="logo_url" value="{{ old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? '')) }}" oninput="previewUrlImage(this, 'team-logo-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                         <img id="team-logo-preview" src="{{ old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? '')) }}" alt="Logo" style="height: 38px; width: 38px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('logo_url', $editItem->logo_url ?? ($editItem->logo ?? ''))) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
@@ -200,7 +196,6 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                            <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                             <th style="padding: 10px 12px; width: 90px;">POSTER</th>
                             <th style="padding: 10px 14px; min-width: 220px;">NAME</th>
                             <th style="padding: 10px 14px; min-width: 220px;">PAGE LINK</th>
@@ -229,11 +224,6 @@
                                     </div>
                                 </td>
 
-                                <!-- ORDER -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    <input type="number" value="{{ $item->display_order ?? 1 }}" min="1" style="width: 44px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; text-align: center; color: #1e293b; outline: none;">
-                                </td>
-
                                 <!-- POSTER -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">
                                     @php $logo = $item->logo_url ?: $item->logo; @endphp
@@ -249,7 +239,7 @@
                                     @endif
                                 </td>
 
-                                <!-- NAME -->
+                                <!-- NAME & DESCRIPTION (Loop Engineering) -->
                                 <td style="padding: 12px 14px; vertical-align: middle;">
                                     <div style="font-weight: 800; color: #0f172a; font-size: 0.9rem; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
                                         <span style="display:inline-block; width: 10px; height: 10px; border-radius: 50%; background: {{ $item->color_code ?? '#2563eb' }};"></span>
@@ -258,6 +248,16 @@
                                     <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
                                         Short: <strong>{{ $item->short_name ?: 'N/A' }}</strong> &bull; {{ $item->tournament ? $item->tournament->name : 'No Series' }}
                                     </div>
+                                    <!-- Loop Engineering: Team Description Display -->
+                                    @if(!empty($item->description))
+                                        <div style="font-size: 0.75rem; color: #475569; margin-top: 5px; line-height: 1.38; background: #f8fafc; border-left: 3px solid #0284c7; padding: 4px 8px; border-radius: 0 4px 4px 0; max-width: 380px;">
+                                            <strong style="color: #0369a1;">Description:</strong> {{ Str::limit($item->description, 110) }}
+                                        </div>
+                                    @else
+                                        <div style="font-size: 0.72rem; color: #94a3b8; font-style: italic; margin-top: 4px;">
+                                            No description added
+                                        </div>
+                                    @endif
                                 </td>
 
                                 <!-- PAGE LINK -->
@@ -352,5 +352,42 @@ function autoSlugify(text) {
 document.getElementById('team_slug')?.addEventListener('input', function() {
     this.dataset.manual = 'true';
 });
+
+// Loop Engineering: Dynamic Team Description Template Generator
+function generateTeamDescriptionTemplate() {
+    const nameInput = document.getElementById('team_name');
+    const typeInput = document.querySelector('select[name="team_type"]');
+    const cityInput = document.querySelector('input[name="city"]');
+    const countryInput = document.querySelector('input[name="country"]');
+    const descTextarea = document.getElementById('team_description_input');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const type = typeInput ? typeInput.value : 'International';
+    const city = cityInput ? cityInput.value.trim() : '';
+    const country = countryInput ? countryInput.value.trim() : 'India';
+
+    if (!name) {
+        alert('Please enter a Team Name first.');
+        return;
+    }
+
+    let desc = '';
+    const lowerType = type.toLowerCase();
+    if (lowerType === 'international') {
+        desc = `${name} is the premier national cricket team representing ${country || name} in international competitions. Officially governed and recognized across ICC formats (Test, ODI, and T20I), the squad features world-class batters, precision bowlers, and dynamic match-winners competing at the highest global levels.`;
+    } else if (lowerType === 'ipl' || lowerType === 'franchise' || lowerType === 't20 league') {
+        desc = `${name} is a marquee franchise cricket team ${city ? 'based in ' + city + ', ' : ''}${country}. Known for explosive power-hitting, elite international stars, disciplined death-over bowling, and high-intensity performances in premier T20 league tournaments.`;
+    } else {
+        desc = `${name} is an active and competitive ${type} cricket squad ${city ? 'from ' + city : (country ? 'representing ' + country : '')}. Comprising talented squad members, dedicated coaching staff, and promising prospects competing across multi-day and limited-overs fixtures.`;
+    }
+
+    if (descTextarea) {
+        descTextarea.value = desc;
+        descTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        if (typeof showAdminToast === 'function') {
+            showAdminToast('Auto-generated team description template applied (Loop Engineering)!');
+        }
+    }
+}
 </script>
 @endsection

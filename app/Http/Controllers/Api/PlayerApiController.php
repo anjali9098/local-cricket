@@ -39,13 +39,8 @@ class PlayerApiController extends Controller
             'role' => 'nullable|string',
             'batting_style' => 'nullable|string',
             'bowling_style' => 'nullable|string',
-            'initials' => 'nullable|string',
             'is_popular' => 'nullable|boolean'
         ]);
-
-        if (empty($data['initials'])) {
-            $data['initials'] = strtoupper(substr($data['name'], 0, 3));
-        }
 
         $player = Player::create($data);
 

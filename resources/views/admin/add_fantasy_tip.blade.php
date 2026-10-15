@@ -20,7 +20,7 @@
             @csrf
             <div>
                 <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">Tip Title *</label>
-                <input type="text" name="title" value="{{ old('title', $editItem->title ?? '') }}" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; color: #0f172a; outline: none; box-sizing: border-box;" placeholder="">
+                <input type="text" name="title" value="{{ old('title', $editItem->title ?? '') }}" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; color: #0f172a; outline: none; box-sizing: border-box;">
             </div>
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -51,7 +51,7 @@
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('fantasy_summary', 'fantasy_summary_preview')">👁️ Live Preview</button>
                     </div>
-                    <textarea id="fantasy_summary" name="summary" class="html-editor-textarea" rows="5" required placeholder="Enter player picks, captain choices, pitch considerations..." style="min-height: 120px;">{{ old('summary', $editItem->summary ?? '') }}</textarea>
+                    <textarea id="fantasy_summary" name="summary" class="html-editor-textarea" rows="5" required style="min-height: 120px;">{{ old('summary', $editItem->summary ?? '') }}</textarea>
                     <div id="fantasy_summary_preview" class="html-editor-preview"></div>
                 </div>
             </div>
@@ -77,7 +77,7 @@
             <!-- Search input & buttons -->
             <div style="display: flex; align-items: center; gap: 6px;">
                 <div class="admin-search-wrapper">
-                    <input type="text" id="fantasy-search-input" class="admin-search-input" oninput="filterFantasyTable()" onkeyup="filterFantasyTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterFantasyTable();}" placeholder="Search fantasy tips..." style="width: 220px;">
+                    <input type="text" id="fantasy-search-input" class="admin-search-input" oninput="filterFantasyTable()" onkeyup="filterFantasyTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterFantasyTable();}" style="width: 220px;">
                     <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
                 </div>
                 <button type="button" onclick="filterFantasyTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">

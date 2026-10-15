@@ -86,7 +86,7 @@
                 <div style="height: 20px; width: 1px; background: #cbd5e1; margin: 0 4px;"></div>
 
                 <!-- Text Overlay Input -->
-                <input type="text" id="modalOverlayText" placeholder="Overlay text on image..." oninput="modalRenderCanvas()" style="padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; width: 170px; outline: none; background: white;">
+                <input type="text" id="modalOverlayText" oninput="modalRenderCanvas()" style="padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; width: 170px; outline: none; background: white;">
 
                 <!-- Text Color -->
                 <input type="color" id="modalTextColor" value="#ffffff" onchange="modalRenderCanvas()" title="Text Color" style="width: 30px; height: 30px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px; cursor: pointer; background: white;">
@@ -168,7 +168,7 @@
 
                     <div>
                         <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 3px;">Image File Name (Slug)</label>
-                        <input type="text" id="modalImageNameInput" placeholder="cricket-photo (auto-slugified)" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" id="modalImageNameInput" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box; background: white;">
                     </div>
 
                     <div>
@@ -212,7 +212,7 @@
             <details style="background: #fafafa; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
                 <summary style="font-size: 0.8rem; font-weight: 700; color: #475569; cursor: pointer;">🔗 Or Insert Direct Image URL without upload</summary>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <input type="text" id="modalDirectUrlInput" placeholder="https://example.com/image.jpg" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none;">
+                    <input type="text" id="modalDirectUrlInput" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none;">
                     <button type="button" onclick="modalInsertDirectUrl()" style="padding: 6px 14px; background: #0f172a; color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Insert URL</button>
                 </div>
             </details>

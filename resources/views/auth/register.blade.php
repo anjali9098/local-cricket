@@ -72,18 +72,18 @@
             @csrf
             <div class="auth-input-group">
                 <label class="auth-label">Your Name *</label>
-                <input type="text" name="name" value="{{ old('name') }}" required autofocus placeholder="John Doe" class="auth-input">
+                <input type="text" name="name" value="{{ old('name') }}" required autofocus class="auth-input">
             </div>
 
             <div class="auth-input-group">
                 <label class="auth-label">Email Address *</label>
-                <input type="email" name="email" value="{{ old('email') }}" required placeholder="name@example.com" class="auth-input">
+                <input type="email" name="email" value="{{ old('email') }}" required class="auth-input">
             </div>
 
             <div class="auth-input-group">
                 <label class="auth-label">Password * (Min. 6 characters)</label>
                 <div class="password-input-wrapper">
-                    <input type="password" id="reg-password" name="password" minlength="6" required placeholder="Create a strong password" class="auth-input">
+                    <input type="password" id="reg-password" name="password" minlength="6" required class="auth-input">
                     <button type="button" class="password-toggle-btn" data-target="reg-password" title="Show password" aria-label="Toggle password visibility">
                         <svg class="eye-icon eye-show" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -100,7 +100,7 @@
             <div class="auth-input-group">
                 <label class="auth-label">Confirm Password *</label>
                 <div class="password-input-wrapper">
-                    <input type="password" id="reg-password-confirm" name="password_confirmation" minlength="6" required placeholder="Re-enter your password" class="auth-input">
+                    <input type="password" id="reg-password-confirm" name="password_confirmation" minlength="6" required class="auth-input">
                     <button type="button" class="password-toggle-btn" data-target="reg-password-confirm" title="Show password" aria-label="Toggle password visibility">
                         <svg class="eye-icon eye-show" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>

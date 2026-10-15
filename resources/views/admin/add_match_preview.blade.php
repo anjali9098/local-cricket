@@ -19,7 +19,7 @@
                     <input type="hidden" name="edit" value="{{ request('edit') }}">
                 @endif
                 <div style="position: relative; display: inline-flex; align-items: center;">
-                    <input type="text" name="search" id="preview-search-input" value="{{ $search ?? '' }}" placeholder="Search previews..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                    <input type="text" name="search" id="preview-search-input" value="{{ $search ?? '' }}" style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
                     @if(!empty($search))
                         <a href="{{ route('admin.match-preview') }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
                     @endif
@@ -54,38 +54,35 @@
         <form method="POST" action="{{ $editItem ? route('admin.match-preview.update', $editItem->id) : route('admin.match-preview.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Title & Slug | Display Order -->
-            <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 16px; align-items: flex-start;">
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Match Preview Title <span style="color:#ef4444;">*</span>
-                    </label>
-                    <input type="text" id="preview_title" name="title" value="{{ old('title', $editItem->title ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
-                    
-                    <input type="text" id="preview_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
-                </div>
-
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Display Order
-                    </label>
-                    <input type="number" name="display_order" value="{{ old('display_order', $editItem->display_order ?? '') }}" min="1" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                </div>
+            <!-- ROW 1: Title & Slug -->
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                    Match Preview Title <span style="color:#ef4444;">*</span>
+                </label>
+                <input type="text" id="preview_title" name="title" value="{{ old('title', $editItem->title ?? '') }}" required onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                
+                <input type="text" id="preview_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
             </div>
 
-            <!-- ROW 2: Short Meta Description & Keywords -->
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px;">
+            <!-- ROW 2: Short Meta Description, Author & Keywords -->
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 16px;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Short Meta Description
                     </label>
-                    <input type="text" name="meta_description" value="{{ old('meta_description', $editItem->meta_description ?? ($editItem->summary ?? '')) }}" placeholder="" maxlength="255" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="meta_description" value="{{ old('meta_description', $editItem->meta_description ?? ($editItem->summary ?? '')) }}" maxlength="255" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
+                        Author Name
+                    </label>
+                    <input type="text" name="author" value="{{ old('author', $editItem->author ?? 'Anjali Malviya') }}" placeholder="e.g. Anjali Malviya" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Keywords (Comma separated)
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -119,7 +116,7 @@
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('preview_summary', 'preview_summary_preview')">👁️ Live Preview</button>
                     </div>
-                    <textarea id="preview_summary" name="summary" class="html-editor-textarea" rows="7" required placeholder="Enter pitch analysis, probable playing 11, key battles, weather conditions, match prediction..." style="min-height: 140px;">{{ old('summary', $editItem->summary ?? ($editItem->full_content ?? '')) }}</textarea>
+                    <textarea id="preview_summary" name="summary" class="html-editor-textarea" rows="7" required style="min-height: 140px;">{{ old('summary', $editItem->summary ?? ($editItem->full_content ?? '')) }}</textarea>
                     <div id="preview_summary_preview" class="html-editor-preview"></div>
                 </div>
             </div>
@@ -137,7 +134,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'preview_poster_image_input', 'match-preview-poster-preview', 'match-preview-poster-badge')" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" id="preview_poster_image_input" name="poster_image" value="{{ old('poster_image', $editItem->poster_image ?? '') }}" oninput="previewUrlImage(this, 'match-preview-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <input type="text" id="preview_poster_image_input" name="poster_image" value="{{ old('poster_image', $editItem->poster_image ?? '') }}" oninput="previewUrlImage(this, 'match-preview-poster-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                         <img id="match-preview-poster-preview" src="{{ old('poster_image', $editItem->poster_image ?? '') }}" alt="Poster" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('poster_image', $editItem->poster_image ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
@@ -167,7 +164,6 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                            <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                             <th style="padding: 10px 12px; width: 90px;">POSTER</th>
                             <th style="padding: 10px 14px; min-width: 250px;">NAME / TITLE</th>
                             <th style="padding: 10px 14px; min-width: 240px;">PAGE LINK</th>
@@ -196,10 +192,6 @@
                                     </div>
                                 </td>
 
-                                <!-- ORDER -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    <input type="number" value="{{ $item->display_order ?? 1 }}" min="1" style="width: 44px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; text-align: center; color: #1e293b; outline: none;">
-                                </td>
 
                                 <!-- POSTER -->
                                 <td style="padding: 12px 10px; vertical-align: middle;">

@@ -226,7 +226,7 @@
                     </a>
                     <a href="{{ route('teams') }}" class="side-menu-link">
                         <span class="side-arrow">&rsaquo;</span>
-                        <span>Popular Teams</span>
+                        <span>Teams</span>
                     </a>
                     <a href="{{ route('players') }}" class="side-menu-link">
                         <span class="side-arrow">&rsaquo;</span>
@@ -248,16 +248,14 @@
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Rankings</span>
                     </a>
-                    <a href="{{ route('player.birthdays') }}" class="side-menu-link">
+                    <a href="{{ route('player.birthdays') }}" class="side-menu-link {{ request()->routeIs('player.birthdays*') ? 'active' : '' }}">
                         <span class="side-arrow">&rsaquo;</span>
-                        <span> Player Birthdays</span>
+                        <span>Player Birthdays</span>
                     </a>
-                    @if(Auth::check() && Auth::user()->role === 'superadmin')
-                    <a href="{{ route('admin.dashboard') }}" class="side-menu-link" style="color: #38bdf8; font-weight: 800; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 6px 10px; background: rgba(56, 189, 248, 0.08);">
-                        <span class="side-arrow">👑</span>
-                        <span>Super Admin Panel</span>
+                    <a href="{{ route('head-to-head') }}" class="side-menu-link {{ request()->routeIs('head-to-head*') || request()->routeIs('h2h*') || request()->routeIs('team.compare*') ? 'active' : '' }}">
+                        <span class="side-arrow">&rsaquo;</span>
+                        <span>Teams Head to Head</span>
                     </a>
-                    @endif
                 </div>
             </div>
 
@@ -284,7 +282,7 @@
 
             <!-- Search Input Form -->
             <form id="globalSearchForm" action="{{ route('search') }}" method="GET" style="position:relative; margin-bottom:14px;" onsubmit="handleSearchSubmit(event)">
-                <input type="text" id="liveSearchInput" name="q" oninput="handleLiveSearchInput()" placeholder="Search players, teams, matches, series, news, articles, venues..." style="width:100%; padding:14px 100px 14px 44px; background:var(--bg-card-secondary); border:2px solid var(--border-color); border-radius:12px; color:var(--text-main); font-size:1rem; font-weight:600; outline:none; transition:border-color 0.2s;" autofocus autocomplete="off">
+                <input type="text" id="liveSearchInput" name="q" oninput="handleLiveSearchInput()" style="width:100%; padding:14px 100px 14px 44px; background:var(--bg-card-secondary); border:2px solid var(--border-color); border-radius:12px; color:var(--text-main); font-size:1rem; font-weight:600; outline:none; transition:border-color 0.2s;" autofocus autocomplete="off">
                 <div style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:1.05rem; pointer-events:none;">
                     🔍
                 </div>
@@ -359,8 +357,8 @@
                 <div>
                     <div class="footer-heading">Cricket Hub</div>
                     <ul class="footer-links">
-                        <li><a href="{{ route('players') }}">Popular Players</a></li>
-                        <li><a href="{{ route('teams') }}">Popular Teams</a></li>
+                        <li><a href="{{ route('players') }}">Cricket Players</a></li>
+                        <li><a href="{{ route('teams') }}">Cricket Teams</a></li>
                         <li><a href="{{ route('venues') }}">Cricket Venues</a></li>
                         <li><a href="{{ route('webstories.all') }}">Web Stories</a></li>
                         <li><a href="{{ route('glossary.all') }}">Cricket Glossary</a></li>

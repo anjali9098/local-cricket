@@ -18,7 +18,7 @@
             <div style="position: absolute; left: 18px; color: var(--text-muted); font-size: 1.1rem; pointer-events: none;">
                 🔍
             </div>
-            <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Search players, teams, matches, series, news, venues, glossary..." autofocus
+            <input type="text" name="q" value="{{ $q ?? '' }}" autofocus
                    style="width: 100%; padding: 16px 120px 16px 50px; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 14px; font-size: 1.05rem; font-weight: 600; color: var(--text-main); outline: none; transition: border-color 0.2s;"
                    onfocus="this.style.borderColor='#38bdf8';" onblur="this.style.borderColor='var(--border-color)';">
             

@@ -14,9 +14,8 @@ use App\Models\News;
 use App\Models\Article;
 use App\Models\Prediction;
 use App\Models\FantasyTip;
-use App\Models\PointsTable;
 use App\Models\TeamRanking;
-use App\Models\PlayerRanking;
+use App\Models\IccPlayerRanking;
 use Illuminate\Support\Str;
 
 class PageController extends Controller
@@ -199,7 +198,20 @@ class PageController extends Controller
             });
 
         if ($battingRankings->isEmpty()) {
-            $battingRankings = PlayerRanking::where('type', 'batting')->orderBy('rank_num', 'asc')->take(10)->get();
+            $battingRankings = \App\Models\IccPlayerRanking::where('category', 'batting')
+                ->whereNotNull('current_rank')
+                ->where('current_rank', '!=', '--')
+                ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+                ->take(10)
+                ->get()
+                ->map(function($r, $idx) {
+                    return (object)[
+                        'rank_num' => $idx + 1,
+                        'player_name' => $r->player_name,
+                        'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
+                        'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
+                    ];
+                });
         }
 
         // 100% Dynamic Real Bowling Rankings from match bowling scores
@@ -218,7 +230,20 @@ class PageController extends Controller
             });
 
         if ($bowlingRankings->isEmpty()) {
-            $bowlingRankings = PlayerRanking::where('type', 'bowling')->orderBy('rank_num', 'asc')->take(10)->get();
+            $bowlingRankings = \App\Models\IccPlayerRanking::where('category', 'bowling')
+                ->whereNotNull('current_rank')
+                ->where('current_rank', '!=', '--')
+                ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+                ->take(10)
+                ->get()
+                ->map(function($r, $idx) {
+                    return (object)[
+                        'rank_num' => $idx + 1,
+                        'player_name' => $r->player_name,
+                        'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
+                        'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
+                    ];
+                });
         }
 
         $playerBirthdays = $this->getProcessedPlayerBirthdays();
@@ -275,15 +300,87 @@ class PageController extends Controller
         })->filter()->sortBy('days_until_birthday')->values();
     }
 
+    public function resolveTournamentFromKey($seriesKey)
+    {
+        if (empty($seriesKey)) return null;
+
+        // 1. If purely numeric ID
+        if (is_numeric($seriesKey)) {
+            return Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($seriesKey);
+        }
+
+        // 2. Trailing numeric ID (e.g., world-championship-of-legends-2026-139)
+        if (preg_match('/-(\d+)$/', $seriesKey, $matches)) {
+            $found = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($matches[1]);
+            if ($found) return $found;
+        }
+
+        // 3. Exact slug match
+        $found = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->where('slug', $seriesKey)->first();
+        if ($found) return $found;
+
+        // 4. Prefix slug match
+        return Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->where('slug', 'like', $seriesKey . '%')->first();
+    }
+
+    public function seriesDetailPage($seriesKey)
+    {
+        $tournament = $this->resolveTournamentFromKey($seriesKey);
+        if (!$tournament) {
+            abort(404, 'Tournament not found.');
+        }
+        if ($tournament->status === 'draft') {
+            abort(404, 'Tournament is not published yet.');
+        }
+        if (!$tournament->is_approved && $tournament->category !== 'local') {
+            abort(404, 'Tournament is not approved yet.');
+        }
+
+        $canonicalKey = $tournament->slug . '-' . $tournament->id;
+        if ($seriesKey !== $canonicalKey && !is_numeric($seriesKey)) {
+            return redirect()->to(url('/series/' . $canonicalKey), 301);
+        }
+
+        $tournament->increment('views_count');
+        return $this->renderTournamentPublicPage($tournament, null, 'pages.tournament_public', null, 'home');
+    }
+
+    public function seriesSubnavPage($seriesKey, $tab = 'home')
+    {
+        $tournament = $this->resolveTournamentFromKey($seriesKey);
+        if (!$tournament) {
+            abort(404, 'Tournament not found.');
+        }
+        if ($tournament->status === 'draft') {
+            abort(404, 'Tournament is not published yet.');
+        }
+        if (!$tournament->is_approved && $tournament->category !== 'local') {
+            abort(404, 'Tournament is not approved yet.');
+        }
+
+        $tabMap = [
+            'home' => 'home',
+            'stats' => 'stats',
+            'fixtures' => 'fixtures',
+            'points' => 'points',
+            'points-table' => 'points',
+            'players' => 'players',
+            'teams' => 'teams',
+            'news' => 'news',
+            'news-articles' => 'news',
+        ];
+        $normalizedTab = $tabMap[strtolower($tab)] ?? 'home';
+
+        $tournament->increment('views_count');
+        return $this->renderTournamentPublicPage($tournament, null, 'pages.tournament_public', null, $normalizedTab);
+    }
+
     public function tournamentDetail($slug = null, $id = null)
     {
         $resolvedId = $id ?? $slug;
-        $tournament = is_numeric($resolvedId) 
-            ? Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($resolvedId)
-            : Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->where('slug', $resolvedId)->first();
-        
+        $tournament = $this->resolveTournamentFromKey($resolvedId);
         if (!$tournament && is_numeric($slug)) {
-            $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($slug);
+            $tournament = $this->resolveTournamentFromKey($slug);
         }
         if (!$tournament) {
             $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->findOrFail($resolvedId);
@@ -297,22 +394,13 @@ class PageController extends Controller
             abort(404, 'Tournament is not approved yet.');
         }
 
-        if ($id === null || is_numeric($slug) || request()->is('t/*')) {
+        // Canonical redirect to /series/{slug}-{id}
+        if ($id === null || is_numeric($slug) || request()->is('t/*') || request()->is('tournament/*') || request()->is('tournament')) {
             return redirect()->to($tournament->url, 301);
         }
 
-        // Increment the views count whenever the public page is opened
         $tournament->increment('views_count');
-
-        $allSeries = Tournament::where(function($q) {
-                $q->where('is_approved', true)
-                  ->orWhere('category', 'local');
-            })
-            ->where('status', '!=', 'draft')
-            ->orderBy('id', 'desc')
-            ->get();
-
-        return $this->renderTournamentPublicPage($tournament, $allSeries);
+        return $this->renderTournamentPublicPage($tournament, null, 'pages.tournament_public', null, 'home');
     }
 
     public function seriesStatDetail(Request $request, $slug = null, $id = null, $stat = null)
@@ -324,28 +412,16 @@ class PageController extends Controller
         }
 
         $resolvedId = $id ?? $slug;
-        $tournament = is_numeric($resolvedId) 
-            ? Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($resolvedId)
-            : Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->where('slug', $resolvedId)->first();
-
-        if (!$tournament && is_numeric($slug)) {
-            $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($slug);
+        $tournament = $this->resolveTournamentFromKey($resolvedId);
+        if (!$tournament) {
+            $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->find($resolvedId);
         }
         if (!$tournament) {
             $tournament = Tournament::with(['teams.players', 'matches.team1', 'matches.team2', 'matches.battingStats', 'matches.bowlingStats'])->findOrFail($resolvedId);
         }
 
-        $allSeries = Tournament::where(function($q) {
-                $q->where('is_approved', true)
-                  ->orWhere('category', 'local');
-            })
-            ->where('status', '!=', 'draft')
-            ->orderBy('id', 'desc')
-            ->get();
-
         $activeStat = strtolower(trim((string)$stat)) ?: 'most-runs';
-
-        return $this->renderTournamentPublicPage($tournament, $allSeries, 'pages.series_stat_detail', $activeStat);
+        return $this->renderTournamentPublicPage($tournament, null, 'pages.tournament_public', $activeStat, 'stats');
     }
 
     public function series(Request $request)
@@ -410,7 +486,7 @@ class PageController extends Controller
         return view('pages.series', compact('allSeries', 'ongoingSeries', 'upcomingSeries', 'completedSeries'));
     }
 
-    private function renderTournamentPublicPage($tournament, $allSeries = null, $viewName = 'pages.tournament_public', $activeStat = 'most-runs')
+    private function renderTournamentPublicPage($tournament, $allSeries = null, $viewName = 'pages.tournament_public', $activeStat = null, $activeTab = 'home')
     {
         if ($allSeries === null) {
             $allSeries = Tournament::where(function($q) {
@@ -466,22 +542,14 @@ class PageController extends Controller
         $teams = $tournament->teams;
         $players = collect();
         $playerTeamMap = []; // name_lower => ['team_id' => ..., 'team_name' => ..., 'team_short_name' => ..., 'team_logo' => ..., 'player' => ...]
+        $apiService = app(\App\Services\Possible11ApiService::class);
 
         foreach ($teams as $team) {
             $teamName = trim($team->name);
             $shortName = trim($team->short_name ?? '');
             $calcShort = strtoupper($shortName ?: substr(preg_replace('/[^A-Za-z]/', '', $teamName), 0, 3));
 
-            $squad = \App\Models\Player::where(function($q) use ($team, $teamName, $shortName) {
-                $q->where('team_id', $team->id);
-                if (!empty($teamName)) {
-                    $q->orWhere('played_teams', 'like', "%{$teamName}%");
-                }
-                if (!empty($shortName) && strlen($shortName) >= 3) {
-                    $q->orWhere('played_teams', 'like', "%{$shortName}%");
-                }
-            })->get()->unique('id')->values();
-
+            $squad = $apiService->getTeamSquadPlayers($team);
             $team->setRelation('players', $squad);
 
             foreach ($squad as $player) {
@@ -828,7 +896,8 @@ class PageController extends Controller
             'teamFifties',
             'teamCenturies',
             'seriesNews',
-            'seriesArticles'
+            'seriesArticles',
+            'activeTab'
         ));
     }
 
@@ -1023,10 +1092,8 @@ class PageController extends Controller
             $items = $items->concat($previews);
         }
 
-        // Sort all items by created_at desc or id desc
-        $allNewsItems = $items->sortByDesc(function($item) {
-            return $item->created_at ? $item->created_at->timestamp : $item->id;
-        });
+        // Sort all items strictly by latest ID desc (guarantees latest created always first)
+        $allNewsItems = $items->sortByDesc('id')->values();
 
         $activeType = $type;
 
@@ -1605,7 +1672,7 @@ class PageController extends Controller
             return redirect()->to($news->url, 301);
         }
 
-        $recentNews = News::where('id', '!=', $news->id)->orderBy('id', 'desc')->take(5)->get();
+        $recentNews = News::where('id', '!=', $news->id)->orderBy('id', 'desc')->take(6)->get();
         return view('pages.show_news', compact('news', 'recentNews'));
     }
 
@@ -1624,7 +1691,7 @@ class PageController extends Controller
             return redirect()->to($article->url, 301);
         }
 
-        $recentArticles = Article::where('id', '!=', $article->id)->orderBy('id', 'desc')->take(5)->get();
+        $recentArticles = Article::where('id', '!=', $article->id)->orderBy('id', 'desc')->take(6)->get();
         return view('pages.show_article', compact('article', 'recentArticles'));
     }
 
@@ -1650,7 +1717,7 @@ class PageController extends Controller
         $recentPredictions = Prediction::where('id', '!=', $prediction->id)
             ->where('tag', '!=', 'MATCH PREVIEW')
             ->orderBy('id', 'desc')
-            ->take(4)
+            ->take(6)
             ->get();
         return view('pages.show_prediction', compact('prediction', 'recentPredictions'));
     }
@@ -1673,7 +1740,7 @@ class PageController extends Controller
         $recentPredictions = Prediction::where('id', '!=', $prediction->id)
             ->where('tag', 'MATCH PREVIEW')
             ->orderBy('id', 'desc')
-            ->take(4)
+            ->take(6)
             ->get();
         $isPreview = true;
         return view('pages.show_prediction', compact('prediction', 'recentPredictions', 'isPreview'));
@@ -1694,7 +1761,7 @@ class PageController extends Controller
             return redirect()->to($tip->url, 301);
         }
 
-        $recentTips = FantasyTip::where('id', '!=', $tip->id)->orderBy('id', 'desc')->take(4)->get();
+        $recentTips = FantasyTip::where('id', '!=', $tip->id)->orderBy('id', 'desc')->take(6)->get();
         return view('pages.show_fantasy', compact('tip', 'recentTips'));
     }
 
@@ -1786,25 +1853,83 @@ class PageController extends Controller
         $stats = $this->getPlayerCalculatedStats($player);
         $formatStats = \App\Services\PlayerEnrichmentService::getPlayerFormatCareerStats($player, $stats);
 
-        $battingScores = \App\Models\PlayerBattingStat::where('player_name', $player->name)
+        // Align overall $stats with comprehensive career totals from formatStats
+        if (!empty($formatStats['all']) && (!empty($formatStats['all']['total_runs']) || !empty($formatStats['all']['wickets']))) {
+            $stats = array_merge($stats, [
+                'matches_count' => $formatStats['all']['matches_count'] ?? ($stats['matches_count'] ?? 0),
+                'runs' => $formatStats['all']['total_runs'] ?? ($stats['runs'] ?? 0),
+                'total_runs' => $formatStats['all']['total_runs'] ?? ($stats['total_runs'] ?? 0),
+                'balls' => $formatStats['all']['total_balls'] ?? ($stats['balls'] ?? 0),
+                'highest' => $formatStats['all']['highest_score'] ?? ($stats['highest'] ?? 0),
+                'highest_score' => $formatStats['all']['highest_score'] ?? ($stats['highest_score'] ?? 0),
+                'strike_rate' => $formatStats['all']['strike_rate'] ?? ($stats['strike_rate'] ?? '0.00'),
+                'average' => $formatStats['all']['batting_avg'] ?? ($stats['average'] ?? '0.00'),
+                'fours' => $formatStats['all']['fours'] ?? ($stats['fours'] ?? 0),
+                'sixes' => $formatStats['all']['sixes'] ?? ($stats['sixes'] ?? 0),
+                'fifties' => $formatStats['all']['fifties'] ?? ($stats['fifties'] ?? 0),
+                'hundreds' => $formatStats['all']['hundreds'] ?? ($stats['hundreds'] ?? 0),
+                'wickets' => $formatStats['all']['wickets'] ?? ($stats['wickets'] ?? 0),
+                'overs' => $formatStats['all']['total_overs'] ?? ($stats['overs'] ?? '0.0'),
+                'best_bowling' => $formatStats['all']['best_bowling_figures'] ?? ($stats['best_bowling'] ?? '-'),
+                'economy' => $formatStats['all']['bowling_economy'] ?? ($stats['economy'] ?? '0.00'),
+                'bowlingAvg' => $formatStats['all']['bowling_avg'] ?? ($stats['bowlingAvg'] ?? '-'),
+                'maidens' => $formatStats['all']['maidens'] ?? ($stats['maidens'] ?? 0),
+            ]);
+        }
+
+        // Fetch all recent and old match statistics for this player
+        $pName = $player->name;
+        $battingScores = \App\Models\PlayerBattingStat::where(function($q) use ($pName) {
+                $q->where('player_name', $pName)
+                  ->orWhere('player_name', 'LIKE', '%' . $pName . '%');
+            })
             ->with(['match.team1', 'match.team2', 'match.tournament'])
             ->orderBy('id', 'desc')
-            ->take(8)
+            ->take(20)
             ->get();
 
-        $bowlingScores = \App\Models\PlayerBowlingStat::where('player_name', $player->name)
+        $bowlingScores = \App\Models\PlayerBowlingStat::where(function($q) use ($pName) {
+                $q->where('player_name', $pName)
+                  ->orWhere('player_name', 'LIKE', '%' . $pName . '%');
+            })
             ->with(['match.team1', 'match.team2', 'match.tournament'])
             ->orderBy('id', 'desc')
-            ->take(8)
+            ->take(20)
             ->get();
 
-        $teammates = \App\Models\Player::where('team_id', $player->team_id)
-            ->where('id', '!=', $player->id)
-            ->take(4)
-            ->get();
+        // Retrieve full squad members for this team without restrictive limit
+        $playerTeam = $player->team;
+        $teamName = $playerTeam?->name;
+        $teammates = collect();
+
+        if ($playerTeam) {
+            $allPlayers = \App\Models\Player::where('id', '!=', $player->id)->get();
+            $teammates = $allPlayers->filter(function($p) use ($player, $teamName) {
+                if ($p->team_id == $player->team_id) return true;
+                if (!empty($teamName) && !empty($p->played_teams)) {
+                    $pTeams = array_map('trim', explode(',', $p->played_teams));
+                    foreach ($pTeams as $pt) {
+                        if (strcasecmp($pt, $teamName) === 0) return true;
+                    }
+                }
+                return false;
+            })->values();
+
+            // Fallback for national teams to ensure 15+ squad players
+            if ($teammates->count() < 12 && !empty($playerTeam->country)) {
+                $byCountry = \App\Models\Player::where('id', '!=', $player->id)
+                    ->where(function($q) use ($playerTeam) {
+                        $q->where('country', $playerTeam->country)
+                          ->orWhere('nationality', $playerTeam->country);
+                    })
+                    ->take(18)
+                    ->get();
+                $teammates = $teammates->concat($byCountry)->unique('id')->values();
+            }
+        }
 
         // Articles tagged or mentioning this player (strictly tagged, no dummy fallback)
-        $playerQueryTerms = array_filter([$player->name, $player->nickname, $player->local_name, $player->slug]);
+        $playerQueryTerms = array_filter([$player->name, $player->nickname, $player->slug]);
         $articles = collect();
         if (!empty($playerQueryTerms)) {
             $articles = \App\Models\Article::where('is_enabled', true)
@@ -1964,9 +2089,10 @@ class PageController extends Controller
 
         $balls = \App\Models\BallByBall::where('match_id', $match->id)->orderBy('created_at', 'desc')->get();
         
-        // Calculate dynamic Cricbuzz stats via MatchService
+        // Calculate dynamic Cricbuzz stats & Match Information Analytics via MatchService
         $matchService = new \App\Services\MatchService();
         $stats = $matchService->getCalculatedStats($match);
+        $matchAnalytics = $matchService->getMatchInformationAnalytics($match);
 
         // Group balls into over summaries
         $overSummaries = [];
@@ -1990,7 +2116,33 @@ class PageController extends Controller
             ];
         }
 
-        return view('pages.match_detail', compact('match', 'balls', 'stats', 'overSummaries'));
+        $apiService = app(\App\Services\Possible11ApiService::class);
+        $team1Squad = $match->team1 ? $apiService->getTeamSquadPlayers($match->team1) : collect();
+        $team2Squad = $match->team2 ? $apiService->getTeamSquadPlayers($match->team2) : collect();
+
+        // Ensure any player with scorecard data in this match is present in the respective squad
+        if ($match->team1) {
+            $t1Names = $match->battingStats->where('team_id', $match->team1_id)->pluck('player_name')
+                ->merge($match->bowlingStats->where('team_id', $match->team1_id)->pluck('player_name'))->unique();
+            foreach ($t1Names as $pName) {
+                if (!$team1Squad->contains(fn($p) => strtolower(trim($p->name)) === strtolower(trim($pName)))) {
+                    $pObj = \App\Models\Player::where('name', $pName)->first();
+                    if ($pObj) $team1Squad->push($pObj);
+                }
+            }
+        }
+        if ($match->team2) {
+            $t2Names = $match->battingStats->where('team_id', $match->team2_id)->pluck('player_name')
+                ->merge($match->bowlingStats->where('team_id', $match->team2_id)->pluck('player_name'))->unique();
+            foreach ($t2Names as $pName) {
+                if (!$team2Squad->contains(fn($p) => strtolower(trim($p->name)) === strtolower(trim($pName)))) {
+                    $pObj = \App\Models\Player::where('name', $pName)->first();
+                    if ($pObj) $team2Squad->push($pObj);
+                }
+            }
+        }
+
+        return view('pages.match_detail', compact('match', 'balls', 'stats', 'overSummaries', 'matchAnalytics', 'team1Squad', 'team2Squad'));
     }
 
     public function globalSearch(Request $request)
@@ -2029,15 +2181,21 @@ class PageController extends Controller
                     ->get();
             }
 
-            // 2. Teams
+            // 2. Teams - Search only team name and short_name (not series/tournament names stored in country)
             if ($type === 'all' || $type === 'teams') {
                 $teams = Team::where(function($query) use ($q, $isNumeric) {
                         $query->where('name', 'LIKE', "%{$q}%")
-                              ->orWhere('short_name', 'LIKE', "%{$q}%")
-                              ->orWhere('city', 'LIKE', "%{$q}%")
-                              ->orWhere('country', 'LIKE', "%{$q}%")
-                              ->orWhere('team_type', 'LIKE', "%{$q}%")
-                              ->orWhere('keywords', 'LIKE', "%{$q}%");
+                              ->orWhere('short_name', 'LIKE', "%{$q}%");
+                        $query->orWhere(function($sub) use ($q) {
+                            $sub->where('city', 'LIKE', "%{$q}%")
+                                ->orWhere(function($cq) use ($q) {
+                                    $cq->where('country', 'LIKE', "%{$q}%")
+                                       ->where('country', 'NOT LIKE', '%league%')
+                                       ->where('country', 'NOT LIKE', '%series%')
+                                       ->where('country', 'NOT LIKE', '%championship%')
+                                       ->where('country', 'NOT LIKE', '%premier%');
+                                });
+                        });
                         if ($isNumeric) $query->orWhere('id', (int)$q);
                     })
                     ->get();
@@ -2176,6 +2334,349 @@ class PageController extends Controller
             'players', 'teams', 'matches', 'tournaments',
             'articles', 'news', 'predictions', 'fantasyTips',
             'venues', 'webStories', 'glossary'
+        ));
+    }
+
+    /**
+     * Head to Head (H2H) Team vs Team Comparison
+     */
+    public function headToHead(Request $request)
+    {
+        $allTeams = Team::orderBy('name', 'asc')->get();
+
+        if ($allTeams->isEmpty()) {
+            return view('pages.head_to_head', [
+                'allTeams' => collect(),
+                'team1' => null,
+                'team2' => null,
+                'format' => 'ALL',
+                'stats' => [],
+                'matches' => collect(),
+                't1Players' => collect(),
+                't2Players' => collect(),
+            ]);
+        }
+
+        // Selected teams resolution
+        $t1Param = $request->query('team1');
+        $t2Param = $request->query('team2');
+        $format = strtoupper(trim($request->query('format', 'ALL')));
+
+        $team1 = null;
+        if ($t1Param) {
+            $team1 = is_numeric($t1Param) ? Team::find($t1Param) : Team::where('slug', $t1Param)->orWhere('name', 'like', "%{$t1Param}%")->first();
+        }
+        if (!$team1) {
+            $team1 = Team::where('name', 'like', '%India%')->first() ?? $allTeams->first();
+        }
+
+        $team2 = null;
+        if ($t2Param) {
+            $team2 = is_numeric($t2Param) ? Team::find($t2Param) : Team::where('slug', $t2Param)->orWhere('name', 'like', "%{$t2Param}%")->first();
+        }
+        if (!$team2 || $team2->id == $team1->id) {
+            $team2 = Team::where('name', 'like', '%Australia%')->orWhere('name', 'like', '%Pakistan%')->where('id', '!=', $team1->id)->first()
+                ?? ($allTeams->where('id', '!=', $team1->id)->first() ?? $team1);
+        }
+
+        // Query matches between team1 and team2
+        $matchQuery = CricketMatch::with(['tournament', 'venue', 'team1', 'team2'])
+            ->where(function($q) use ($team1, $team2) {
+                $q->where(function($sub) use ($team1, $team2) {
+                    $sub->where('team1_id', $team1->id)->where('team2_id', $team2->id);
+                })->orWhere(function($sub) use ($team1, $team2) {
+                    $sub->where('team1_id', $team2->id)->where('team2_id', $team1->id);
+                });
+            });
+
+        $formatLabels = [
+            'ALL' => 'All Formats',
+            'T20' => 'T20',
+            'T10' => 'T10',
+            'TEST' => 'TEST',
+            'ODI' => 'ODI',
+            'T20WC' => 'T20 WC',
+            'ODIWC' => 'ODI WC',
+            'IPL' => 'IPL',
+        ];
+
+        if ($format !== 'ALL') {
+            if ($format === 'T10') {
+                $matchQuery->where(function($q) {
+                    $q->where('match_type', 'like', '%T10%')
+                      ->orWhereHas('tournament', function($tq) {
+                          $tq->where('format', 'like', '%T10%')
+                             ->orWhere('match_formats', 'like', '%T10%')
+                             ->orWhere('name', 'like', '%T10%');
+                      });
+                });
+            } elseif ($format === 'TEST') {
+                $matchQuery->where(function($q) {
+                    $q->where('match_type', 'like', '%TEST%')
+                      ->orWhereHas('tournament', function($tq) {
+                          $tq->where('format', 'like', '%TEST%')
+                             ->orWhere('match_formats', 'like', '%TEST%')
+                             ->orWhere('name', 'like', '%Test%');
+                      });
+                });
+            } elseif ($format === 'ODI') {
+                $matchQuery->where(function($q) {
+                    $q->where(function($sub) {
+                        $sub->where('match_type', 'like', '%ODI%')
+                            ->orWhere('match_type', 'like', '%One Day%');
+                    })->orWhereHas('tournament', function($tq) {
+                        $tq->where('format', 'like', '%ODI%')
+                           ->orWhere('match_formats', 'like', '%ODI%')
+                           ->orWhere('name', 'like', '%ODI%');
+                    });
+                });
+            } elseif ($format === 'T20WC') {
+                $matchQuery->where(function($q) {
+                    $q->where(function($sub) {
+                        $sub->where('match_type', 'like', '%T20%')
+                            ->orWhere('match_type', 'like', '%T20I%');
+                    })->whereHas('tournament', function($tq) {
+                        $tq->where(function($stq) {
+                            $stq->where('name', 'like', '%World Cup%')
+                               ->orWhere('name', 'like', '%T20 WC%')
+                               ->orWhere('slug', 'like', '%world-cup%')
+                               ->orWhere('slug', 'like', '%t20-wc%');
+                        });
+                    });
+                });
+            } elseif ($format === 'ODIWC') {
+                $matchQuery->where(function($q) {
+                    $q->where(function($sub) {
+                        $sub->where('match_type', 'like', '%ODI%')
+                            ->orWhere('match_type', 'like', '%One Day%');
+                    })->whereHas('tournament', function($tq) {
+                        $tq->where(function($stq) {
+                            $stq->where('name', 'like', '%World Cup%')
+                               ->orWhere('name', 'like', '%CWC%')
+                               ->orWhere('slug', 'like', '%world-cup%')
+                               ->orWhere('slug', 'like', '%odi-wc%');
+                        })->where('name', 'not like', '%T20%');
+                    });
+                });
+            } elseif ($format === 'IPL') {
+                $matchQuery->where(function($q) {
+                    $q->where('match_type', 'like', '%IPL%')
+                      ->orWhereHas('tournament', function($tq) {
+                          $tq->where('name', 'like', '%IPL%')
+                             ->orWhere('name', 'like', '%Indian Premier League%')
+                             ->orWhere('short_name', 'like', '%IPL%')
+                             ->orWhere('slug', 'like', '%ipl%');
+                      });
+                });
+            } elseif ($format === 'T20') {
+                $matchQuery->where(function($q) {
+                    $q->where(function($sub) {
+                        $sub->where('match_type', 'like', '%T20%')
+                            ->orWhere('match_type', 'like', '%T20I%')
+                            ->orWhere('match_type', 'like', '%Twenty20%');
+                    })->orWhereHas('tournament', function($tq) {
+                        $tq->where('format', 'like', '%T20%')
+                           ->orWhere('match_formats', 'like', '%T20%')
+                           ->orWhere('name', 'like', '%T20%')
+                           ->orWhere('name', 'like', '%Twenty20%');
+                    });
+                });
+            }
+        }
+
+        $matches = $matchQuery->orderBy('match_date', 'desc')->get();
+
+        // Calculate Head-to-Head Aggregates (100% Real Match Data from Database)
+        $totalMatches = $matches->count();
+        $t1Wins = 0;
+        $t2Wins = 0;
+        $ties = 0;
+        $noResults = 0;
+        $t1Scores = [];
+        $t2Scores = [];
+        $t1Bat1stWins = 0;
+        $t1ChaseWins = 0;
+        $t2Bat1stWins = 0;
+        $t2ChaseWins = 0;
+        $t1HomeWins = 0;
+        $t2HomeWins = 0;
+        $t1AwayWins = 0;
+        $t2AwayWins = 0;
+        $t1NeutralWins = 0;
+        $t2NeutralWins = 0;
+
+        $t1Country = strtolower(trim($team1->country ?? $team1->name));
+        $t2Country = strtolower(trim($team2->country ?? $team2->name));
+
+        foreach ($matches as $m) {
+            $isT1First = ($m->team1_id == $team1->id);
+            $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($m->team1_score ?? '0'))[0] ?? '0');
+            $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($m->team2_score ?? '0'))[0] ?? '0');
+
+            if ($s1 > 0) {
+                if ($isT1First) { $t1Scores[] = $s1; } else { $t2Scores[] = $s1; }
+            }
+            if ($s2 > 0) {
+                if ($isT1First) { $t2Scores[] = $s2; } else { $t1Scores[] = $s2; }
+            }
+
+            // Determine winner
+            $wTeamId = null;
+            if (!empty($m->winner_team_id)) {
+                $wTeamId = $m->winner_team_id;
+            } elseif ($s1 > 0 && $s2 > 0) {
+                if ($s1 > $s2) {
+                    $wTeamId = $m->team1_id;
+                } elseif ($s2 > $s1) {
+                    $wTeamId = $m->team2_id;
+                }
+            }
+
+            if (!$wTeamId && !empty($m->result_text)) {
+                $rLower = strtolower($m->result_text);
+                if (str_contains($rLower, strtolower($team1->name)) && (str_contains($rLower, 'won') || str_contains($rLower, 'win') || str_contains($rLower, 'beat'))) {
+                    $wTeamId = $team1->id;
+                } elseif (str_contains($rLower, strtolower($team2->name)) && (str_contains($rLower, 'won') || str_contains($rLower, 'win') || str_contains($rLower, 'beat'))) {
+                    $wTeamId = $team2->id;
+                }
+            }
+
+            // Check venue home/away/neutral
+            $vCountry = strtolower(trim($m->venue->country ?? ''));
+            $isT1Home = false;
+            $isT2Home = false;
+            if ($vCountry !== '') {
+                if (str_contains($t1Country, $vCountry) || str_contains($vCountry, $t1Country)) {
+                    $isT1Home = true;
+                } elseif (str_contains($t2Country, $vCountry) || str_contains($vCountry, $t2Country)) {
+                    $isT2Home = true;
+                }
+            }
+
+            if ($wTeamId == $team1->id) {
+                $t1Wins++;
+                if ($isT1First) { $t1Bat1stWins++; } else { $t1ChaseWins++; }
+                if ($isT1Home) { $t1HomeWins++; }
+                elseif ($isT2Home) { $t1AwayWins++; }
+                else { $t1NeutralWins++; }
+            } elseif ($wTeamId == $team2->id) {
+                $t2Wins++;
+                if (!$isT1First) { $t2Bat1stWins++; } else { $t2ChaseWins++; }
+                if ($isT2Home) { $t2HomeWins++; }
+                elseif ($isT1Home) { $t2AwayWins++; }
+                else { $t2NeutralWins++; }
+            } elseif (stripos((string)($m->result_text . ' ' . $m->result_description), 'tie') !== false || stripos((string)($m->result_text . ' ' . $m->result_description), 'draw') !== false) {
+                $ties++;
+            } else {
+                $noResults++;
+            }
+        }
+
+        // Recent Form: Fetch each team's last 5 completed matches across all tournaments
+        $recentFormT1 = [];
+        $t1RecentMatches = CricketMatch::where(function($q) use ($team1) {
+                $q->where('team1_id', $team1->id)->orWhere('team2_id', $team1->id);
+            })
+            ->whereIn('status', ['completed', 'finished', 'result'])
+            ->orderBy('match_date', 'desc')
+            ->take(5)
+            ->get();
+
+        foreach ($t1RecentMatches as $rm) {
+            $rWinId = $rm->winner_team_id;
+            if (!$rWinId) {
+                $rs1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($rm->team1_score ?? '0'))[0] ?? '0');
+                $rs2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($rm->team2_score ?? '0'))[0] ?? '0');
+                if ($rs1 > $rs2 && $rs1 > 0) $rWinId = $rm->team1_id;
+                elseif ($rs2 > $rs1 && $rs2 > 0) $rWinId = $rm->team2_id;
+            }
+            if ($rWinId == $team1->id) {
+                $recentFormT1[] = 'W';
+            } elseif (stripos((string)($rm->result_text . ' ' . $rm->result_description), 'tie') !== false || stripos((string)($rm->result_text . ' ' . $rm->result_description), 'draw') !== false) {
+                $recentFormT1[] = 'T';
+            } elseif (stripos((string)($rm->result_text . ' ' . $rm->result_description), 'no result') !== false || stripos((string)($rm->result_text . ' ' . $rm->result_description), 'abandon') !== false) {
+                $recentFormT1[] = 'NR';
+            } else {
+                $recentFormT1[] = 'L';
+            }
+        }
+
+        $recentFormT2 = [];
+        $t2RecentMatches = CricketMatch::where(function($q) use ($team2) {
+                $q->where('team1_id', $team2->id)->orWhere('team2_id', $team2->id);
+            })
+            ->whereIn('status', ['completed', 'finished', 'result'])
+            ->orderBy('match_date', 'desc')
+            ->take(5)
+            ->get();
+
+        foreach ($t2RecentMatches as $rm) {
+            $rWinId = $rm->winner_team_id;
+            if (!$rWinId) {
+                $rs1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($rm->team1_score ?? '0'))[0] ?? '0');
+                $rs2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($rm->team2_score ?? '0'))[0] ?? '0');
+                if ($rs1 > $rs2 && $rs1 > 0) $rWinId = $rm->team1_id;
+                elseif ($rs2 > $rs1 && $rs2 > 0) $rWinId = $rm->team2_id;
+            }
+            if ($rWinId == $team2->id) {
+                $recentFormT2[] = 'W';
+            } elseif (stripos((string)($rm->result_text . ' ' . $rm->result_description), 'tie') !== false || stripos((string)($rm->result_text . ' ' . $rm->result_description), 'draw') !== false) {
+                $recentFormT2[] = 'T';
+            } elseif (stripos((string)($rm->result_text . ' ' . $rm->result_description), 'no result') !== false || stripos((string)($rm->result_text . ' ' . $rm->result_description), 'abandon') !== false) {
+                $recentFormT2[] = 'NR';
+            } else {
+                $recentFormT2[] = 'L';
+            }
+        }
+
+        $t1Highest = !empty($t1Scores) ? max($t1Scores) : 0;
+        $t2Highest = !empty($t2Scores) ? max($t2Scores) : 0;
+        $t1Lowest = !empty($t1Scores) ? min($t1Scores) : 0;
+        $t2Lowest = !empty($t2Scores) ? min($t2Scores) : 0;
+        $t1Average = !empty($t1Scores) ? round(array_sum($t1Scores) / count($t1Scores)) : 0;
+        $t2Average = !empty($t2Scores) ? round(array_sum($t2Scores) / count($t2Scores)) : 0;
+
+        $t1WinPct = $totalMatches > 0 ? round(($t1Wins / $totalMatches) * 100, 1) : 0;
+        $t2WinPct = $totalMatches > 0 ? round(($t2Wins / $totalMatches) * 100, 1) : 0;
+
+        $t1Players = Player::where('team_id', $team1->id)->orWhere('played_teams', 'like', "%{$team1->name}%")->take(8)->get();
+        $t2Players = Player::where('team_id', $team2->id)->orWhere('played_teams', 'like', "%{$team2->name}%")->take(8)->get();
+
+        $formatLabel = $formatLabels[$format] ?? 'All Formats';
+
+        $stats = [
+            'totalMatches' => $totalMatches,
+            't1Wins' => $t1Wins,
+            't2Wins' => $t2Wins,
+            't1Lost' => $t2Wins,
+            't2Lost' => $t1Wins,
+            'ties' => $ties,
+            'noResults' => $noResults,
+            't1HomeWins' => $t1HomeWins,
+            't2HomeWins' => $t2HomeWins,
+            't1AwayWins' => $t1AwayWins,
+            't2AwayWins' => $t2AwayWins,
+            't1NeutralWins' => $t1NeutralWins,
+            't2NeutralWins' => $t2NeutralWins,
+            't1WinPct' => $t1WinPct,
+            't2WinPct' => $t2WinPct,
+            't1Highest' => $t1Highest,
+            't2Highest' => $t2Highest,
+            't1Lowest' => $t1Lowest,
+            't2Lowest' => $t2Lowest,
+            't1Average' => $t1Average,
+            't2Average' => $t2Average,
+            't1Bat1stWins' => $t1Bat1stWins,
+            't1ChaseWins' => $t1ChaseWins,
+            't2Bat1stWins' => $t2Bat1stWins,
+            't2ChaseWins' => $t2ChaseWins,
+            'recentFormT1' => $recentFormT1,
+            'recentFormT2' => $recentFormT2,
+            'formatLabel' => $formatLabel,
+        ];
+
+        return view('pages.head_to_head', compact(
+            'allTeams', 'team1', 'team2', 'format', 'formatLabels', 'formatLabel', 'stats', 'matches', 't1Players', 't2Players'
         ));
     }
 }

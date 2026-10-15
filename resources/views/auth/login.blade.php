@@ -78,7 +78,7 @@
             @csrf
             <div class="auth-input-group">
                 <label class="auth-label">Email Address</label>
-                <input type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="name@example.com" class="auth-input">
+                <input type="email" name="email" value="{{ old('email') }}" required autofocus class="auth-input">
             </div>
 
             <div class="auth-input-group">
@@ -87,7 +87,7 @@
                     <a href="{{ route('password.forgot') }}" class="auth-link-forgot">Forgot Password?</a>
                 </div>
                 <div class="password-input-wrapper">
-                    <input type="password" id="login-password" name="password" required placeholder="Enter your password" class="auth-input">
+                    <input type="password" id="login-password" name="password" required class="auth-input">
                     <button type="button" class="password-toggle-btn" data-target="login-password" title="Show password" aria-label="Toggle password visibility">
                         <svg class="eye-icon eye-show" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>

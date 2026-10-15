@@ -49,7 +49,7 @@
         <!-- Live Matches Search -->
         <div style="display: flex; align-items: center; gap: 6px;">
             <div class="admin-search-wrapper">
-                <input type="text" id="match-search-input" class="admin-search-input" oninput="filterMatches()" onkeyup="filterMatches()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterMatches();}" placeholder="Search matches..." style="width: 220px;">
+                <input type="text" id="match-search-input" class="admin-search-input" oninput="filterMatches()" onkeyup="filterMatches()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterMatches();}" style="width: 220px;">
                 <button type="button" class="admin-search-clear-btn" onclick="document.getElementById('match-search-input').value=''; filterMatches(); this.style.display='none';" title="Clear search">&times;</button>
             </div>
             <button type="button" onclick="filterMatches()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
@@ -268,7 +268,7 @@
                         <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">
                             Or Enter New Series Name
                         </label>
-                        <input type="text" name="name" id="new_series_input" placeholder="" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="name" id="new_series_input" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -281,14 +281,14 @@
                         <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">
                             Team 1 Name <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="text" name="team1_name" required placeholder="" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="team1_name" required style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
                     <div>
                         <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">
                             Team 2 Name <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="text" name="team2_name" required placeholder="" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="team2_name" required style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -309,7 +309,7 @@
 
                     <div>
                         <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">Match Subtitle / Level</label>
-                        <input type="text" name="level_type" placeholder="" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="level_type" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
                     <div>
@@ -327,14 +327,14 @@
 
                     <div style="grid-column: span 2;">
                         <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">Venue / Stadium</label>
-                        <input type="text" name="venue" placeholder="e.g. Wankhede Stadium, Mumbai" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="venue" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
                     <div style="grid-column: span 3;">
                         <label style="display:block; margin-bottom: 8px; font-weight: 700; font-size: 0.9rem; color: #334155;">
                             📺 Where to Watch (Broadcast TV &amp; Live Streaming Platforms)
                         </label>
-                        <input type="text" name="where_to_watch" placeholder="e.g. Disney+ Hotstar, Star Sports 1 HD, JioCinema, Sony LIV" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="where_to_watch" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none; box-sizing: border-box;">
                         <small style="color: #64748b; font-size: 0.8rem; margin-top: 5px; display: block;">Specify genuine TV and streaming broadcasters where fans can watch this match live (e.g. Disney+ Hotstar, Star Sports, JioCinema, Sony LIV).</small>
                     </div>
                 </div>
@@ -378,7 +378,7 @@
 
             <div>
                 <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Result Text / Winner Title</label>
-                <input type="text" name="result_text" id="modalResultText" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;">
+                <input type="text" name="result_text" id="modalResultText" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box;">
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
@@ -424,7 +424,7 @@ function toggleNewSeriesInput(val) {
 
     if (val && val !== 'new' && val !== '') {
         input.value = '';
-        input.placeholder = 'Selected Series: ' + (selectedOpt.text.split('•')[0] || selectedOpt.text).trim();
+        // series selected
         input.disabled = true;
         if (teamsCount < 2) {
             alertBox.style.display = 'block';
@@ -434,7 +434,7 @@ function toggleNewSeriesInput(val) {
         }
     } else {
         input.disabled = false;
-        input.placeholder = '';
+        
         alertBox.style.display = 'none';
     }
 }

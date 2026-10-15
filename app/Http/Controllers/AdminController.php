@@ -24,8 +24,14 @@ class AdminController extends Controller
 {
     protected function saveUploadedFile(\Illuminate\Http\UploadedFile $file, string $folder = 'uploads/images'): string
     {
-        $mime = $file->getMimeType() ?: 'image/jpeg';
-        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+        $targetDir = public_path($folder);
+        if (!file_exists($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+        $name = 'upload_' . date('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) . '.' . $ext;
+        $file->move($targetDir, $name);
+        return asset("{$folder}/{$name}");
     }
 
     protected function saveBase64Image(string $base64String, string $folder = 'uploads/images'): ?string
@@ -35,13 +41,19 @@ class AdminController extends Controller
             return null;
         }
 
-        if (!preg_match('/^data:image\/(\w+);base64,/', $base64String, $matches)) {
+        // If it's already an HTTP / local URL and not a data URI, return as-is
+        if (!str_starts_with($base64String, 'data:image')) {
             return $base64String;
         }
 
-        $extension = strtolower($matches[1]);
-        if ($extension === 'jpeg') {
-            $extension = 'jpg';
+        $extension = 'jpg';
+        if (preg_match('/^data:image\/([a-zA-Z0-9\+\-]+)/i', $base64String, $matches)) {
+            $ext = strtolower($matches[1]);
+            if ($ext === 'jpeg') $ext = 'jpg';
+            if ($ext === 'svg+xml') $ext = 'svg';
+            if (in_array($ext, ['jpg', 'png', 'webp', 'avif', 'gif', 'svg'])) {
+                $extension = $ext;
+            }
         }
 
         $targetDir = public_path($folder);
@@ -49,10 +61,16 @@ class AdminController extends Controller
             @mkdir($targetDir, 0755, true);
         }
 
-        $filename = 'img_' . date('Ymd_His') . '_' . \Illuminate\Support\Str::random(6) . '.' . $extension;
-        $data = substr($base64String, strpos($base64String, ',') + 1);
+        $filename = 'img_' . date('Ymd_His') . '_' . \Illuminate\Support\Str::random(8) . '.' . $extension;
+        $pos = strpos($base64String, ';base64,');
+        if ($pos !== false) {
+            $data = substr($base64String, $pos + 8);
+        } else {
+            $data = substr($base64String, strpos($base64String, ',') + 1);
+        }
+
         $decoded = base64_decode($data);
-        if ($decoded !== false) {
+        if ($decoded !== false && strlen($decoded) > 0) {
             file_put_contents("{$targetDir}/{$filename}", $decoded);
             return asset("{$folder}/{$filename}");
         }
@@ -123,6 +141,10 @@ class AdminController extends Controller
     protected function handleUploadedImagesMultiple(Request $request, string $fileKey, string $folder = 'uploads/web_stories'): array
     {
         $urls = [];
+        $targetDir = public_path($folder);
+        if (!file_exists($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
 
         // Check if multiple files were uploaded
         $fileKeys = array_unique([$fileKey, 'images', 'slides']);
@@ -132,10 +154,12 @@ class AdminController extends Controller
                 if (!is_array($files)) {
                     $files = [$files];
                 }
-                foreach ($files as $file) {
+                foreach ($files as $idx => $file) {
                     if ($file && $file->isValid()) {
-                        $mime = $file->getMimeType() ?: 'image/jpeg';
-                        $urls[] = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+                        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                        $name = 'slide_' . date('Ymd_His') . '_' . $idx . '_' . \Illuminate\Support\Str::random(6) . '.' . $ext;
+                        $file->move($targetDir, $name);
+                        $urls[] = asset("{$folder}/{$name}");
                     }
                 }
                 if (!empty($urls)) {
@@ -149,7 +173,14 @@ class AdminController extends Controller
             foreach ($request->input('slides_base64') as $b64) {
                 $b64 = trim($b64);
                 if (!empty($b64)) {
-                    $urls[] = $b64;
+                    if (str_starts_with($b64, 'data:image') || str_contains($b64, ';base64,')) {
+                        $saved = $this->saveBase64Image($b64, $folder);
+                        if ($saved) {
+                            $urls[] = $saved;
+                        }
+                    } else {
+                        $urls[] = $b64;
+                    }
                 }
             }
             if (!empty($urls)) {
@@ -530,7 +561,6 @@ class AdminController extends Controller
                     'status' => $request->input('status', 'upcoming') === 'live' ? 'ongoing' : ($request->input('status', 'upcoming') === 'completed' ? 'completed' : 'upcoming'),
                     'is_approved' => true,
                     'is_enabled' => true,
-                    'display_order' => 1,
                     'views_count' => 0
                 ]
             );
@@ -729,8 +759,11 @@ class AdminController extends Controller
                 $h1Heading = $title;
             }
 
+            $author = trim((string)$request->input('author', '')) ?: (auth()->user()?->name ?: 'Anjali Malviya');
+
             Article::create([
                 'category' => $request->input('category', 'INTERNATIONAL'),
+                'author' => $author,
                 'title' => $title,
                 'slug' => $slug,
                 'meta_description' => $request->input('meta_description', ''),
@@ -740,7 +773,6 @@ class AdminController extends Controller
                 'summary' => $summary,
                 'image_url' => $imageUrl,
                 'read_time' => $readTime,
-                'display_order' => (int)$request->input('display_order', 1),
                 'is_enabled' => $request->has('is_enabled') ? true : false,
                 'published_date' => date('M d')
             ]);
@@ -782,7 +814,11 @@ class AdminController extends Controller
                 $h1Heading = $title;
             }
 
+            $author = trim((string)$request->input('author', '')) ?: (auth()->user()?->name ?: 'Anjali Malviya');
+
             News::create([
+                'user_id' => auth()->id() ?? 3,
+                'author' => $author,
                 'category' => $request->input('category', 'CRICKET'),
                 'title' => $title,
                 'slug' => $slug,
@@ -793,7 +829,6 @@ class AdminController extends Controller
                 'summary' => $summary,
                 'image_url' => $imageUrl,
                 'read_time' => $readTime,
-                'display_order' => (int)$request->input('display_order', 1),
                 'is_enabled' => $request->has('is_enabled') ? true : false,
                 'published_date' => date('M d')
             ]);
@@ -818,9 +853,12 @@ class AdminController extends Controller
         }
 
         if (!empty($title)) {
+            $author = trim((string)$request->input('author', '')) ?: (auth()->user()?->name ?: 'Anjali Malviya');
+
             if ($type === 'FANTASY') {
                 FantasyTip::create([
                     'tag' => 'FANTASY',
+                    'author' => $author,
                     'title' => $title,
                     'slug' => $slug,
                     'summary' => $summary,
@@ -828,13 +866,13 @@ class AdminController extends Controller
                     'meta_description' => $request->input('meta_description', $summary),
                     'keywords' => $request->input('keywords', ''),
                     'poster_image' => $posterUrl,
-                    'display_order' => (int)$request->input('display_order', 1),
                     'is_enabled' => $request->has('is_enabled') ? true : false,
                 ]);
                 return redirect()->route('admin.prediction')->with('success', "Fantasy Tip added successfully!");
             } else {
                 Prediction::create([
                     'tag' => 'MATCH PREDICTION',
+                    'author' => $author,
                     'match_title' => 'Match Prediction',
                     'title' => $title,
                     'slug' => $slug,
@@ -843,7 +881,6 @@ class AdminController extends Controller
                     'meta_description' => $request->input('meta_description', $summary),
                     'keywords' => $request->input('keywords', ''),
                     'poster_image' => $posterUrl,
-                    'display_order' => (int)$request->input('display_order', 1),
                     'is_enabled' => $request->has('is_enabled') ? true : false,
                 ]);
                 return redirect()->route('admin.prediction')->with('success', "Match Prediction added successfully!");
@@ -884,7 +921,6 @@ class AdminController extends Controller
                 'slug' => $slug,
                 'short_name' => $short,
                 'year' => $request->input('year', date('Y')),
-                'display_order' => (int)$request->input('display_order', 1),
                 'meta_description' => $request->input('meta_description', ''),
                 'start_date' => $request->input('start_date'),
                 'end_date' => $request->input('end_date'),
@@ -942,7 +978,6 @@ class AdminController extends Controller
                 'slug' => $slug,
                 'short_name' => $short,
                 'year' => $request->input('year', $tournament->year ?? date('Y')),
-                'display_order' => (int)$request->input('display_order', 1),
                 'meta_description' => $request->input('meta_description', ''),
                 'start_date' => $request->input('start_date'),
                 'end_date' => $request->input('end_date'),
@@ -991,7 +1026,6 @@ class AdminController extends Controller
                 'nrr' => $request->input('nrr', '0.00'),
                 'points' => (int)$request->input('points', 0),
                 'category' => $request->input('category', 'ALL'),
-                'display_order' => (int)$request->input('display_order', 1),
                 'keywords' => $request->input('keywords', ''),
             ]);
 
@@ -1023,7 +1057,6 @@ class AdminController extends Controller
             'nrr' => $request->input('nrr', $team->nrr),
             'points' => (int)$request->input('points', $team->points),
             'category' => $request->input('category', $team->category ?? 'ALL'),
-            'display_order' => (int)$request->input('display_order', $team->display_order ?? 1),
             'keywords' => $request->input('keywords', $team->keywords ?? ''),
         ]);
 
@@ -1194,9 +1227,21 @@ class AdminController extends Controller
                         if ($request->hasFile("slide_file_{$idx}")) {
                             $file = $request->file("slide_file_{$idx}");
                             if ($file && $file->isValid()) {
-                                $filename = 'slide_' . time() . '_' . $idx . '.' . $file->getClientOriginalExtension();
-                                $file->move(public_path('uploads/web_stories'), $filename);
+                                $targetDir = public_path('uploads/web_stories');
+                                if (!file_exists($targetDir)) {
+                                    @mkdir($targetDir, 0755, true);
+                                }
+                                $filename = 'slide_' . time() . '_' . $idx . '_' . \Illuminate\Support\Str::random(4) . '.' . ($file->getClientOriginalExtension() ?: 'jpg');
+                                $file->move($targetDir, $filename);
                                 $img = asset('uploads/web_stories/' . $filename);
+                            }
+                        }
+
+                        // Save base64 image data to physical file if present
+                        if (!empty($img) && (str_starts_with($img, 'data:image') || str_contains($img, ';base64,'))) {
+                            $savedImg = $this->saveBase64Image($img, 'uploads/web_stories');
+                            if (!empty($savedImg)) {
+                                $img = $savedImg;
                             }
                         }
 
@@ -1227,9 +1272,21 @@ class AdminController extends Controller
                     if ($request->hasFile("slide_file_{$idx}")) {
                         $file = $request->file("slide_file_{$idx}");
                         if ($file && $file->isValid()) {
-                            $filename = 'slide_' . time() . '_' . $idx . '.' . $file->getClientOriginalExtension();
-                            $file->move(public_path('uploads/web_stories'), $filename);
+                            $targetDir = public_path('uploads/web_stories');
+                            if (!file_exists($targetDir)) {
+                                @mkdir($targetDir, 0755, true);
+                            }
+                            $filename = 'slide_' . time() . '_' . $idx . '_' . \Illuminate\Support\Str::random(4) . '.' . ($file->getClientOriginalExtension() ?: 'jpg');
+                            $file->move($targetDir, $filename);
                             $img = asset('uploads/web_stories/' . $filename);
+                        }
+                    }
+
+                    // Save base64 image data to physical file if present
+                    if (!empty($img) && (str_starts_with($img, 'data:image') || str_contains($img, ';base64,'))) {
+                        $savedImg = $this->saveBase64Image($img, 'uploads/web_stories');
+                        if (!empty($savedImg)) {
+                            $img = $savedImg;
                         }
                     }
 
@@ -1283,6 +1340,12 @@ class AdminController extends Controller
         if (empty($coverUrl) && !empty($parsedSlides)) {
             $coverUrl = $parsedSlides[0]['image'] ?? null;
         }
+        if (!empty($coverUrl) && (str_starts_with($coverUrl, 'data:image') || str_contains($coverUrl, ';base64,'))) {
+            $savedCover = $this->saveBase64Image($coverUrl, 'uploads/web_stories');
+            if (!empty($savedCover)) {
+                $coverUrl = $savedCover;
+            }
+        }
 
         if (empty($title)) {
             $title = 'New Web Story';
@@ -1305,7 +1368,6 @@ class AdminController extends Controller
             'meta_description' => $metaDescription,
             'image_url' => $coverUrl,
             'tag' => $category,
-            'display_order' => (int)$request->input('display_order', 1),
             'keywords' => $request->input('keywords', ''),
             'is_enabled' => $request->has('is_enabled') ? true : false,
             'slides' => $parsedSlides,
@@ -1470,8 +1532,9 @@ class AdminController extends Controller
      */
     public function syncPossible11Series(Request $request, \App\Services\Possible11ApiService $service)
     {
-        $status = $request->input('status', 'live');
-        $result = $service->syncSeries($status);
+        $status = $request->input('status', 'all');
+        $result = $service->syncSeries($status, true, 'Cricket', 50);
+        $service->autoGenerateAllMissingTournamentMatches();
 
         if ($result['success']) {
             return redirect()->route('admin.series')->with('success', $result['message']);
@@ -1634,15 +1697,15 @@ class AdminController extends Controller
                 return redirect()->route('admin.ranking', ['edit_team' => $editTeam->slug . '-' . $editTeam->id]);
             }
         } elseif ($editPlayerParam) {
-            $editPlayer = $this->resolveEditModel(\App\Models\PlayerRanking::class, $editPlayerParam);
+            $editPlayer = $this->resolveEditModel(\App\Models\IccPlayerRanking::class, $editPlayerParam);
             if ($editPlayer && (is_numeric($editPlayerParam) || $request->query('edit_player') === (string)$editPlayer->id)) {
-                return redirect()->route('admin.ranking', ['edit_player' => $editPlayer->slug . '-' . $editPlayer->id]);
+                return redirect()->route('admin.ranking', ['edit_player' => ($editPlayer->slug ?? $editPlayer->id) . '-' . $editPlayer->id]);
             }
         }
 
         $search = trim($request->query('search', ''));
         $teamQuery = TeamRanking::query();
-        $playerQuery = \App\Models\PlayerRanking::query();
+        $playerQuery = \App\Models\IccPlayerRanking::query();
 
         if (!empty($search)) {
             $teamQuery->where(function($q) use ($search) {
@@ -1652,14 +1715,13 @@ class AdminController extends Controller
             });
             $playerQuery->where(function($q) use ($search) {
                 $q->where('player_name', 'like', "%{$search}%")
-                  ->orWhere('team_name', 'like', "%{$search}%")
-                  ->orWhere('type', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
                   ->orWhere('format', 'like', "%{$search}%");
             });
         }
 
         $teamRankings = $teamQuery->orderBy('rank_num', 'asc')->get();
-        $playerRankings = $playerQuery->orderBy('type')->orderBy('rank_num', 'asc')->get();
+        $playerRankings = $playerQuery->orderBy('category')->orderBy('current_rank', 'asc')->get();
         return view('admin.add_team_ranking', compact('teamRankings', 'playerRankings', 'editTeam', 'editPlayer', 'search'));
     }
 
@@ -1739,7 +1801,6 @@ class AdminController extends Controller
                 'letter' => $letter,
                 'keywords' => $request->input('keywords', ''),
                 'poster_image' => $posterUrl,
-                'display_order' => (int)$request->input('display_order', 1),
             ]);
 
             return redirect()->route('admin.glossary')->with('success', 'Glossary Term created successfully!');
@@ -1761,11 +1822,13 @@ class AdminController extends Controller
 
         if ($type === 'FANTASY') {
             $item = \App\Models\FantasyTip::find($id);
-            $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', $item ? $item->poster_image : '');
+            $author = trim((string)$request->input('author', '')) ?: ($item ? ($item->author ?? null) : null) ?: (auth()->user()?->name ?: 'Anjali Malviya');
+
             if (!$item) {
                 \App\Models\Prediction::where('id', $id)->delete();
                 \App\Models\FantasyTip::create([
                     'tag' => 'FANTASY',
+                    'author' => $author,
                     'title' => $title,
                     'slug' => $slug,
                     'summary' => $summary,
@@ -1773,20 +1836,19 @@ class AdminController extends Controller
                     'meta_description' => $request->input('meta_description', $summary),
                     'keywords' => $request->input('keywords', ''),
                     'poster_image' => $posterUrl,
-                    'display_order' => (int)$request->input('display_order', 1),
                     'is_enabled' => $request->has('is_enabled') ? true : false,
                 ]);
                 return redirect()->route('admin.prediction')->with('success', 'Saved as Fantasy Tip successfully!');
             }
             $item->update([
                 'title' => $title,
+                'author' => $author,
                 'slug' => $slug,
                 'summary' => $summary,
                 'full_content' => $summary,
                 'meta_description' => $request->input('meta_description', $summary),
                 'keywords' => $request->input('keywords', $item->keywords),
                 'poster_image' => $posterUrl ?: $item->poster_image,
-                'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
                 'is_enabled' => $request->has('is_enabled') ? true : false,
                 'tag' => 'FANTASY'
             ]);
@@ -1794,10 +1856,13 @@ class AdminController extends Controller
         } else {
             $item = \App\Models\Prediction::find($id);
             $posterUrl = $this->handleUploadedImage($request, 'poster_file', 'poster_image', $item ? $item->poster_image : '');
+            $author = trim((string)$request->input('author', '')) ?: ($item ? ($item->author ?? null) : null) ?: (auth()->user()?->name ?: 'Anjali Malviya');
+
             if (!$item) {
                 \App\Models\FantasyTip::where('id', $id)->delete();
                 \App\Models\Prediction::create([
                     'tag' => 'MATCH PREDICTION',
+                    'author' => $author,
                     'match_title' => 'Match Prediction',
                     'title' => $title,
                     'slug' => $slug,
@@ -1806,20 +1871,19 @@ class AdminController extends Controller
                     'meta_description' => $request->input('meta_description', $summary),
                     'keywords' => $request->input('keywords', ''),
                     'poster_image' => $posterUrl,
-                    'display_order' => (int)$request->input('display_order', 1),
                     'is_enabled' => $request->has('is_enabled') ? true : false,
                 ]);
                 return redirect()->route('admin.prediction')->with('success', 'Saved as Match Prediction successfully!');
             }
             $item->update([
                 'title' => $title,
+                'author' => $author,
                 'slug' => $slug,
                 'summary' => $summary,
                 'full_content' => $summary,
                 'meta_description' => $request->input('meta_description', $summary),
                 'keywords' => $request->input('keywords', $item->keywords),
                 'poster_image' => $posterUrl ?: $item->poster_image,
-                'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
                 'is_enabled' => $request->has('is_enabled') ? true : false,
                 'tag' => 'MATCH PREDICTION'
             ]);
@@ -1874,8 +1938,11 @@ class AdminController extends Controller
             $h1Heading = $item->h1_heading ?: $title;
         }
 
+        $author = trim((string)$request->input('author', '')) ?: ($item->author ?? (auth()->user()?->name ?: 'Anjali Malviya'));
+
         $item->update([
             'category' => $request->input('category', $item->category),
+            'author' => $author,
             'title' => $title,
             'slug' => $slug,
             'meta_description' => $request->input('meta_description', $item->meta_description),
@@ -1885,7 +1952,6 @@ class AdminController extends Controller
             'summary' => $summary,
             'image_url' => $imageUrl,
             'read_time' => $readTime,
-            'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
             'is_enabled' => $request->has('is_enabled') ? true : false,
         ]);
         return redirect()->route('admin.article')->with('success', 'Article updated successfully!');
@@ -1927,8 +1993,11 @@ class AdminController extends Controller
             $h1Heading = $item->h1_heading ?: $title;
         }
 
+        $author = trim((string)$request->input('author', '')) ?: ($item->author ?? (auth()->user()?->name ?: 'Anjali Malviya'));
+
         $item->update([
             'category' => $request->input('category', $item->category),
+            'author' => $author,
             'title' => $title,
             'slug' => $slug,
             'meta_description' => $request->input('meta_description', $item->meta_description),
@@ -1938,7 +2007,6 @@ class AdminController extends Controller
             'summary' => $summary,
             'image_url' => $imageUrl,
             'read_time' => $readTime,
-            'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
             'is_enabled' => $request->has('is_enabled') ? true : false,
         ]);
 
@@ -1964,6 +2032,12 @@ class AdminController extends Controller
         if (empty($coverUrl) && !empty($parsedSlides)) {
             $coverUrl = $parsedSlides[0]['image'] ?? $item->image_url;
         }
+        if (!empty($coverUrl) && (str_starts_with($coverUrl, 'data:image') || str_contains($coverUrl, ';base64,'))) {
+            $savedCover = $this->saveBase64Image($coverUrl, 'uploads/web_stories');
+            if (!empty($savedCover)) {
+                $coverUrl = $savedCover;
+            }
+        }
 
         $author = trim($request->input('author', ''));
         if (empty($author)) {
@@ -1986,7 +2060,6 @@ class AdminController extends Controller
             'meta_description' => $metaDescription,
             'author' => $author,
             'tag' => $category,
-            'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
             'keywords' => $request->input('keywords', $item->keywords ?? ''),
             'is_enabled' => $request->has('is_enabled') ? true : false,
             'image_url' => $coverUrl,
@@ -2032,7 +2105,6 @@ class AdminController extends Controller
             'letter' => $letter,
             'keywords' => $request->input('keywords', $item->keywords),
             'poster_image' => $posterUrl,
-            'display_order' => (int)$request->input('display_order', $item->display_order ?? 1)
         ]);
         return redirect()->route('admin.glossary')->with('success', 'Glossary Term updated successfully!');
     }
@@ -2097,23 +2169,13 @@ class AdminController extends Controller
         $playerName = trim($request->input('player_name', ''));
         $type = strtolower($request->input('type', 'batting'));
         if (!empty($playerName)) {
-            $photoUrl = $this->handleUploadedImage($request, 'poster_file', 'photo_url', $request->input('poster_image', ''));
-
-            $slug = trim($request->input('slug', ''));
-            if (empty($slug)) {
-                $slug = \Illuminate\Support\Str::slug($playerName);
-            }
-
-            \App\Models\PlayerRanking::create([
-                'type' => $type,
-                'rank_num' => (int)$request->input('rank_num', 1),
-                'badge_text' => strtoupper($request->input('badge_text', 'IND')),
+            \App\Models\IccPlayerRanking::create([
+                'category' => $type,
+                'format' => strtoupper($request->input('format', 'ODI')),
                 'player_name' => $playerName,
-                'slug' => $slug,
-                'photo_url' => $photoUrl,
-                'stat_value' => (int)$request->input('stat_value', 0),
-                'display_order' => (int)$request->input('display_order', 1),
-                'keywords' => $request->input('keywords', ''),
+                'country' => strtoupper($request->input('badge_text', 'IND')),
+                'current_rank' => (string)$request->input('rank_num', 1),
+                'best_rank' => (string)$request->input('stat_value', 1),
             ]);
 
             return redirect()->route('admin.ranking')->with('success', 'Player Ranking created successfully!');
@@ -2124,27 +2186,17 @@ class AdminController extends Controller
 
     public function updatePlayerRanking(Request $request, $id)
     {
-        $item = \App\Models\PlayerRanking::findOrFail($id);
+        $item = \App\Models\IccPlayerRanking::findOrFail($id);
         $playerName = trim($request->input('player_name', $item->player_name));
-        $type = strtolower($request->input('type', $item->type));
-
-        $photoUrl = $this->handleUploadedImage($request, 'poster_file', 'photo_url', $item->photo_url ?? '');
-
-        $slug = trim($request->input('slug', ''));
-        if (empty($slug)) {
-            $slug = \Illuminate\Support\Str::slug($playerName);
-        }
+        $type = strtolower($request->input('type', $item->category));
 
         $item->update([
-            'type' => $type,
-            'rank_num' => (int)$request->input('rank_num', $item->rank_num),
-            'badge_text' => strtoupper($request->input('badge_text', $item->badge_text ?? 'IND')),
+            'category' => $type,
+            'format' => strtoupper($request->input('format', $item->format ?? 'ODI')),
             'player_name' => $playerName,
-            'slug' => $slug,
-            'photo_url' => $photoUrl,
-            'stat_value' => (int)$request->input('stat_value', $item->stat_value),
-            'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
-            'keywords' => $request->input('keywords', $item->keywords ?? ''),
+            'country' => strtoupper($request->input('badge_text', $item->country ?? 'IND')),
+            'current_rank' => (string)$request->input('rank_num', $item->current_rank),
+            'best_rank' => (string)$request->input('stat_value', $item->best_rank),
         ]);
 
         return redirect()->route('admin.ranking')->with('success', 'Player Ranking updated successfully!');
@@ -2152,7 +2204,7 @@ class AdminController extends Controller
 
     public function deletePlayerRanking($id)
     {
-        \App\Models\PlayerRanking::findOrFail($id)->delete();
+        \App\Models\IccPlayerRanking::findOrFail($id)->delete();
         return redirect()->route('admin.ranking')->with('success', 'Player ranking deleted successfully!');
     }
 
@@ -2205,8 +2257,11 @@ class AdminController extends Controller
             $slug = \Illuminate\Support\Str::slug($title);
         }
 
+        $author = trim((string)$request->input('author', '')) ?: (auth()->user()?->name ?: 'Anjali Malviya');
+
         \App\Models\Prediction::create([
             'tag' => 'MATCH PREVIEW',
+            'author' => $author,
             'match_title' => $title,
             'title' => $title,
             'slug' => $slug,
@@ -2215,7 +2270,6 @@ class AdminController extends Controller
             'meta_description' => $request->input('meta_description', substr(strip_tags($summary), 0, 160)),
             'keywords' => $request->input('keywords', ''),
             'poster_image' => $posterUrl,
-            'display_order' => (int)$request->input('display_order', 1),
             'is_enabled' => $request->has('is_enabled') ? true : false,
         ]);
         return redirect()->route('admin.match-preview')->with('success', 'Match Preview published successfully!');
@@ -2234,16 +2288,17 @@ class AdminController extends Controller
         }
 
         $summary = trim($request->input('summary', $item->summary));
+        $author = trim((string)$request->input('author', '')) ?: ($item->author ?? (auth()->user()?->name ?: 'Anjali Malviya'));
 
         $item->update([
             'title' => $title,
+            'author' => $author,
             'slug' => $slug,
             'summary' => $summary,
             'full_content' => $summary,
             'meta_description' => $request->input('meta_description', substr(strip_tags($summary), 0, 160)),
             'keywords' => $request->input('keywords', $item->keywords),
             'poster_image' => $posterUrl,
-            'display_order' => (int)$request->input('display_order', $item->display_order ?? 1),
             'is_enabled' => $request->has('is_enabled') ? true : false,
             'tag' => 'MATCH PREVIEW',
         ]);
@@ -2323,7 +2378,6 @@ class AdminController extends Controller
             'country' => $request->input('country', ''),
             'logo' => $logo,
             'logo_url' => $logo,
-            'display_order' => (int)$request->input('display_order', 1),
             'description' => $request->input('description', ''),
             'keywords' => $request->input('keywords', ''),
         ]);
@@ -2352,7 +2406,6 @@ class AdminController extends Controller
             'logo' => $logo,
             'logo_url' => $logo,
             'tournament_id' => $request->input('tournament_id') ?: $team->tournament_id,
-            'display_order' => (int)$request->input('display_order', $team->display_order ?? 1),
             'description' => $request->input('description', $team->description ?? ''),
             'keywords' => $request->input('keywords', $team->keywords ?? ''),
         ]);
@@ -2436,7 +2489,9 @@ class AdminController extends Controller
         }
 
         $teams = Team::orderBy('name', 'asc')->get();
-        return view('admin.admin_players', compact('players', 'editItem', 'teams', 'search', 'roleFilter'));
+        $tournaments = Tournament::orderBy('name', 'asc')->get();
+        $allCaptains = Player::orderBy('name', 'asc')->get(['id', 'name']);
+        return view('admin.admin_players', compact('players', 'editItem', 'teams', 'tournaments', 'allCaptains', 'search', 'roleFilter'));
     }
 
     public function createPlayer(\Illuminate\Http\Request $request)
@@ -2464,31 +2519,16 @@ class AdminController extends Controller
         $dob = $request->input('date_of_birth') ?: null;
         $birthdayText = $dob ? date('d M', strtotime($dob)) : null;
 
-        // Extract ICC rankings dynamically using loop engineering
-        $iccRankings = [];
-        $rawRankings = $request->input('icc_rankings', []);
-        if (is_array($rawRankings)) {
-            foreach (['batting', 'bowling', 'all_rounder'] as $cat) {
-                foreach (['test', 'odi', 't20i'] as $fmt) {
-                    $curr = isset($rawRankings[$cat][$fmt]['current']) ? trim((string)$rawRankings[$cat][$fmt]['current']) : '';
-                    $best = isset($rawRankings[$cat][$fmt]['best']) ? trim((string)$rawRankings[$cat][$fmt]['best']) : '';
-                    if ($curr !== '' || $best !== '') {
-                        $iccRankings[$cat][$fmt] = [
-                            'current' => $curr !== '' ? $curr : '--',
-                            'best' => $best !== '' ? $best : '--',
-                        ];
-                    }
-                }
-            }
-        }
+        $seriesId = $request->input('series_id') ? (int)$request->input('series_id') : null;
+        $formatId = $request->input('format_id') ? strtoupper(trim($request->input('format_id'))) : null;
+        $isCaptain = $request->has('is_captain');
+        $captainId = $request->input('captain_id') ? (int)$request->input('captain_id') : null;
 
-        \App\Models\Player::create([
+        $player = \App\Models\Player::create([
             'name' => $name,
-            'local_name' => trim($request->input('local_name', '')),
             'nickname' => trim($request->input('nickname', '')),
             'slug' => $slug,
             'short_name' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3)),
-            'initials' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 2)),
             'team_id' => $request->input('team_id') ?: null,
             'role' => $request->input('role', 'Batsman'),
             'batting_style' => $request->input('batting_style', ''),
@@ -2508,12 +2548,64 @@ class AdminController extends Controller
             'birthday_text' => $birthdayText,
             'profile_image' => $profileImage,
             'is_popular' => $request->has('is_popular') ? 1 : 0,
-            'display_order' => (int)$request->input('display_order', 1),
-            'description' => $request->input('description', ''),
+            'meta_description' => $request->input('meta_description', $request->input('description', '')),
             'bio' => $request->input('bio', ''),
             'keywords' => $request->input('keywords', ''),
-            'icc_rankings' => !empty($iccRankings) ? $iccRankings : null,
         ]);
+
+        // If series and format are selected, store into single seriesid_captionid_formateid column
+        if ($seriesId && $formatId) {
+            $series = \App\Models\Tournament::find($seriesId);
+            $team = \App\Models\Team::find($player->team_id);
+            $effectiveCaptainId = $isCaptain ? $player->id : $captainId;
+            $squadData = [
+                $formatId => [
+                    'series_id' => $seriesId,
+                    'series_name' => $series ? $series->name : 'Series #' . $seriesId,
+                    'format_id' => $formatId,
+                    'team_id' => $player->team_id,
+                    'team_name' => $team ? $team->name : '',
+                    'captain_id' => $effectiveCaptainId,
+                    'is_captain' => $isCaptain,
+                    'role_in_squad' => $player->role ?? 'Player',
+                    'updated_at' => now()->toDateTimeString(),
+                ]
+            ];
+            $player->seriesid_captionid_formateid = json_encode($squadData);
+            $player->save();
+        }
+
+        // Save ICC rankings to dedicated icc_player_rankings table
+        $rawRankings = $request->input('icc_rankings', []);
+        if (is_array($rawRankings)) {
+            foreach (['batting', 'bowling', 'all_rounder'] as $cat) {
+                foreach (['test', 'odi', 't20i'] as $fmt) {
+                    $curr = isset($rawRankings[$cat][$fmt]['current']) ? trim((string)$rawRankings[$cat][$fmt]['current']) : '';
+                    $best = isset($rawRankings[$cat][$fmt]['best']) ? trim((string)$rawRankings[$cat][$fmt]['best']) : '';
+                    if ($curr !== '' || $best !== '') {
+                        \App\Models\IccPlayerRanking::updateOrCreate(
+                            [
+                                'player_id' => $player->id,
+                                'category' => $cat,
+                                'format' => strtoupper($fmt),
+                            ],
+                            [
+                                'player_name' => $player->name,
+                                'country' => $country ?: ($player->country ?? 'IND'),
+                                'current_rank' => $curr !== '' ? $curr : '--',
+                                'best_rank' => $best !== '' ? $best : '--',
+                            ]
+                        );
+                    } else {
+                        \App\Models\IccPlayerRanking::where('player_id', $player->id)
+                            ->where('category', $cat)
+                            ->where('format', strtoupper($fmt))
+                            ->delete();
+                    }
+                }
+            }
+        }
+
         return redirect()->route('admin.players')->with('success', "Player '{$name}' created successfully!");
     }
 
@@ -2533,32 +2625,35 @@ class AdminController extends Controller
         $dob = $request->input('date_of_birth') ?: $player->date_of_birth;
         $birthdayText = $dob ? date('d M', strtotime($dob)) : null;
 
-        // Extract ICC rankings dynamically using loop engineering
-        $iccRankings = [];
-        $rawRankings = $request->input('icc_rankings', []);
-        if (is_array($rawRankings)) {
-            foreach (['batting', 'bowling', 'all_rounder'] as $cat) {
-                foreach (['test', 'odi', 't20i'] as $fmt) {
-                    $curr = isset($rawRankings[$cat][$fmt]['current']) ? trim((string)$rawRankings[$cat][$fmt]['current']) : '';
-                    $best = isset($rawRankings[$cat][$fmt]['best']) ? trim((string)$rawRankings[$cat][$fmt]['best']) : '';
-                    if ($curr !== '' || $best !== '') {
-                        $iccRankings[$cat][$fmt] = [
-                            'current' => $curr !== '' ? $curr : '--',
-                            'best' => $best !== '' ? $best : '--',
-                        ];
-                    }
-                }
-            }
+        $seriesId = $request->input('series_id') ? (int)$request->input('series_id') : null;
+        $formatId = $request->input('format_id') ? strtoupper(trim($request->input('format_id'))) : null;
+        $isCaptain = $request->has('is_captain');
+        $captainId = $request->input('captain_id') ? (int)$request->input('captain_id') : ($isCaptain ? $player->id : null);
+
+        $squadData = $player->format_squads_data ?? [];
+        if ($seriesId && $formatId) {
+            $series = \App\Models\Tournament::find($seriesId);
+            $team = \App\Models\Team::find($request->input('team_id') ?: $player->team_id);
+            $squadData[$formatId] = [
+                'series_id' => $seriesId,
+                'series_name' => $series ? $series->name : 'Series #' . $seriesId,
+                'format_id' => $formatId,
+                'team_id' => $request->input('team_id') ?: $player->team_id,
+                'team_name' => $team ? $team->name : '',
+                'captain_id' => $captainId,
+                'is_captain' => $isCaptain,
+                'role_in_squad' => $request->input('role', $player->role ?? 'Player'),
+                'updated_at' => now()->toDateTimeString(),
+            ];
         }
 
         $player->update([
             'name' => $name,
-            'local_name' => trim($request->input('local_name', $player->local_name ?? '')),
             'nickname' => trim($request->input('nickname', $player->nickname ?? '')),
             'slug' => $slug,
             'short_name' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3)),
-            'initials' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 2)),
             'team_id' => $request->input('team_id') ?: $player->team_id,
+            'seriesid_captionid_formateid' => !empty($squadData) ? json_encode($squadData) : $player->seriesid_captionid_formateid,
             'role' => $request->input('role', $player->role ?? 'Batsman'),
             'batting_style' => $request->input('batting_style', $player->batting_style ?? ''),
             'bowling_style' => $request->input('bowling_style', $player->bowling_style ?? ''),
@@ -2577,12 +2672,42 @@ class AdminController extends Controller
             'birthday_text' => $birthdayText,
             'profile_image' => $profileImage,
             'is_popular' => $request->has('is_popular') ? 1 : 0,
-            'display_order' => (int)$request->input('display_order', $player->display_order ?? 1),
-            'description' => $request->input('description', $player->description ?? ''),
+            'meta_description' => $request->input('meta_description', $request->input('description', $player->meta_description ?? '')),
             'bio' => $request->input('bio', $player->bio ?? ''),
             'keywords' => $request->input('keywords', $player->keywords ?? ''),
-            'icc_rankings' => !empty($iccRankings) ? $iccRankings : null,
         ]);
+
+        // Save ICC rankings to dedicated icc_player_rankings table
+        $rawRankings = $request->input('icc_rankings', []);
+        if (is_array($rawRankings)) {
+            foreach (['batting', 'bowling', 'all_rounder'] as $cat) {
+                foreach (['test', 'odi', 't20i'] as $fmt) {
+                    $curr = isset($rawRankings[$cat][$fmt]['current']) ? trim((string)$rawRankings[$cat][$fmt]['current']) : '';
+                    $best = isset($rawRankings[$cat][$fmt]['best']) ? trim((string)$rawRankings[$cat][$fmt]['best']) : '';
+                    if ($curr !== '' || $best !== '') {
+                        \App\Models\IccPlayerRanking::updateOrCreate(
+                            [
+                                'player_id' => $player->id,
+                                'category' => $cat,
+                                'format' => strtoupper($fmt),
+                            ],
+                            [
+                                'player_name' => $player->name,
+                                'country' => $country ?: ($player->country ?? 'IND'),
+                                'current_rank' => $curr !== '' ? $curr : '--',
+                                'best_rank' => $best !== '' ? $best : '--',
+                            ]
+                        );
+                    } else {
+                        \App\Models\IccPlayerRanking::where('player_id', $player->id)
+                            ->where('category', $cat)
+                            ->where('format', strtoupper($fmt))
+                            ->delete();
+                    }
+                }
+            }
+        }
+
         return redirect()->route('admin.players')->with('success', 'Player updated successfully!');
     }
 
@@ -2650,7 +2775,6 @@ class AdminController extends Controller
             'country' => $request->input('country', 'India'),
             'capacity' => $request->input('capacity', ''),
             'image_url' => $imageUrl,
-            'display_order' => (int)$request->input('display_order', 1),
             'description' => $request->input('description', ''),
             'keywords' => $request->input('keywords', ''),
         ]);
@@ -2675,7 +2799,6 @@ class AdminController extends Controller
             'country' => $request->input('country', $venue->country ?? 'India'),
             'capacity' => $request->input('capacity', $venue->capacity ?? ''),
             'image_url' => $imageUrl,
-            'display_order' => (int)$request->input('display_order', $venue->display_order ?? 1),
             'description' => $request->input('description', $venue->description ?? ''),
             'keywords' => $request->input('keywords', $venue->keywords ?? ''),
         ]);
@@ -2922,6 +3045,150 @@ class AdminController extends Controller
         }
 
         return response()->json(['success' => false, 'message' => 'No valid image data received.'], 422);
+    }
+
+    /**
+     * Fetch Series Squad Data for SuperAdmin by Series, Team, and Format directly from Players table
+     */
+    public function getSeriesSquadData(Request $request)
+    {
+        $seriesId = (int)$request->query('series_id');
+        $teamId = (int)$request->query('team_id');
+        $format = strtoupper(trim($request->query('format', 'T20')));
+
+        if (!$seriesId || !$teamId) {
+            return response()->json(['success' => false, 'message' => 'series_id and team_id are required.'], 422);
+        }
+
+        // Find all players assigned to this team or currently in this series/format squad
+        $teamPlayers = \App\Models\Player::where('team_id', $teamId)->orderBy('name', 'asc')->get();
+        if ($teamPlayers->isEmpty()) {
+            $teamPlayers = \App\Models\Player::orderBy('name', 'asc')->get();
+        }
+
+        $selectedPlayerIds = [];
+        $captainId = null;
+        $viceCaptainId = null;
+        $wicketKeeperId = null;
+
+        foreach ($teamPlayers as $p) {
+            $squadData = $p->format_squads_data;
+            if (isset($squadData[$format])) {
+                $fmtEntry = $squadData[$format];
+                if (isset($fmtEntry['series_id']) && (int)$fmtEntry['series_id'] === $seriesId) {
+                    $selectedPlayerIds[] = $p->id;
+                    if (!empty($fmtEntry['is_captain'])) {
+                        $captainId = $p->id;
+                    }
+                    if (!empty($fmtEntry['is_vice_captain'])) {
+                        $viceCaptainId = $p->id;
+                    }
+                    if (!empty($fmtEntry['is_wicket_keeper'])) {
+                        $wicketKeeperId = $p->id;
+                    }
+                }
+            } elseif ($p->series_id == $seriesId && strtoupper((string)$p->format_id) === $format) {
+                $selectedPlayerIds[] = $p->id;
+                if ($p->captain_id == $p->id) {
+                    $captainId = $p->id;
+                }
+            }
+        }
+
+        $allPlayers = \App\Models\Player::orderBy('name', 'asc')->get([
+            'id', 'name', 'role', 'team_id', 'country', 'profile_image', 'played_teams'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'series_id' => $seriesId,
+            'team_id' => $teamId,
+            'format' => $format,
+            'captain_id' => $captainId,
+            'vice_captain_id' => $viceCaptainId,
+            'wicket_keeper_id' => $wicketKeeperId,
+            'selected_player_ids' => $selectedPlayerIds,
+            'all_players' => $allPlayers,
+        ]);
+    }
+
+    /**
+     * Save Series Squad & Captain Mapping directly into Players table (format_squads JSON)
+     */
+    public function saveSeriesSquadData(Request $request)
+    {
+        $seriesId = (int)$request->input('series_id');
+        $teamId = (int)$request->input('team_id');
+        $format = strtoupper(trim($request->input('format', 'T20')));
+
+        if (!$seriesId || !$teamId) {
+            return response()->json(['success' => false, 'message' => 'Series and Team are required.'], 422);
+        }
+
+        $series = \App\Models\Tournament::find($seriesId);
+        $team = \App\Models\Team::find($teamId);
+
+        $captainId = $request->input('captain_id') ? (int)$request->input('captain_id') : null;
+        $viceCaptainId = $request->input('vice_captain_id') ? (int)$request->input('vice_captain_id') : null;
+        $wicketKeeperId = $request->input('wicket_keeper_id') ? (int)$request->input('wicket_keeper_id') : null;
+        $playerIds = $request->input('player_ids', []);
+        if (is_string($playerIds)) {
+            $playerIds = array_filter(array_map('intval', explode(',', $playerIds)));
+        }
+
+        if ($captainId && !in_array($captainId, $playerIds)) {
+            $playerIds[] = $captainId;
+        }
+        if ($viceCaptainId && !in_array($viceCaptainId, $playerIds)) {
+            $playerIds[] = $viceCaptainId;
+        }
+        if ($wicketKeeperId && !in_array($wicketKeeperId, $playerIds)) {
+            $playerIds[] = $wicketKeeperId;
+        }
+
+        // 1. Remove this series format squad from players who were unselected for this series & format
+        $existingPlayers = \App\Models\Player::where('team_id', $teamId)->get();
+
+        foreach ($existingPlayers as $ep) {
+            if (!in_array($ep->id, $playerIds)) {
+                $squadData = $ep->format_squads_data;
+                if (isset($squadData[$format]) && isset($squadData[$format]['series_id']) && (int)$squadData[$format]['series_id'] === $seriesId) {
+                    unset($squadData[$format]);
+                    $ep->seriesid_captionid_formateid = !empty($squadData) ? json_encode($squadData) : null;
+                    $ep->save();
+                }
+            }
+        }
+
+        // 2. Add or update format squad entry in seriesid_captionid_formateid JSON for all selected players
+        foreach ($playerIds as $pid) {
+            $p = \App\Models\Player::find($pid);
+            if ($p) {
+                $squadData = $p->format_squads_data;
+                $squadData[$format] = [
+                    'series_id' => $seriesId,
+                    'series_name' => $series ? $series->name : 'Series #' . $seriesId,
+                    'format_id' => $format,
+                    'team_id' => $teamId,
+                    'team_name' => $team ? $team->name : 'Team #' . $teamId,
+                    'captain_id' => $captainId,
+                    'is_captain' => ($pid == $captainId),
+                    'is_vice_captain' => ($pid == $viceCaptainId),
+                    'is_wicket_keeper' => ($pid == $wicketKeeperId),
+                    'role_in_squad' => $p->role ?? 'Player',
+                    'updated_at' => now()->toDateTimeString(),
+                ];
+
+                $p->seriesid_captionid_formateid = json_encode($squadData);
+                $p->save();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Squad for format {$format} saved successfully into players table with " . count($playerIds) . " players!",
+            'player_count' => count($playerIds),
+        ]);
     }
 }
 

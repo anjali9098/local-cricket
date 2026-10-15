@@ -21,7 +21,7 @@ class Player extends Model {
             ($this->played_teams ?? '') . ' ' .
             ($this->role ?? '') . ' ' .
             ($this->bio ?? '') . ' ' .
-            ($this->description ?? '') . ' ' .
+            ($this->meta_description ?? '') . ' ' .
             ($this->keywords ?? '') . ' ' .
             ($this->team ? $this->team->name : '')
         );
@@ -45,20 +45,44 @@ class Player extends Model {
 
     public function getHasCustomImageAttribute(): bool
     {
-        return !empty($this->attributes['profile_image'] ?? null);
+        $val = $this->attributes['profile_image'] ?? null;
+        if (empty($val)) return false;
+        $valLower = strtolower($val);
+        return !(
+            str_contains($valLower, 'default-player-image') ||
+            str_contains($valLower, 'default-player') ||
+            str_contains($valLower, 'default_player') ||
+            str_contains($valLower, 'default-avatar') ||
+            str_contains($valLower, 'default_avatar') ||
+            str_contains($valLower, 'icon512.png') ||
+            str_contains($valLower, 'placeholder') ||
+            str_contains($valLower, 'default.png') ||
+            str_contains($valLower, 'default-player-boy') ||
+            str_contains($valLower, 'default-player-girl')
+        );
     }
 
     public function getRealProfileImageAttribute(): ?string
     {
-        if (!empty($this->attributes['profile_image'] ?? null)) {
-            return self::formatImageUrl($this->attributes['profile_image']);
-        }
-        return null;
+        return $this->has_custom_image ? self::formatImageUrl($this->attributes['profile_image']) : null;
     }
 
     public function getProfileImageAttribute($value)
     {
         if (!empty($value)) {
+            $valLower = strtolower($value);
+            if (
+                str_contains($valLower, 'default-player-image') ||
+                str_contains($valLower, 'default-player') ||
+                str_contains($valLower, 'default_player') ||
+                str_contains($valLower, 'default-avatar') ||
+                str_contains($valLower, 'default_avatar') ||
+                str_contains($valLower, 'icon512.png') ||
+                str_contains($valLower, 'placeholder') ||
+                str_contains($valLower, 'default.png')
+            ) {
+                return $this->default_avatar;
+            }
             return self::formatImageUrl($value);
         }
         return $this->default_avatar;
@@ -107,15 +131,91 @@ class Player extends Model {
         return !empty($this->father_name) || !empty($this->mother_name) || !empty($this->spouse_name) || !empty($this->children) || !empty($this->siblings);
     }
 
+    public function iccRankings()
+    {
+        return $this->hasMany(IccPlayerRanking::class, 'player_id');
+    }
+
+    public function getFormatSquadsDataAttribute()
+    {
+        $raw = $this->seriesid_captionid_formateid ?? $this->format_squads ?? null;
+        if (empty($raw)) {
+            return [];
+        }
+        if (is_array($raw)) {
+            return $raw;
+        }
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+            // If stored as seriesid-captainid-formatid string format: e.g. "140-46-ODI"
+            if (preg_match('/^(\d+)-(\d+)-([A-Za-z0-9_]+)$/', trim($raw), $m)) {
+                return [
+                    strtoupper($m[3]) => [
+                        'series_id' => (int)$m[1],
+                        'captain_id' => (int)$m[2],
+                        'format_id' => strtoupper($m[3]),
+                    ]
+                ];
+            }
+        }
+        return [];
+    }
+
+    public function getSeriesIdAttribute()
+    {
+        $data = $this->format_squads_data;
+        if (!empty($data)) {
+            $first = reset($data);
+            return $first['series_id'] ?? null;
+        }
+        return null;
+    }
+
+    public function getFormatIdAttribute()
+    {
+        $data = $this->format_squads_data;
+        if (!empty($data)) {
+            $firstKey = key($data);
+            return $firstKey ?: ($data[$firstKey]['format_id'] ?? null);
+        }
+        return null;
+    }
+
+    public function getCaptainIdAttribute()
+    {
+        $data = $this->format_squads_data;
+        if (!empty($data)) {
+            $first = reset($data);
+            return $first['captain_id'] ?? null;
+        }
+        return null;
+    }
+
+    public function getTournamentAttribute()
+    {
+        $sid = $this->series_id;
+        return $sid ? Tournament::find($sid) : null;
+    }
+
+    public function getCaptainAttribute()
+    {
+        $cid = $this->captain_id;
+        return ($cid && $cid != $this->id) ? Player::find($cid) : null;
+    }
+
+    public function getFormatSquadDetails(string $format): ?array
+    {
+        $fmt = strtoupper(trim($format));
+        $data = $this->format_squads_data;
+        return $data[$fmt] ?? null;
+    }
+
     public function getNormalizedIccRankingsAttribute()
     {
-        $raw = $this->icc_rankings;
-        if (is_string($raw)) {
-            $raw = json_decode($raw, true) ?: [];
-        } elseif (!is_array($raw)) {
-            $raw = [];
-        }
-
+        $dbRanks = $this->relationLoaded('iccRankings') ? $this->iccRankings : $this->iccRankings()->get();
         $categories = ['batting', 'bowling', 'all_rounder'];
         $formats = ['test', 'odi', 't20i'];
         $matrix = [];
@@ -123,16 +223,20 @@ class Player extends Model {
         foreach ($categories as $cat) {
             $matrix[$cat] = [];
             foreach ($formats as $fmt) {
-                $curr = isset($raw[$cat][$fmt]['current']) && trim((string)$raw[$cat][$fmt]['current']) !== ''
-                    ? trim((string)$raw[$cat][$fmt]['current'])
-                    : '--';
-                $best = isset($raw[$cat][$fmt]['best']) && trim((string)$raw[$cat][$fmt]['best']) !== ''
-                    ? trim((string)$raw[$cat][$fmt]['best'])
-                    : '--';
-
                 $matrix[$cat][$fmt] = [
-                    'current' => $curr,
-                    'best' => $best,
+                    'current' => '--',
+                    'best' => '--',
+                ];
+            }
+        }
+
+        foreach ($dbRanks as $r) {
+            $cat = strtolower($r->category);
+            $fmt = strtolower($r->format);
+            if (isset($matrix[$cat][$fmt])) {
+                $matrix[$cat][$fmt] = [
+                    'current' => !empty($r->current_rank) && $r->current_rank !== '--' ? (string)$r->current_rank : '--',
+                    'best' => !empty($r->best_rank) && $r->best_rank !== '--' ? (string)$r->best_rank : '--',
                 ];
             }
         }
@@ -142,22 +246,13 @@ class Player extends Model {
 
     public function hasIccRankings()
     {
-        $raw = $this->icc_rankings;
-        if (is_string($raw)) {
-            $raw = json_decode($raw, true) ?: [];
-        }
-        if (!is_array($raw) || empty($raw)) {
-            return false;
-        }
-
-        foreach ($raw as $cat => $formats) {
-            if (is_array($formats)) {
-                foreach ($formats as $fmt => $ranks) {
-                    $curr = isset($ranks['current']) ? trim((string)$ranks['current']) : '';
-                    $best = isset($ranks['best']) ? trim((string)$ranks['best']) : '';
-                    if (($curr !== '' && $curr !== '--') || ($best !== '' && $best !== '--')) {
-                        return true;
-                    }
+        $matrix = $this->normalized_icc_rankings;
+        foreach ($matrix as $cat => $formats) {
+            foreach ($formats as $fmt => $ranks) {
+                $curr = $ranks['current'] ?? '';
+                $best = $ranks['best'] ?? '';
+                if (($curr !== '' && $curr !== '--') || ($best !== '' && $best !== '--')) {
+                    return true;
                 }
             }
         }

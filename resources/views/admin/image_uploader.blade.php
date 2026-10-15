@@ -85,7 +85,7 @@
             </button>
 
             <!-- Text Overlay input -->
-            <input type="text" id="overlayTextInput" placeholder="Type Text" oninput="renderCanvas()" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.85rem; width: 170px; outline: none; background: white;">
+            <input type="text" id="overlayTextInput" oninput="renderCanvas()" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.85rem; width: 170px; outline: none; background: white;">
 
             <!-- Text Color picker box -->
             <div style="position: relative; display: flex; align-items: center;" title="Text Color">
@@ -180,7 +180,7 @@
                     <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">
                         Image Name
                     </label>
-                    <input type="text" id="imageNameInput" value="" placeholder="e.g. cricket-match-photo (auto-filled on select)" style="width: 100%; padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; box-sizing: border-box;">
+                    <input type="text" id="imageNameInput" value="" style="width: 100%; padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; box-sizing: border-box;">
                 </div>
 
                 <!-- Format Selection (WebP / AVIF) as explicitly requested by user -->

@@ -30,7 +30,7 @@
                 <!-- Search input & buttons -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="position: relative; display: inline-flex; align-items: center;">
-                        <input type="text" name="search" id="series-search-input" value="{{ $search ?? '' }}" placeholder="Search series..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        <input type="text" name="search" id="series-search-input" value="{{ $search ?? '' }}" style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
                         @if(!empty($search))
                             <a href="{{ route('admin.series', array_filter(['type' => $typeFilter ?? null])) }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
                         @endif
@@ -74,17 +74,17 @@
         <form method="POST" action="{{ $editItem ? route('admin.series.update', $editItem->id) : route('admin.series.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Series Name & Page Unique URL | Short Name | Series Year | Display Order -->
-            <div style="display: grid; grid-template-columns: 2.2fr 1fr 1fr 1fr; gap: 16px; align-items: flex-start;">
+            <!-- ROW 1: Series Name & Page Unique URL | Short Name | Series Year -->
+            <div style="display: grid; grid-template-columns: 2.2fr 1.2fr 1.2fr; gap: 16px; align-items: flex-start;">
                 
                 <!-- Series Name & Unique URL -->
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Series Name <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="series_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="text" id="series_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                     
-                    <input type="text" id="series_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                    <input type="text" id="series_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
                 </div>
 
                 <!-- Short Name -->
@@ -92,7 +92,7 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Short Name
                     </label>
-                    <input type="text" name="short_name" value="{{ old('short_name', $editItem->short_name ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="short_name" value="{{ old('short_name', $editItem->short_name ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
 
                 <!-- Series Year -->
@@ -100,15 +100,7 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Series Year
                     </label>
-                    <input type="text" name="year" value="{{ old('year', $editItem->year ?? '2026') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                </div>
-
-                <!-- Display Order -->
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Display Order
-                    </label>
-                    <input type="number" name="display_order" value="{{ old('display_order', $editItem->display_order ?? '') }}" min="1" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="year" value="{{ old('year', $editItem->year ?? '2026') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -117,7 +109,7 @@
                 <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                     Short Meta Description
                 </label>
-                <input type="text" name="meta_description" value="{{ old('meta_description', $editItem->meta_description ?? '') }}" placeholder="" maxlength="200" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                <input type="text" name="meta_description" value="{{ old('meta_description', $editItem->meta_description ?? '') }}" maxlength="200" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
             </div>
 
             <!-- ROW 3: Start Date | End Date | Select Categories | Match Formats -->
@@ -186,7 +178,7 @@
                         <button type="button" onclick="openTeamsModal()" title="View & select all teams or add new" style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#0284c7; color:white; border-radius:50%; font-size:0.7rem; font-weight:bold; cursor:pointer; border:none; line-height:1;">?</button>
                     </label>
                     <div style="position: relative; display: flex; align-items: center;">
-                        <input type="text" id="series_teams_list" name="teams_list" value="{{ old('teams_list', $editItem->teams_list ?? '') }}" placeholder="Select or type teams..." style="width: 100%; padding: 8px 105px 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" id="series_teams_list" name="teams_list" value="{{ old('teams_list', $editItem->teams_list ?? '') }}" style="width: 100%; padding: 8px 105px 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                         <button type="button" onclick="openTeamsModal()" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.76rem; font-weight: 700; border-radius: 4px; padding: 4px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; transition: all 0.15s;" onmouseover="this.style.background='#0284c7'; this.style.color='#ffffff';" onmouseout="this.style.background='#f0f9ff'; this.style.color='#0284c7';">
                             + Select / Add
                         </button>
@@ -200,7 +192,7 @@
                         <button type="button" onclick="openVenuesModal()" title="View & select all venues or add new" style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#0284c7; color:white; border-radius:50%; font-size:0.7rem; font-weight:bold; cursor:pointer; border:none; line-height:1;">?</button>
                     </label>
                     <div style="position: relative; display: flex; align-items: center;">
-                        <input type="text" id="series_venues_list" name="venues_list" value="{{ old('venues_list', $editItem->venues_list ?? '') }}" placeholder="Select or type venues..." style="width: 100%; padding: 8px 105px 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" id="series_venues_list" name="venues_list" value="{{ old('venues_list', $editItem->venues_list ?? '') }}" style="width: 100%; padding: 8px 105px 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                         <button type="button" onclick="openVenuesModal()" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.76rem; font-weight: 700; border-radius: 4px; padding: 4px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; transition: all 0.15s;" onmouseover="this.style.background='#0284c7'; this.style.color='#ffffff';" onmouseout="this.style.background='#f0f9ff'; this.style.color='#0284c7';">
                             + Select / Add
                         </button>
@@ -212,7 +204,7 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Hosting Country
                     </label>
-                    <input type="text" name="hosting_country" value="{{ old('hosting_country', $editItem->hosting_country ?? ($editItem->city ?? 'India')) }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="hosting_country" value="{{ old('hosting_country', $editItem->hosting_country ?? ($editItem->city ?? 'India')) }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
 
                 <!-- Total Matches -->
@@ -220,7 +212,7 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Total Matches
                     </label>
-                    <input type="number" name="total_matches" value="{{ old('total_matches', $editItem->total_matches ?? 10) }}" min="1" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="number" name="total_matches" value="{{ old('total_matches', $editItem->total_matches ?? 10) }}" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -254,7 +246,7 @@
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('series_full_description', 'series_full_description_preview')">👁️ Live Preview</button>
                     </div>
-                    <textarea id="series_full_description" name="full_description" class="html-editor-textarea" rows="6" placeholder="Enter series overview, schedule info, tournament rules, venue details..." style="min-height: 130px;">{{ old('full_description', $editItem->full_description ?? ($editItem->description ?? '')) }}</textarea>
+                    <textarea id="series_full_description" name="full_description" class="html-editor-textarea" rows="6" style="min-height: 130px;">{{ old('full_description', $editItem->full_description ?? ($editItem->description ?? '')) }}</textarea>
                     <div id="series_full_description_preview" class="html-editor-preview"></div>
                 </div>
             </div>
@@ -272,7 +264,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <input type="file" name="poster_image_file" accept="image/*" onchange="previewAndConvertImage(this, 'series_poster_image_input', 'series-poster-preview', 'series-poster-badge')" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" id="series_poster_image_input" name="poster_image" value="{{ old('poster_image', $editItem->poster_image ?? ($editItem->banner_url ?? '')) }}" oninput="previewUrlImage(this, 'series-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <input type="text" id="series_poster_image_input" name="poster_image" value="{{ old('poster_image', $editItem->poster_image ?? ($editItem->banner_url ?? '')) }}" oninput="previewUrlImage(this, 'series-poster-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                         <img id="series-poster-preview" src="{{ old('poster_image', $editItem->poster_image ?? ($editItem->banner_url ?? '')) }}" alt="Poster" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('poster_image', $editItem->poster_image ?? ($editItem->banner_url ?? ''))) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
@@ -302,7 +294,6 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                            <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                             <th style="padding: 10px 12px; width: 90px;">POSTER</th>
                             <th style="padding: 10px 14px; min-width: 220px;">NAME</th>
                             <th style="padding: 10px 14px; min-width: 240px;">PAGE LINK</th>
@@ -330,11 +321,6 @@
                                         <span>{{ $t->views_count ?? 0 }}</span>
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                     </div>
-                                </td>
-
-                                <!-- ORDER -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    <input type="number" value="{{ $t->display_order ?? 1 }}" min="1" style="width: 44px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; text-align: center; color: #1e293b; outline: none;">
                                 </td>
 
                                 <!-- POSTER -->
@@ -449,7 +435,7 @@
         <!-- Modal Search & Quick Add Toggle -->
         <div style="padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
             <div class="admin-search-wrapper" style="flex: 1; min-width: 200px;">
-                <input type="text" id="modal-team-search" class="admin-search-input" oninput="filterModalTeams()" onkeyup="filterModalTeams()" placeholder="Search teams by name, short name or ID..." style="width: 100%; box-sizing: border-box;">
+                <input type="text" id="modal-team-search" class="admin-search-input" oninput="filterModalTeams()" onkeyup="filterModalTeams()" style="width: 100%; box-sizing: border-box;">
                 <button type="button" class="admin-search-clear-btn" onclick="document.getElementById('modal-team-search').value=''; filterModalTeams(); this.style.display='none';" title="Clear">&times;</button>
             </div>
             <button type="button" onclick="toggleQuickTeamForm()" id="btn-toggle-quick-team" style="padding: 8px 14px; background: #0284c7; color: white; border: none; border-radius: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
@@ -463,11 +449,11 @@
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: flex-end;">
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Team Name *</label>
-                    <input type="text" id="quick_team_name" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #93c5fd; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
+                    <input type="text" id="quick_team_name" style="width: 100%; padding: 6px 10px; border: 1px solid #93c5fd; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Short Code</label>
-                    <input type="text" id="quick_team_short" placeholder="" maxlength="5" style="width: 100%; padding: 6px 10px; border: 1px solid #93c5fd; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box; text-transform: uppercase;">
+                    <input type="text" id="quick_team_short" maxlength="5" style="width: 100%; padding: 6px 10px; border: 1px solid #93c5fd; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box; text-transform: uppercase;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Type</label>
@@ -539,7 +525,7 @@
         <!-- Modal Search & Quick Add Toggle -->
         <div style="padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
             <div class="admin-search-wrapper" style="flex: 1; min-width: 200px;">
-                <input type="text" id="modal-venue-search" class="admin-search-input" oninput="filterModalVenues()" onkeyup="filterModalVenues()" placeholder="Search venues by stadium name, city, or ID..." style="width: 100%; box-sizing: border-box;">
+                <input type="text" id="modal-venue-search" class="admin-search-input" oninput="filterModalVenues()" onkeyup="filterModalVenues()" style="width: 100%; box-sizing: border-box;">
                 <button type="button" class="admin-search-clear-btn" onclick="document.getElementById('modal-venue-search').value=''; filterModalVenues(); this.style.display='none';" title="Clear">&times;</button>
             </div>
             <button type="button" onclick="toggleQuickVenueForm()" id="btn-toggle-quick-venue" style="padding: 8px 14px; background: #0284c7; color: white; border: none; border-radius: 6px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
@@ -553,19 +539,19 @@
             <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr auto; gap: 10px; align-items: flex-end;">
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Stadium Name *</label>
-                    <input type="text" id="quick_venue_name" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
+                    <input type="text" id="quick_venue_name" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 4px;">City</label>
-                    <input type="text" id="quick_venue_city" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
+                    <input type="text" id="quick_venue_city" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Country</label>
-                    <input type="text" id="quick_venue_country" value="India" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
+                    <input type="text" id="quick_venue_country" value="India" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 4px;">Capacity</label>
-                    <input type="text" id="quick_venue_capacity" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
+                    <input type="text" id="quick_venue_capacity" style="width: 100%; padding: 6px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.82rem; outline: none; box-sizing: border-box;">
                 </div>
                 <button type="button" onclick="submitQuickVenue()" id="btn-save-quick-venue" style="padding: 7px 16px; background: #16a34a; color: white; border: none; border-radius: 4px; font-weight: 700; font-size: 0.82rem; cursor: pointer; height: 32px;">
                     Save

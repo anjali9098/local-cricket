@@ -35,7 +35,7 @@
                 <!-- Search input & buttons -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="position: relative; display: inline-flex; align-items: center;">
-                        <input type="text" name="search" id="story-search-input" value="{{ $search ?? '' }}" placeholder="Search web stories..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        <input type="text" name="search" id="story-search-input" value="{{ $search ?? '' }}" style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
                         @if(!empty($search))
                             <a href="{{ route('admin.story') }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
                         @endif
@@ -108,7 +108,7 @@
                         </label>
                         <span id="title-char-count" style="font-size: 0.75rem; color: #64748b; font-weight: 700;">0 chars</span>
                     </div>
-                    <input type="text" id="story_title" name="title" value="{{ old('title', $editItem->title ?? '') }}" required placeholder="e.g. England vs Pakistan 2nd Test: Sonny Baker Replaces Brydon Carse" onkeyup="handleTitleInput(this.value)" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem; color: #0f172a; outline: none; box-sizing: border-box; font-weight: 600;">
+                    <input type="text" id="story_title" name="title" value="{{ old('title', $editItem->title ?? '') }}" required onkeyup="handleTitleInput(this.value)" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.9rem; color: #0f172a; outline: none; box-sizing: border-box; font-weight: 600;">
                 </div>
 
                 <!-- Page URL (Screenshot 1) -->
@@ -117,7 +117,7 @@
                         Page URL <span style="font-size: 0.75rem; color: #0284c7; font-weight: 600;">(Auto-generated slug)</span>
                     </label>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="text" id="story_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="england-vs-pakistan-2nd-test-sonny-baker-replaces-brydon-carse" style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #334155; outline: none; box-sizing: border-box; background: #fafafa; font-family: monospace;">
+                        <input type="text" id="story_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #334155; outline: none; box-sizing: border-box; background: #fafafa; font-family: monospace;">
                         @if($editItem)
                             <a href="{{ route('webstories.show', $editItem->id) }}" target="_blank" style="padding: 8px 12px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 4px; color: #166534; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                                 <span>Preview</span>
@@ -135,7 +135,7 @@
                         </label>
                         <span id="meta-char-count" style="font-size: 0.75rem; color: #64748b; font-weight: 600;">0 chars</span>
                     </div>
-                    <textarea id="story_meta" name="meta_description" rows="2" onkeyup="updateMetaCount(this.value)" placeholder="England name Sonny Baker in the squad for the 2nd Test vs Pakistan as Brydon Carse is left out..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">{{ old('meta_description', $editItem->meta_description ?? '') }}</textarea>
+                    <textarea id="story_meta" name="meta_description" rows="2" onkeyup="updateMetaCount(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">{{ old('meta_description', $editItem->meta_description ?? '') }}</textarea>
                 </div>
 
                 <!-- Keywords (Screenshot 1) -->
@@ -143,7 +143,7 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Keywords
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="England vs Pakistan 2nd Test, England Test Squad, Sonny Baker, Brydon Carse..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
 
                 <!-- ROW: Story Cover Poster + Author + Display Order (Screenshot 1) -->
@@ -173,19 +173,13 @@
                                 </button>
                                 <span id="story-cover-badge" style="display: none;"></span>
                             </div>
-                            <input type="text" id="story_cover_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="updateCoverUrlPreview(this.value)" placeholder="Image URL (auto-filled on upload or fallback to Slide #1)" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; outline: none; background: white;">
+                            <input type="text" id="story_cover_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="updateCoverUrlPreview(this.value)" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; outline: none; background: white;">
                         </div>
 
-                        <!-- Author & Display Order -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.8rem; color: #334155;">Author</label>
-                                <input type="text" name="author" value="{{ old('author', $editItem->author ?? 'Admin') }}" placeholder="Admin" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.8rem; color: #334155;">Display Order</label>
-                                <input type="number" name="display_order" value="{{ old('display_order', $editItem->display_order ?? 1) }}" min="1" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none;">
-                            </div>
+                        <!-- Author -->
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.8rem; color: #334155;">Author</label>
+                            <input type="text" name="author" value="{{ old('author', $editItem->author ?? 'Admin') }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none;">
                         </div>
                     </div>
                 </div>
@@ -264,7 +258,6 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                            <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                             <th style="padding: 10px 12px; width: 80px;">POSTER</th>
                             <th style="padding: 10px 14px; min-width: 250px;">TITLE</th>
                             <th style="padding: 10px 14px; min-width: 180px;">PAGE LINK</th>
@@ -288,11 +281,6 @@
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                         </a>
                                     </div>
-                                </td>
-
-                                <!-- ORDER -->
-                                <td style="padding: 12px 10px; vertical-align: middle; color: #334155; font-weight: 700;">
-                                    {{ $item->display_order ?: $item->id }}
                                 </td>
 
                                 <!-- POSTER / COVER -->
@@ -536,7 +524,7 @@ function renderAllSlides() {
                             ✂️ Crop / Zoom
                         </button>
 
-                        <input type="text" id="slide_img_input_${idx}" value="${escapeHtml(slide.image || '')}" oninput="handleSlideImageInput(this.value, ${idx})" placeholder="Image URL..." style="width: 100%; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.72rem; outline: none; background: white; box-sizing: border-box;">
+                        <input type="text" id="slide_img_input_${idx}" value="${escapeHtml(slide.image || '')}" oninput="handleSlideImageInput(this.value, ${idx})" style="width: 100%; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.72rem; outline: none; background: white; box-sizing: border-box;">
                     </div>
 
                     <!-- Right: Heading, Description (120-150 chars), CTA Text & URL -->
@@ -547,7 +535,7 @@ function renderAllSlides() {
                             <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.8rem; color: #1e293b;">
                                 Slide Heading
                             </label>
-                            <input type="text" value="${escapeHtml(slide.heading || '')}" oninput="handleSlideHeadingInput(${idx}, this.value)" placeholder="e.g. Virat Kohli Delivers in the Final" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; font-weight: 600;">
+                            <input type="text" value="${escapeHtml(slide.heading || '')}" oninput="handleSlideHeadingInput(${idx}, this.value)" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; font-weight: 600;">
                         </div>
 
                         <!-- Description with 120-150 chars recommendation -->
@@ -560,7 +548,7 @@ function renderAllSlides() {
                                     ${charLen} / 150 chars
                                 </span>
                             </div>
-                            <textarea rows="2" maxlength="200" oninput="handleSlideDescChange(${idx}, this)" placeholder="Brief description (120-150 characters)..." style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">${escapeHtml(slide.description || '')}</textarea>
+                            <textarea rows="2" maxlength="200" oninput="handleSlideDescChange(${idx}, this)" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">${escapeHtml(slide.description || '')}</textarea>
                         </div>
 
                         <!-- CTA Text & CTA URL -->
@@ -569,13 +557,13 @@ function renderAllSlides() {
                                 <label style="display: block; margin-bottom: 3px; font-weight: 700; font-size: 0.75rem; color: #475569;">
                                     CTA Button Text (ctaText)
                                 </label>
-                                <input type="text" value="${escapeHtml(slide.cta_text || '')}" oninput="handleSlideFieldChange(${idx}, 'cta_text', this.value)" placeholder="e.g. Match Details, Read More" style="width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.8rem; outline: none; box-sizing: border-box;">
+                                <input type="text" value="${escapeHtml(slide.cta_text || '')}" oninput="handleSlideFieldChange(${idx}, 'cta_text', this.value)" style="width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.8rem; outline: none; box-sizing: border-box;">
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 3px; font-weight: 700; font-size: 0.75rem; color: #475569;">
                                     CTA Link URL (ctaUrl)
                                 </label>
-                                <input type="url" value="${escapeHtml(slide.cta_url || '')}" oninput="handleSlideFieldChange(${idx}, 'cta_url', this.value)" placeholder="e.g. /matches/india-vs-south-africa" style="width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.8rem; outline: none; box-sizing: border-box;">
+                                <input type="url" value="${escapeHtml(slide.cta_url || '')}" oninput="handleSlideFieldChange(${idx}, 'cta_url', this.value)" style="width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 3px; font-size: 0.8rem; outline: none; box-sizing: border-box;">
                             </div>
                         </div>
 
@@ -733,8 +721,51 @@ function handleSlideFileSelect(event, idx) {
             updateCoverUrlPreview(dataUrl);
             coverInput.value = dataUrl;
         }
+
+        // Upload in background so base64 dataUrl is replaced by server asset URL
+        uploadSlideImageAsync(dataUrl, idx);
     };
     reader.readAsDataURL(file);
+}
+
+function uploadSlideImageAsync(dataUrl, idx) {
+    if (!dataUrl || !dataUrl.startsWith('data:image/')) return;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    fetch("{{ route('admin.image-uploader.upload') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            image_data: dataUrl,
+            folder: 'web_stories',
+            image_name: 'slide_' + Date.now() + '_' + idx,
+            format: 'webp'
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success && res.url) {
+            if (slidesState[idx]) {
+                slidesState[idx].image = res.url;
+            }
+            const input = document.getElementById(`slide_img_input_${idx}`);
+            if (input) input.value = res.url;
+            syncSlidesJsonInput();
+
+            const coverInput = document.getElementById('story_cover_input');
+            if (coverInput && coverInput.value === dataUrl) {
+                coverInput.value = res.url;
+                updateCoverUrlPreview(res.url);
+            }
+        }
+    })
+    .catch(err => {
+        console.warn('Background slide upload warning (server will extract on submit):', err);
+    });
 }
 
 function openSlideModalCropper(idx) {
@@ -764,9 +795,36 @@ function previewCoverFile(input) {
     if (!input.files || !input.files[0]) return;
     const reader = new FileReader();
     reader.onload = function(e) {
-        updateCoverUrlPreview(e.target.result);
+        const dataUrl = e.target.result;
+        updateCoverUrlPreview(dataUrl);
         const coverInp = document.getElementById('story_cover_input');
-        if (coverInp) coverInp.value = e.target.result;
+        if (coverInp) coverInp.value = dataUrl;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        fetch("{{ route('admin.image-uploader.upload') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                image_data: dataUrl,
+                folder: 'web_stories',
+                image_name: 'cover_' + Date.now(),
+                format: 'webp'
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success && res.url) {
+                if (coverInp) coverInp.value = res.url;
+                updateCoverUrlPreview(res.url);
+            }
+        })
+        .catch(err => {
+            console.warn('Background cover upload warning (server will extract on submit):', err);
+        });
     };
     reader.readAsDataURL(input.files[0]);
 }

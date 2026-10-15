@@ -32,7 +32,7 @@
                 <!-- Search input & buttons -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="position: relative; display: inline-flex; align-items: center;">
-                        <input type="text" name="search" id="venue-search-input" value="{{ $search ?? '' }}" placeholder="Search stadium / city..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
+                        <input type="text" name="search" id="venue-search-input" value="{{ $search ?? '' }}" style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 220px; background: white; color: #1e293b;">
                         @if(!empty($search))
                             <a href="{{ route('admin.venues', array_filter(['country' => $countryFilter ?? null])) }}" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); text-decoration: none; font-size: 1.15rem; color: #94a3b8; line-height: 1;" title="Clear search">&times;</a>
                         @endif
@@ -75,36 +75,29 @@
         <form method="POST" action="{{ $editItem ? route('admin.venues.update', $editItem->id) : route('admin.venues.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Venue Name & Slug | City | Country | Display Order -->
-            <div style="display: grid; grid-template-columns: 2.2fr 1fr 1fr 0.8fr; gap: 16px; align-items: flex-start;">
+            <!-- ROW 1: Venue Name & Slug | City | Country -->
+            <div style="display: grid; grid-template-columns: 2.2fr 1.2fr 1.2fr; gap: 16px; align-items: flex-start;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Stadium / Venue Name <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="venue_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="text" id="venue_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                     
-                    <input type="text" id="venue_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                    <input type="text" id="venue_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
                 </div>
 
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         City
                     </label>
-                    <input type="text" name="city" value="{{ old('city', $editItem->city ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="city" value="{{ old('city', $editItem->city ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
 
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Country
                     </label>
-                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? 'India') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                </div>
-
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Display Order
-                    </label>
-                    <input type="number" name="display_order" value="{{ old('display_order', $editItem->display_order ?? '') }}" min="1" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? 'India') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -114,19 +107,19 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Capacity
                     </label>
-                    <input type="text" name="capacity" value="{{ old('capacity', $editItem->capacity ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="capacity" value="{{ old('capacity', $editItem->capacity ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Keywords
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Ground &amp; Pitch Description
                     </label>
-                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -143,7 +136,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <input type="file" name="image_file" accept="image/*" onchange="previewAndConvertImage(this, 'venue_image_url_input', 'venue-poster-preview', 'venue-poster-badge')" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" id="venue_image_url_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="previewUrlImage(this, 'venue-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <input type="text" id="venue_image_url_input" name="image_url" value="{{ old('image_url', $editItem->image_url ?? '') }}" oninput="previewUrlImage(this, 'venue-poster-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                         <img id="venue-poster-preview" src="{{ old('image_url', $editItem->image_url ?? '') }}" alt="Venue" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('image_url', $editItem->image_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
@@ -177,7 +170,6 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                            <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                             <th style="padding: 10px 12px; width: 90px;">POSTER</th>
                             <th style="padding: 10px 14px; min-width: 220px;">STADIUM NAME</th>
                             <th style="padding: 10px 14px; min-width: 220px;">PAGE LINK / CITY</th>
@@ -203,11 +195,6 @@
                                     <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
                                         Country: <strong>{{ $item->country ?: 'India' }}</strong>
                                     </div>
-                                </td>
-
-                                <!-- ORDER -->
-                                <td style="padding: 12px 10px; vertical-align: middle;">
-                                    <input type="number" value="{{ $item->display_order ?? 1 }}" min="1" style="width: 44px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; text-align: center; color: #1e293b; outline: none;">
                                 </td>
 
                                 <!-- POSTER -->

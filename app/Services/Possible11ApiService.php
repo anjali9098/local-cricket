@@ -204,120 +204,149 @@ class Possible11ApiService
                         return $reqs;
                     });
 
-                    // Save data to database
+                    // Save data to database with robust Loop Engineering
                     foreach ($chunk as $seriesItem) {
                         $apiSeriesId = (int)($seriesItem['id'] ?? 0);
                         if (!$apiSeriesId) continue;
 
-                        // 1. Upsert Tournament
-                        $tournamentRes = $this->upsertTournament($seriesItem, $st, $adminUserId);
-                        $tournament = $tournamentRes['tournament'];
-                        if ($tournamentRes['action'] === 'created') $stats['series_created']++;
-                        if ($tournamentRes['action'] === 'updated') $stats['series_updated']++;
+                        try {
+                            // 1. Upsert Tournament
+                            $tournamentRes = $this->upsertTournament($seriesItem, $st, $adminUserId);
+                            $tournament = $tournamentRes['tournament'];
+                            if ($tournamentRes['action'] === 'created') $stats['series_created']++;
+                            if ($tournamentRes['action'] === 'updated') $stats['series_updated']++;
 
-                        // 2. Teams data
-                        $teamResp = $responses["teams_{$apiSeriesId}"] ?? null;
-                        $teamsData = ($teamResp instanceof \Illuminate\Http\Client\Response && $teamResp->successful()) 
-                            ? ($teamResp->json()['teams'] ?? []) 
-                            : [];
+                            // 2. Teams data
+                            $teamResp = $responses["teams_{$apiSeriesId}"] ?? null;
+                            $teamsData = ($teamResp instanceof \Illuminate\Http\Client\Response && $teamResp->successful()) 
+                                ? ($teamResp->json()['teams'] ?? []) 
+                                : [];
 
-                        $squadResp = $responses["squad_{$apiSeriesId}"] ?? null;
-                        $squadJson = ($squadResp instanceof \Illuminate\Http\Client\Response && $squadResp->successful())
-                            ? $squadResp->json()
-                            : [];
-                        $squadTeams = $squadJson['teams'] ?? [];
+                            $squadResp = $responses["squad_{$apiSeriesId}"] ?? null;
+                            $squadJson = ($squadResp instanceof \Illuminate\Http\Client\Response && $squadResp->successful())
+                                ? $squadResp->json()
+                                : [];
+                            $squadTeams = $squadJson['teams'] ?? [];
 
-                        // Index squad data by team ID and team code
-                        $squadByTeamId = [];
-                        $squadByTeamCode = [];
-                        foreach ($squadTeams as $sqT) {
-                            $sqTId = (int)($sqT['teamId'] ?? $sqT['id'] ?? 0);
-                            if ($sqTId) {
-                                $squadByTeamId[$sqTId] = $sqT;
-                            }
-                            $sqTCode = strtoupper(trim($sqT['team_code'] ?? $sqT['code'] ?? ''));
-                            if ($sqTCode) {
-                                $squadByTeamCode[$sqTCode] = $sqT;
-                            }
-                        }
-
-                        // If teamsData was empty from series-teams, build from squadTeams
-                        if (empty($teamsData) && !empty($squadTeams)) {
+                            // Index squad data by team ID and team code
+                            $squadByTeamId = [];
+                            $squadByTeamCode = [];
                             foreach ($squadTeams as $sqT) {
-                                $teamsData[] = [
-                                    'id' => $sqT['teamId'] ?? $sqT['id'] ?? 0,
-                                    'name' => $sqT['team_name'] ?? $sqT['name'] ?? 'Team',
-                                    'code' => $sqT['team_code'] ?? $sqT['code'] ?? 'UNK',
-                                    'color' => '#0284c7',
-                                    'flag' => '',
-                                    'type' => 'International'
-                                ];
+                                $sqTId = (int)($sqT['teamId'] ?? $sqT['id'] ?? 0);
+                                if ($sqTId) {
+                                    $squadByTeamId[$sqTId] = $sqT;
+                                }
+                                $sqTCode = strtoupper(trim($sqT['team_code'] ?? $sqT['code'] ?? ''));
+                                if ($sqTCode) {
+                                    $squadByTeamCode[$sqTCode] = $sqT;
+                                }
                             }
-                        }
 
-                        $teamIdMap = [];
-                        $createdTeams = [];
-
-                        foreach ($teamsData as $tData) {
-                            $apiTeamId = (int)($tData['id'] ?? $tData['teamId'] ?? 0);
-                            $team = $this->upsertTeam($tData, $tournament->id);
-                            if ($apiTeamId) {
-                                $teamIdMap[$apiTeamId] = $team->id;
+                            // If teamsData was empty from series-teams, build from squadTeams
+                            if (empty($teamsData) && !empty($squadTeams)) {
+                                foreach ($squadTeams as $sqT) {
+                                    $teamsData[] = [
+                                        'id' => $sqT['teamId'] ?? $sqT['id'] ?? 0,
+                                        'name' => $sqT['team_name'] ?? $sqT['name'] ?? 'Team',
+                                        'code' => $sqT['team_code'] ?? $sqT['code'] ?? 'UNK',
+                                        'color' => '#0284c7',
+                                        'flag' => '',
+                                        'type' => 'International'
+                                    ];
+                                }
                             }
-                            $createdTeams[] = $team;
-                            $stats['teams_synced']++;
 
-                            // Extract and upsert squad players for this team
+                            $teamIdMap = [];
+                            $createdTeams = [];
+
+                            foreach ($teamsData as $tData) {
+                                try {
+                                    $apiTeamId = (int)($tData['id'] ?? $tData['teamId'] ?? 0);
+                                    $team = $this->upsertTeam($tData, $tournament->id);
+                                    if ($apiTeamId) {
+                                        $teamIdMap[$apiTeamId] = $team->id;
+                                    }
+                                    $createdTeams[] = $team;
+                                    $stats['teams_synced']++;
+                                } catch (\Throwable $teamEx) {
+                                    Log::warning("Possible11 team upsert error in series {$apiSeriesId}: " . $teamEx->getMessage());
+                                }
+                            }
+
+                            // 3. Matches data (prioritized so fixtures/live matches are stored immediately)
+                            $detailResp = $responses["detail_{$apiSeriesId}"] ?? null;
+                            $detailData = null;
+                            if ($detailResp instanceof \Illuminate\Http\Client\Response && $detailResp->successful()) {
+                                $dJson = $detailResp->json();
+                                $detailData = $dJson['data'] ?? $dJson;
+                            }
+
+                            $hasApiMatches = false;
+                            if ($detailData && !empty($detailData['matches'])) {
+                                foreach ($detailData['matches'] as $mItem) {
+                                    try {
+                                        $match = $this->upsertMatch($mItem, $tournament->id, $teamIdMap);
+                                        if ($match) {
+                                            $this->populateMatchScorecard($match);
+                                            $stats['matches_synced']++;
+                                            $hasApiMatches = true;
+                                        }
+                                    } catch (\Throwable $mEx) {
+                                        Log::warning("Possible11 match upsert error in series {$apiSeriesId}: " . $mEx->getMessage());
+                                    }
+                                }
+                            }
+
+                            // Auto-generate realistic matches if API had 0 matches but tournament has at least 2 teams
+                            if (!$hasApiMatches && count($createdTeams) >= 2) {
+                                try {
+                                    $this->autoGenerateTournamentMatches($tournament, $createdTeams, $st);
+                                } catch (\Throwable $genEx) {
+                                    Log::warning("Match auto-gen error for series {$tournament->id}: " . $genEx->getMessage());
+                                }
+                            }
+
+                            // 4. Extract and upsert squad players for teams (isolated per player)
                             if ($syncSquads) {
-                                $teamCode = strtoupper(trim($tData['code'] ?? $tData['short_name'] ?? ''));
-                                $matchedSquad = $squadByTeamId[$apiTeamId] ?? ($teamCode ? ($squadByTeamCode[$teamCode] ?? null) : null);
-                                
-                                $pList = [];
-                                if ($matchedSquad) {
-                                    if (!empty($matchedSquad['formats'])) {
-                                        foreach ($matchedSquad['formats'] as $fmt) {
-                                            if (!empty($fmt['players'])) {
-                                                foreach ($fmt['players'] as $pl) {
-                                                    $pList[$pl['id']] = $pl;
+                                foreach ($teamsData as $tData) {
+                                    $apiTeamId = (int)($tData['id'] ?? $tData['teamId'] ?? 0);
+                                    $teamDbId = $teamIdMap[$apiTeamId] ?? null;
+                                    if (!$teamDbId) continue;
+
+                                    $teamCode = strtoupper(trim($tData['code'] ?? $tData['short_name'] ?? ''));
+                                    $matchedSquad = $squadByTeamId[$apiTeamId] ?? ($teamCode ? ($squadByTeamCode[$teamCode] ?? null) : null);
+                                    
+                                    $pList = [];
+                                    if ($matchedSquad) {
+                                        if (!empty($matchedSquad['formats'])) {
+                                            foreach ($matchedSquad['formats'] as $fmt) {
+                                                if (!empty($fmt['players'])) {
+                                                    foreach ($fmt['players'] as $pl) {
+                                                        $pList[$pl['id']] = $pl;
+                                                    }
                                                 }
                                             }
                                         }
+                                        if (!empty($matchedSquad['players'])) {
+                                            foreach ($matchedSquad['players'] as $pl) {
+                                                $pList[$pl['id']] = $pl;
+                                            }
+                                        }
                                     }
-                                    if (!empty($matchedSquad['players'])) {
-                                        foreach ($matchedSquad['players'] as $pl) {
-                                            $pList[$pl['id']] = $pl;
+
+                                    foreach ($pList as $pData) {
+                                        try {
+                                            $this->upsertPlayer($pData, $teamDbId);
+                                            $stats['players_synced']++;
+                                        } catch (\Throwable $pEx) {
+                                            Log::warning("Possible11 player upsert error in team {$teamDbId}: " . $pEx->getMessage());
                                         }
                                     }
                                 }
-
-                                foreach ($pList as $pData) {
-                                    $this->upsertPlayer($pData, $team->id);
-                                    $stats['players_synced']++;
-                                }
                             }
-                        }
-
-                        // 3. Matches data
-                        $detailResp = $responses["detail_{$apiSeriesId}"] ?? null;
-                        $detailData = ($detailResp instanceof \Illuminate\Http\Client\Response && $detailResp->successful()) 
-                            ? ($detailResp->json()['data'] ?? null) 
-                            : null;
-
-                        $hasApiMatches = false;
-                        if ($detailData && !empty($detailData['matches'])) {
-                            foreach ($detailData['matches'] as $mItem) {
-                                $match = $this->upsertMatch($mItem, $tournament->id, $teamIdMap);
-                                if ($match) {
-                                    $this->populateMatchScorecard($match);
-                                    $stats['matches_synced']++;
-                                    $hasApiMatches = true;
-                                }
-                            }
-                        }
-
-                        // Auto-generate realistic matches if API had 0 matches but tournament has at least 2 teams
-                        if (!$hasApiMatches && count($createdTeams) >= 2) {
-                            $this->autoGenerateTournamentMatches($tournament, $createdTeams, $st);
+                        } catch (\Throwable $seriesEx) {
+                            Log::warning("Possible11 error syncing series {$apiSeriesId}: " . $seriesEx->getMessage());
+                            $stats['errors'][] = "Series {$apiSeriesId}: " . $seriesEx->getMessage();
                         }
                     }
                 }
@@ -346,12 +375,12 @@ class Possible11ApiService
     {
         $matches = CricketMatch::with(['team1', 'team2', 'tournament'])->get();
         $updated = 0;
-        $now = time();
+        $now = \Carbon\Carbon::now('Asia/Kolkata')->getTimestamp();
 
         foreach ($matches as $match) {
             $format = strtoupper($match->match_type ?: 'T20');
             $maxHours = ($format === 'TEST') ? 120 : (($format === 'ODI') ? 10 : 5);
-            $mTime = !empty($match->match_date) ? strtotime($match->match_date) : null;
+            $mTime = !empty($match->match_date) ? \Carbon\Carbon::parse($match->match_date, 'Asia/Kolkata')->getTimestamp() : null;
             $hoursPassed = $mTime ? ($now - $mTime) / 3600 : null;
 
             $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($match->team1_score ?? '0'))[0] ?? '0');
@@ -372,8 +401,8 @@ class Possible11ApiService
                 }
             }
 
-            // Score based completion check
-            if ($s1 > 0 && ($s2 > $s1 || $w2 >= 10)) {
+            // Score based completion check: only when enough match play time has elapsed or 10 wickets fell
+            if ($s1 > 0 && ($s2 > $s1 || $w2 >= 10) && ($hoursPassed === null || $hoursPassed >= 1.5)) {
                 $targetStatus = 'completed';
             }
 
@@ -390,7 +419,7 @@ class Possible11ApiService
     /**
      * Auto-generate fixture matches for tournaments that don't have matches returned directly in API
      */
-    protected function autoGenerateTournamentMatches(Tournament $tournament, array $teams, string $seriesStatus): void
+    public function autoGenerateTournamentMatches(Tournament $tournament, array $teams, string $seriesStatus): void
     {
         if (count($teams) < 2) return;
 
@@ -433,6 +462,25 @@ class Possible11ApiService
 
             $this->populateMatchScorecard($match);
         }
+    }
+
+    /**
+     * Auto-generate matches with realistic 2-innings scorecards for all tournaments with >= 2 teams and 0 matches
+     */
+    public function autoGenerateAllMissingTournamentMatches(): int
+    {
+        $tournaments = Tournament::all();
+        $generated = 0;
+        foreach ($tournaments as $t) {
+            if ($t->matches()->count() === 0) {
+                $teams = Team::where('tournament_id', $t->id)->get()->all();
+                if (count($teams) >= 2) {
+                    $this->autoGenerateTournamentMatches($t, $teams, 'completed');
+                    $generated++;
+                }
+            }
+        }
+        return $generated;
     }
 
     /**
@@ -545,7 +593,41 @@ class Possible11ApiService
     }
 
     /**
-     * Populate realistic match scores, batting stats, bowling stats, and ball commentary
+     * Get all squad players for a team including via played_teams and nationality
+     */
+    public function getTeamSquadPlayers(Team $team): \Illuminate\Support\Collection
+    {
+        $players = Player::where('team_id', $team->id)->get();
+        if ($players->count() < 11 && !empty($team->name)) {
+            $teamName = $team->name;
+            $allPlayers = Player::where('team_id', '!=', $team->id)->get();
+            $extraPlayers = $allPlayers->filter(function($p) use ($teamName) {
+                if (empty($p->played_teams)) return false;
+                $pTeams = array_map('trim', explode(',', $p->played_teams));
+                foreach ($pTeams as $pt) {
+                    if (strcasecmp($pt, $teamName) === 0) return true;
+                }
+                return false;
+            });
+            $players = $players->concat($extraPlayers)->unique('id')->values();
+
+            // Fallback for national teams
+            if ($players->count() < 11 && !empty($team->country)) {
+                $byCountry = Player::where('team_id', '!=', $team->id)
+                    ->where(function($q) use ($team) {
+                        $q->where('country', $team->country)
+                          ->orWhere('nationality', $team->country);
+                    })
+                    ->take(15)
+                    ->get();
+                $players = $players->concat($byCountry)->unique('id')->values();
+            }
+        }
+        return $players;
+    }
+
+    /**
+     * Populate realistic match scores, batting stats, bowling stats, and ball commentary for BOTH innings
      */
     public function populateMatchScorecard(CricketMatch $match): void
     {
@@ -553,11 +635,11 @@ class Possible11ApiService
         $t2 = $match->team2;
         if (!$t1 || !$t2) return;
 
-        $t1Players = $t1->players;
-        $t2Players = $t2->players;
+        $t1Players = $this->getTeamSquadPlayers($t1);
+        $t2Players = $this->getTeamSquadPlayers($t2);
 
-        $format = strtoupper($match->match_type ?: 'T20');
-        $isT20 = ($format === 'T20' || $format === 'T10');
+        $format = strtoupper($match->match_type ?: ($match->tournament?->format ?: 'T20'));
+        $isT20 = ($format === 'T20' || $format === 'T10' || $format === 'T20I');
         $isODI = ($format === 'ODI');
         $maxOvers = $isODI ? 50 : ($isT20 ? 20 : 90);
 
@@ -627,14 +709,15 @@ class Possible11ApiService
 
         if ($match->status === 'live') {
             $liveOvers = (float)number_format(mt_rand(10, 16) + (mt_rand(1, 5) / 10), 1);
-            $liveScore = (int)(($s1 * $liveOvers) / (float)$maxOvers) + mt_rand(-8, 8);
-            $liveWickets = mt_rand(2, 5);
+            $rawLiveScore = (int)(($s1 * $liveOvers) / (float)$maxOvers) + mt_rand(-8, 8);
+            $liveScore = max(20, min($rawLiveScore, $s1 - 5));
+            $liveWickets = min(8, max(2, mt_rand(2, 5)));
             $needed = ($s1 + 1) - $liveScore;
 
             $match->team1_score = $s1;
             $match->team1_wickets = $w1;
             $match->team1_overs = $o1;
-            $match->team2_score = max(20, $liveScore);
+            $match->team2_score = $liveScore;
             $match->team2_wickets = $liveWickets;
             $match->team2_overs = $liveOvers;
             $match->current_innings = 2;
@@ -654,17 +737,104 @@ class Possible11ApiService
 
         $match->save();
 
-        // Populate batting stats if none exist
-        if ($match->battingStats()->count() == 0 && $t1Players->isNotEmpty()) {
+        // Populate batting and bowling stats if none exist
+        if ($match->battingStats()->count() == 0 && $t1Players->isNotEmpty() && $t2Players->isNotEmpty()) {
             PlayerBattingStat::where('match_id', $match->id)->delete();
             PlayerBowlingStat::where('match_id', $match->id)->delete();
             BallByBall::where('match_id', $match->id)->delete();
 
-            // Team 1 Batting
-            foreach ($t1Players->take(7) as $idx => $p) {
-                $pRuns = ($idx === 0) ? mt_rand(45, 75) : (($idx === 1) ? mt_rand(30, 55) : mt_rand(12, 38));
-                $pBalls = (int)($pRuns * 0.85) + mt_rand(2, 7);
-                $fours = max(0, (int)($pRuns / 8) + mt_rand(0, 2));
+            // Helper to sort players: Batsman/WK first, then All-Rounder, then Bowler
+            $sortBatters = function($playersCollection) {
+                return $playersCollection->sortBy(function($p) {
+                    $r = strtolower($p->role ?? '');
+                    if (str_contains($r, 'bat') || str_contains($r, 'keep') || str_contains($r, 'wk')) return 1;
+                    if (str_contains($r, 'all')) return 2;
+                    return 3;
+                })->values();
+            };
+
+            // Helper to get bowlers: Bowler, then All-Rounder
+            $getBowlers = function($playersCollection) {
+                $bowlers = $playersCollection->filter(function($p) {
+                    $r = strtolower($p->role ?? '');
+                    return str_contains($r, 'bowl') || str_contains($r, 'all');
+                })->values();
+                if ($bowlers->count() < 5) {
+                    $bowlers = $playersCollection->slice(max(0, $playersCollection->count() - 5))->values();
+                }
+                return $bowlers->take(5);
+            };
+
+            // 1. INNINGS 1: Team 1 Batting
+            $t1Batters = $sortBatters($t1Players)->take(7);
+            $remRuns1 = $s1;
+            foreach ($t1Batters as $idx => $p) {
+                $isLast = ($idx === $t1Batters->count() - 1);
+                if ($isLast) {
+                    $pRuns = max(0, $remRuns1);
+                } else {
+                    $pRuns = ($idx === 0) ? mt_rand(35, 68) : (($idx === 1) ? mt_rand(28, 52) : mt_rand(8, 34));
+                    $pRuns = min($pRuns, max(0, $remRuns1 - 10));
+                }
+                $remRuns1 -= $pRuns;
+                $pBalls = max(1, (int)($pRuns * 0.82) + mt_rand(2, 6));
+                $fours = max(0, (int)($pRuns / 8) + mt_rand(0, 1));
+                $sixes = max(0, (int)($pRuns / 22));
+                $sr = round(($pRuns / max(1, $pBalls)) * 100, 2);
+
+                PlayerBattingStat::create([
+                    'match_id' => $match->id,
+                    'player_name' => $p->name,
+                    'runs' => $pRuns,
+                    'balls' => $pBalls,
+                    'fours' => $fours,
+                    'sixes' => $sixes,
+                    'strike_rate' => $sr,
+                    'status_text' => ($idx < $w1) ? 'c Bowler b Bowler' : 'not out',
+                    'created_at' => now(),
+                ]);
+            }
+
+            // 2. INNINGS 1: Team 2 Bowling
+            $t2BowlerList = $getBowlers($t2Players);
+            $maxBowlerOvers = $isODI ? 10.0 : ($isT20 ? 4.0 : 22.0);
+            $allocatedW1 = 0;
+            foreach ($t2BowlerList as $bIdx => $bw) {
+                $isLast = ($bIdx === $t2BowlerList->count() - 1);
+                $bWickets = $isLast ? max(0, $w1 - $allocatedW1) : mt_rand(0, min(3, max(0, $w1 - $allocatedW1)));
+                $allocatedW1 += $bWickets;
+                $bOvers = $maxBowlerOvers;
+                $bRuns = (int)($s1 / max(1, $t2BowlerList->count())) + mt_rand(-6, 6);
+                $bRuns = max(12, $bRuns);
+                $bEconomy = round($bRuns / max(1, (float)$bOvers), 2);
+                $maidens = ($bEconomy < 4.5 && mt_rand(1, 10) > 6) ? 1 : 0;
+
+                PlayerBowlingStat::create([
+                    'match_id' => $match->id,
+                    'player_name' => $bw->name,
+                    'overs' => $bOvers,
+                    'runs' => $bRuns,
+                    'wickets' => $bWickets,
+                    'economy' => $bEconomy,
+                    'maidens' => $maidens,
+                    'created_at' => now(),
+                ]);
+            }
+
+            // 3. INNINGS 2: Team 2 Batting (Populated for completed or 2nd-innings live matches)
+            $t2Batters = $sortBatters($t2Players)->take(7);
+            $remRuns2 = $s2;
+            foreach ($t2Batters as $idx => $p) {
+                $isLast = ($idx === $t2Batters->count() - 1);
+                if ($isLast) {
+                    $pRuns = max(0, $remRuns2);
+                } else {
+                    $pRuns = ($idx === 0) ? mt_rand(30, 62) : (($idx === 1) ? mt_rand(25, 48) : mt_rand(8, 30));
+                    $pRuns = min($pRuns, max(0, $remRuns2 - 8));
+                }
+                $remRuns2 -= $pRuns;
+                $pBalls = max(1, (int)($pRuns * 0.84) + mt_rand(2, 5));
+                $fours = max(0, (int)($pRuns / 8) + mt_rand(0, 1));
                 $sixes = max(0, (int)($pRuns / 24));
                 $sr = round(($pRuns / max(1, $pBalls)) * 100, 2);
 
@@ -676,33 +846,40 @@ class Possible11ApiService
                     'fours' => $fours,
                     'sixes' => $sixes,
                     'strike_rate' => $sr,
-                    'status_text' => ($idx < $w1) ? 'out' : 'not out',
+                    'status_text' => ($idx < $w2) ? 'b Bowler' : 'not out',
                     'created_at' => now(),
                 ]);
             }
 
-            // Team 2 Bowling
-            $t2Bowlers = $t2Players->filter(fn($pl) => stripos($pl->role, 'Bowl') !== false || stripos($pl->role, 'All') !== false);
-            if ($t2Bowlers->isEmpty()) $t2Bowlers = $t2Players->slice(5);
-            $bowlerList = $t2Bowlers->take(5)->values();
-            foreach ($bowlerList as $bw) {
-                $bOvers = $isODI ? 10.0 : 4.0;
-                $bRuns = mt_rand(25, 48);
-                $bWickets = mt_rand(0, 3);
+            // 4. INNINGS 2: Team 1 Bowling
+            $t1BowlerList = $getBowlers($t1Players);
+            $allocatedW2 = 0;
+            foreach ($t1BowlerList as $bIdx => $bw) {
+                $isLast = ($bIdx === $t1BowlerList->count() - 1);
+                $bWickets = $isLast ? max(0, $w2 - $allocatedW2) : mt_rand(0, min(3, max(0, $w2 - $allocatedW2)));
+                $allocatedW2 += $bWickets;
+                $bOvers = $maxBowlerOvers;
+                $bRuns = (int)($s2 / max(1, $t1BowlerList->count())) + mt_rand(-6, 6);
+                $bRuns = max(12, $bRuns);
+                $bEconomy = round($bRuns / max(1, (float)$bOvers), 2);
+                $maidens = ($bEconomy < 4.5 && mt_rand(1, 10) > 6) ? 1 : 0;
+
                 PlayerBowlingStat::create([
                     'match_id' => $match->id,
                     'player_name' => $bw->name,
                     'overs' => $bOvers,
                     'runs' => $bRuns,
                     'wickets' => $bWickets,
-                    'economy' => round($bRuns / $bOvers, 2),
+                    'economy' => $bEconomy,
+                    'maidens' => $maidens,
                     'created_at' => now(),
                 ]);
             }
 
-            // Ball by ball commentary with rotating batters and bowlers
+            // 5. Ball by ball commentary with rotating batters and bowlers
             $commentaryOvers = $isODI ? [48, 49, 50] : [18, 19, 20];
-            $battersList = $t1Players->take(5)->values();
+            $battersList = $t1Batters->take(5)->values();
+            $bowlerList = $t2BowlerList->values();
             $strikerIdx = 0;
             $nonStrikerIdx = 1;
             $nextBatterIdx = 2;
@@ -823,7 +1000,6 @@ class Possible11ApiService
             return ['tournament' => $tournament, 'action' => 'updated'];
         } else {
             $dataToSave['user_id'] = $adminUserId;
-            $dataToSave['display_order'] = 1;
             $dataToSave['created_at'] = now();
             $newTournament = Tournament::create($dataToSave);
             return ['tournament' => $newTournament, 'action' => 'created'];
@@ -878,9 +1054,7 @@ class Possible11ApiService
             $player->team_id = $teamId;
             $player->name = $name;
             $player->slug = Str::slug($name);
-            $player->initials = Str::upper(Str::substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 2)) ?: 'CR';
             $player->days_left = '0';
-            $player->display_order = 1;
             $player->created_at = now();
         }
 
@@ -991,21 +1165,25 @@ class Possible11ApiService
                 $squadData = $this->getSeriesSquad($seriesId);
                 
                 foreach ($squadData['teams'] ?? [] as $teamObj) {
-                    $teamName = trim($teamObj['name'] ?? ($teamObj['teamName'] ?? ''));
+                    $teamName = trim($teamObj['team_name'] ?? $teamObj['name'] ?? ($teamObj['teamName'] ?? ''));
                     if (empty($teamName)) continue;
                     
-                    $team = Team::where('name', $teamName)->first();
+                    $teamCode = trim($teamObj['team_code'] ?? $teamObj['code'] ?? '');
+                    $team = Team::where('name', $teamName)
+                        ->orWhere(function($q) use ($teamCode) {
+                            if (!empty($teamCode)) $q->where('short_name', $teamCode);
+                        })
+                        ->first();
                     if (!$team) {
                         $team = Team::create([
                             'name' => $teamName,
                             'slug' => Str::slug($teamName),
-                            'short_name' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $teamName), 0, 3)),
+                            'short_name' => !empty($teamCode) ? $teamCode : strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $teamName), 0, 3)),
                             'team_type' => 'international',
                             'color_code' => '#0284c7',
                             'logo' => $teamObj['logo'] ?? ($teamObj['icon'] ?? ''),
                             'logo_url' => $teamObj['logo'] ?? ($teamObj['icon'] ?? ''),
-                            'country' => $teamName,
-                            'display_order' => 1
+                            'country' => $teamName
                         ]);
                     }
                     $teamsCount++;
@@ -1052,26 +1230,52 @@ class Possible11ApiService
         $venuesCount = 0;
         
         // 1. Extract venues from all Series & Matches
+        $seriesIds = [];
+        $seriesHostMap = [];
         foreach (['live', 'upcoming', 'completed'] as $st) {
-            $seriesList = $this->getSeriesList($st, 'Cricket', 25);
+            $seriesList = $this->getSeriesList($st, 'Cricket', 15);
             foreach ($seriesList as $sItem) {
-                $detail = $this->getSeriesDetail((int)$sItem['id']);
-                if (!empty($detail['matches'])) {
-                    foreach ($detail['matches'] as $m) {
-                        $venueName = trim($m['venue'] ?? ($m['ground'] ?? ($m['location'] ?? '')));
-                        if (!empty($venueName) && strlen($venueName) > 2) {
-                            $v = \App\Models\Venue::where('name', $venueName)->first();
-                            if (!$v) {
-                                \App\Models\Venue::create([
-                                    'name' => $venueName,
-                                    'slug' => Str::slug($venueName),
-                                    'city' => trim($m['city'] ?? ''),
-                                    'country' => trim($m['country'] ?? ($sItem['host'] ?? 'International')),
-                                    'capacity' => '35,000',
-                                    'floodlights' => 1,
-                                    'display_order' => 1
-                                ]);
-                                $venuesCount++;
+                $sId = (int)($sItem['id'] ?? 0);
+                if ($sId) {
+                    $seriesIds[$sId] = $sId;
+                    $seriesHostMap[$sId] = $sItem['host'] ?? 'International';
+                }
+            }
+        }
+
+        // Fetch series details in parallel chunks of 10
+        foreach (array_chunk(array_values($seriesIds), 10) as $chunkIds) {
+            $responses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($chunkIds) {
+                $reqs = [];
+                foreach ($chunkIds as $id) {
+                    $reqs[] = $pool->as("detail_{$id}")->timeout(8)->withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Accept' => 'application/json'
+                    ])->get($this->baseUrl . "?action=series-detail&id={$id}");
+                }
+                return $reqs;
+            });
+
+            foreach ($chunkIds as $id) {
+                $resp = $responses["detail_{$id}"] ?? null;
+                if ($resp instanceof \Illuminate\Http\Client\Response && $resp->successful()) {
+                    $detail = $resp->json()['data'] ?? null;
+                    if (!empty($detail['matches'])) {
+                        foreach ($detail['matches'] as $m) {
+                            $venueName = trim($m['venue'] ?? ($m['ground'] ?? ($m['location'] ?? '')));
+                            if (!empty($venueName) && strlen($venueName) > 2) {
+                                $v = \App\Models\Venue::where('name', $venueName)->first();
+                                if (!$v) {
+                                    \App\Models\Venue::create([
+                                        'name' => $venueName,
+                                        'slug' => Str::slug($venueName),
+                                        'city' => trim($m['city'] ?? ''),
+                                        'country' => trim($m['country'] ?? ($seriesHostMap[$id] ?? 'International')),
+                                        'capacity' => '35,000',
+                                        'keywords' => $venueName . ', cricket venue, stadium'
+                                    ]);
+                                    $venuesCount++;
+                                }
                             }
                         }
                     }
@@ -1081,26 +1285,29 @@ class Possible11ApiService
 
         // 2. Prominent International Grounds pool
         $prominentVenues = [
-            ['name' => 'Wankhede Stadium', 'city' => 'Mumbai', 'country' => 'India', 'capacity' => '33,108', 'floodlights' => 1, 'pitch_type' => 'Batting friendly, true bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Narendra Modi Stadium', 'city' => 'Ahmedabad', 'country' => 'India', 'capacity' => '132,000', 'floodlights' => 1, 'pitch_type' => 'Balanced, good for pace & spin', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Eden Gardens', 'city' => 'Kolkata', 'country' => 'India', 'capacity' => '68,000', 'floodlights' => 1, 'pitch_type' => 'High scoring, aids spin in 2nd innings', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'M. Chinnaswamy Stadium', 'city' => 'Bengaluru', 'country' => 'India', 'capacity' => '40,000', 'floodlights' => 1, 'pitch_type' => 'Fast outfield, excellent for T20 batting', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Melbourne Cricket Ground (MCG)', 'city' => 'Melbourne', 'country' => 'Australia', 'capacity' => '100,024', 'floodlights' => 1, 'pitch_type' => 'Big boundaries, great carry and bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Sydney Cricket Ground (SCG)', 'city' => 'Sydney', 'country' => 'Australia', 'capacity' => '48,000', 'floodlights' => 1, 'pitch_type' => 'Traditional spinning pitch, batting friendly', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => "Lord's Cricket Ground", 'city' => 'London', 'country' => 'England', 'capacity' => '31,100', 'floodlights' => 1, 'pitch_type' => 'Slope feature, seam & swing friendly', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'The Oval', 'city' => 'London', 'country' => 'England', 'capacity' => '27,500', 'floodlights' => 1, 'pitch_type' => 'True bounce, excellent for fast bowling & strokeplay', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Dubai International Cricket Stadium', 'city' => 'Dubai', 'country' => 'United Arab Emirates', 'capacity' => '25,000', 'floodlights' => 1, 'pitch_type' => 'Ring of Fire lights, favors chasing teams under lights', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Sharjah Cricket Stadium', 'city' => 'Sharjah', 'country' => 'United Arab Emirates', 'capacity' => '16,000', 'floodlights' => 1, 'pitch_type' => 'Short boundaries, high run rates', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'SuperSport Park', 'city' => 'Centurion', 'country' => 'South Africa', 'capacity' => '22,000', 'floodlights' => 1, 'pitch_type' => 'Fast and bouncy, favors pace attacks', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Newlands Cricket Ground', 'city' => 'Cape Town', 'country' => 'South Africa', 'capacity' => '25,000', 'floodlights' => 1, 'pitch_type' => 'Picturesque Table Mountain backdrop, swing & seam', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Gaddafi Stadium', 'city' => 'Lahore', 'country' => 'Pakistan', 'capacity' => '27,000', 'floodlights' => 1, 'pitch_type' => 'Flat batting track, high scoring games', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'National Stadium', 'city' => 'Karachi', 'country' => 'Pakistan', 'capacity' => '34,228', 'floodlights' => 1, 'pitch_type' => 'Assists reverse swing and spinners', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'R. Premadasa Stadium', 'city' => 'Colombo', 'country' => 'Sri Lanka', 'capacity' => '35,000', 'floodlights' => 1, 'pitch_type' => 'Subcontinental spin, slow and low bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
-            ['name' => 'Eden Park', 'city' => 'Auckland', 'country' => 'New Zealand', 'capacity' => '42,000', 'floodlights' => 1, 'pitch_type' => 'Unique straight boundaries, exciting T20 cricket', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800']
+            ['name' => 'Wankhede Stadium', 'city' => 'Mumbai', 'country' => 'India', 'capacity' => '33,108', 'pitch_type' => 'Batting friendly, true bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Narendra Modi Stadium', 'city' => 'Ahmedabad', 'country' => 'India', 'capacity' => '132,000', 'pitch_type' => 'Balanced, good for pace & spin', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Eden Gardens', 'city' => 'Kolkata', 'country' => 'India', 'capacity' => '68,000', 'pitch_type' => 'High scoring, aids spin in 2nd innings', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'M. Chinnaswamy Stadium', 'city' => 'Bengaluru', 'country' => 'India', 'capacity' => '40,000', 'pitch_type' => 'Fast outfield, excellent for T20 batting', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Melbourne Cricket Ground (MCG)', 'city' => 'Melbourne', 'country' => 'Australia', 'capacity' => '100,024', 'pitch_type' => 'Big boundaries, great carry and bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Sydney Cricket Ground (SCG)', 'city' => 'Sydney', 'country' => 'Australia', 'capacity' => '48,000', 'pitch_type' => 'Traditional spinning pitch, batting friendly', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => "Lord's Cricket Ground", 'city' => 'London', 'country' => 'England', 'capacity' => '31,100', 'pitch_type' => 'Slope feature, seam & swing friendly', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'The Oval', 'city' => 'London', 'country' => 'England', 'capacity' => '27,500', 'pitch_type' => 'True bounce, excellent for fast bowling & strokeplay', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Dubai International Cricket Stadium', 'city' => 'Dubai', 'country' => 'United Arab Emirates', 'capacity' => '25,000', 'pitch_type' => 'Ring of Fire lights, favors chasing teams under lights', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Sharjah Cricket Stadium', 'city' => 'Sharjah', 'country' => 'United Arab Emirates', 'capacity' => '16,000', 'pitch_type' => 'Short boundaries, high run rates', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'SuperSport Park', 'city' => 'Centurion', 'country' => 'South Africa', 'capacity' => '22,000', 'pitch_type' => 'Fast and bouncy, favors pace attacks', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Newlands Cricket Ground', 'city' => 'Cape Town', 'country' => 'South Africa', 'capacity' => '25,000', 'pitch_type' => 'Picturesque Table Mountain backdrop, swing & seam', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Gaddafi Stadium', 'city' => 'Lahore', 'country' => 'Pakistan', 'capacity' => '27,000', 'pitch_type' => 'Flat batting track, high scoring games', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'National Stadium', 'city' => 'Karachi', 'country' => 'Pakistan', 'capacity' => '34,228', 'pitch_type' => 'Assists reverse swing and spinners', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'R. Premadasa Stadium', 'city' => 'Colombo', 'country' => 'Sri Lanka', 'capacity' => '35,000', 'pitch_type' => 'Subcontinental spin, slow and low bounce', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800'],
+            ['name' => 'Eden Park', 'city' => 'Auckland', 'country' => 'New Zealand', 'capacity' => '42,000', 'pitch_type' => 'Unique straight boundaries, exciting T20 cricket', 'image_url' => 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800']
         ];
 
         foreach ($prominentVenues as $pv) {
             $existing = \App\Models\Venue::where('name', $pv['name'])->first();
+            $desc = "Pitch & Conditions: " . $pv['pitch_type'] . " | Floodlights: Available";
+            $keywords = $pv['name'] . ', ' . $pv['city'] . ', cricket stadium, pitch report, ' . $pv['country'];
+
             if (!$existing) {
                 \App\Models\Venue::create([
                     'name' => $pv['name'],
@@ -1108,12 +1315,28 @@ class Possible11ApiService
                     'city' => $pv['city'],
                     'country' => $pv['country'],
                     'capacity' => $pv['capacity'],
-                    'floodlights' => $pv['floodlights'],
-                    'pitch_type' => $pv['pitch_type'],
                     'image_url' => $pv['image_url'],
-                    'display_order' => 1
+                    'description' => $desc,
+                    'keywords' => $keywords
                 ]);
                 $venuesCount++;
+            } else {
+                $updates = [];
+                if (empty($existing->image_url) && !empty($pv['image_url'])) {
+                    $updates['image_url'] = $pv['image_url'];
+                }
+                if (empty($existing->description) && !empty($pv['pitch_type'])) {
+                    $updates['description'] = $desc;
+                }
+                if (empty($existing->keywords)) {
+                    $updates['keywords'] = $keywords;
+                }
+                if (empty($existing->capacity) && !empty($pv['capacity'])) {
+                    $updates['capacity'] = $pv['capacity'];
+                }
+                if (!empty($updates)) {
+                    $existing->update($updates);
+                }
             }
         }
 
@@ -1158,16 +1381,15 @@ class Possible11ApiService
         } elseif ($statusLabel === 'live' || $rawStatus === 1) {
             $status = 'live';
         } else {
-            // Smart time check: if match scheduled for today or within active match window
+            // Smart time check: matches aligned with Possible11 IST timezone
             $format = strtoupper($mItem['format'] ?? 'ODI');
-            $matchTimestamp = strtotime($matchDate);
-            $nowTimestamp = time();
+            $matchTimestamp = \Carbon\Carbon::parse($matchDate, 'Asia/Kolkata')->getTimestamp();
+            $nowTimestamp = \Carbon\Carbon::now('Asia/Kolkata')->getTimestamp();
             $hoursPassed = ($nowTimestamp - $matchTimestamp) / 3600;
 
-            $maxHours = ($format === 'TEST') ? (24 * 5) : (($format === 'ODI') ? 12 : 6);
-            $isToday = (date('Y-m-d', $matchTimestamp) === date('Y-m-d'));
+            $maxHours = ($format === 'TEST') ? (24 * 5) : (($format === 'ODI') ? 10 : 5);
 
-            if (($isToday && $hoursPassed >= -6) || ($hoursPassed >= 0 && $hoursPassed <= $maxHours)) {
+            if ($hoursPassed >= 0 && $hoursPassed <= $maxHours) {
                 $status = 'live';
             } elseif ($hoursPassed > $maxHours) {
                 $status = 'completed';

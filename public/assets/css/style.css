@@ -135,13 +135,54 @@ body.light-theme .side-panel {
 }
 
 body.light-theme .bg-\[\#161b22\],
+body.light-theme .bg-\[\#161b22\]\/40,
 body.light-theme .bg-\[\#161b22\]\/50,
+body.light-theme .bg-\[\#161b22\]\/60,
 body.light-theme .bg-\[\#21262d\] {
     background-color: var(--bg-card-secondary) !important;
     border-color: var(--border-color) !important;
 }
 
+body.light-theme .team-avatar,
+html.light-theme .team-avatar {
+    background-color: #f1f5f9 !important;
+    color: #0284c7 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+body.light-theme .team-avatar img,
+html.light-theme .team-avatar img {
+    background-color: #ffffff !important;
+}
+body.light-theme .team-fallback-text,
+html.light-theme .team-fallback-text {
+    color: #0284c7 !important;
+}
+body.light-theme .match-header-team-card {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+
+body.light-theme .match-info-table thead tr {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+}
+body.light-theme .match-info-table tbody tr {
+    border-color: #e2e8f0 !important;
+}
+body.light-theme .match-info-table tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+body.light-theme .match-info-table td.match-info-label {
+    color: #475569 !important;
+}
+body.light-theme .match-info-table td.match-info-value {
+    color: #0f172a !important;
+}
+
 body.light-theme .border-\[\#30363d\],
+body.light-theme .border-\[\#30363d\]\/50,
+body.light-theme .border-\[\#30363d\]\/60,
 body.light-theme .border-white\/5,
 body.light-theme .border-white\/10,
 body.light-theme .border-white\/15 {
@@ -905,13 +946,21 @@ body.light-theme .mobile-nav-pill.active {
     height: 24px;
     border-radius: 50%;
     background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.62rem;
     font-weight: 800;
-    color: var(--primary-text);
+    color: #38bdf8;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.team-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #ffffff;
 }
 .team-name { font-size: 0.92rem; font-weight: 600; color: var(--text-main); }
 .team-score { font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--text-main); }

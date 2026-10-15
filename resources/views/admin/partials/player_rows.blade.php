@@ -16,11 +16,6 @@
             </div>
         </td>
 
-        <!-- ORDER -->
-        <td style="padding: 12px 10px; vertical-align: middle;">
-            <input type="number" value="{{ $item->display_order ?? 1 }}" min="1" style="width: 44px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; text-align: center; color: #1e293b; outline: none;">
-        </td>
-
         <!-- POSTER -->
         <td style="padding: 12px 10px; vertical-align: middle;">
             @if(!empty($item->profile_image))
@@ -56,9 +51,27 @@
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                 </a>
             </div>
-            <div style="font-size: 0.75rem; color: #475569; font-weight: 600;">
+            <div style="font-size: 0.75rem; color: #475569; font-weight: 600; margin-bottom: 3px;">
                 Team: <strong>{{ $item->team ? $item->team->name : 'No Team' }}</strong>
             </div>
+            @if($item->tournament || $item->format_id || !empty($item->format_squads_data))
+                <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 3px;">
+                    @if($item->tournament)
+                        <span style="font-size: 0.7rem; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 5px; border-radius: 3px; font-weight: 700;">
+                            🏆 {{ \Illuminate\Support\Str::limit($item->tournament->name, 18) }} ({{ $item->format_id ?: 'Active' }})
+                        </span>
+                    @endif
+                    @if($item->captain_id == $item->id)
+                        <span style="font-size: 0.7rem; background: #fef9c3; color: #854d0e; border: 1px solid #fde047; padding: 1px 5px; border-radius: 3px; font-weight: 800;">
+                            👑 Captain
+                        </span>
+                    @elseif($item->captain)
+                        <span style="font-size: 0.7rem; background: #f1f5f9; color: #475569; padding: 1px 5px; border-radius: 3px; font-weight: 600;">
+                            Capt: {{ $item->captain->name }}
+                        </span>
+                    @endif
+                </div>
+            @endif
         </td>
 
         <!-- ROLE, DOB & COUNTRY -->

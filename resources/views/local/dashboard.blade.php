@@ -135,7 +135,7 @@
             <div class="sm:col-span-4">
                 <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">Search Tournament / Team / Match</label>
                 <select name="search" id="search-select" onchange="toggleCustomFilter(this, 'custom-search-container', 'custom-search-input')" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none cursor-pointer" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    <option value="" class="bg-[#161b22] text-gray-400">All Tournaments & Teams (Select...)</option>
+                    <option value="" class="bg-[#161b22] text-gray-400">All Tournaments & Teams</option>
                     @if(isset($availableTournaments) && $availableTournaments->isNotEmpty())
                         <optgroup label="🏆 TOURNAMENTS" class="bg-[#0d1117] text-sky-400 font-bold">
                             @foreach($availableTournaments as $tName)
@@ -164,49 +164,49 @@
                         </optgroup>
                     @endif
                     <option value="custom" class="bg-[#161b22] text-emerald-400 font-bold" {{ (!empty($search) && (!isset($availableTournaments) || !$availableTournaments->contains($search)) && (!isset($availableTeams) || !$availableTeams->contains($search)) && (!isset($availableMatches) || !$availableMatches->contains($search))) ? 'selected' : '' }}>
-                        ➕ Other (Type Custom Keyword...)
+                        ➕ Other (Custom Search...)
                     </option>
                 </select>
                 <div id="custom-search-container" style="{{ (!empty($search) && (!isset($availableTournaments) || !$availableTournaments->contains($search)) && (!isset($availableTeams) || !$availableTeams->contains($search)) && (!isset($availableMatches) || !$availableMatches->contains($search))) ? 'display: block;' : 'display: none;' }}" class="mt-2">
-                    <input type="text" name="custom_search" id="custom-search-input" value="{{ (!empty($search) && (!isset($availableTournaments) || !$availableTournaments->contains($search)) && (!isset($availableTeams) || !$availableTeams->contains($search)) && (!isset($availableMatches) || !$availableMatches->contains($search))) ? $search : '' }}" placeholder="Type tournament / team / match name..." class="w-full rounded-xl px-3 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
+                    <input type="text" name="custom_search" id="custom-search-input" value="{{ (!empty($search) && (!isset($availableTournaments) || !$availableTournaments->contains($search)) && (!isset($availableTeams) || !$availableTeams->contains($search)) && (!isset($availableMatches) || !$availableMatches->contains($search))) ? $search : '' }}" class="w-full rounded-xl px-3 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
             </div>
 
             <!-- Filter City Dropdown -->
             <div class="sm:col-span-3">
-                <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">City (e.g. Indore)</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">City</label>
                 <select name="city" id="city-select" onchange="toggleCustomFilter(this, 'custom-city-container', 'custom-city-input')" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none cursor-pointer" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    <option value="" class="bg-[#161b22] text-gray-400">All Cities (Select...)</option>
+                    <option value="" class="bg-[#161b22] text-gray-400">All Cities</option>
                     @foreach($availableCities as $c)
                         <option value="{{ $c }}" class="bg-[#161b22] text-white" {{ ($filterCity ?? '') === $c ? 'selected' : '' }}>
-                            📍 {{ $c }}
+                            {{ $c }}
                         </option>
                     @endforeach
                     <option value="custom" class="bg-[#161b22] text-emerald-400 font-bold" {{ (!empty($filterCity) && !$availableCities->contains($filterCity)) ? 'selected' : '' }}>
-                        ➕ Other (Type Custom City...)
+                        ➕ Other (Custom City...)
                     </option>
                 </select>
                 <div id="custom-city-container" style="{{ (!empty($filterCity) && !$availableCities->contains($filterCity)) ? 'display: block;' : 'display: none;' }}" class="mt-2">
-                    <input type="text" name="custom_city" id="custom-city-input" value="{{ (!empty($filterCity) && !$availableCities->contains($filterCity)) ? $filterCity : '' }}" placeholder="Type custom city name..." class="w-full rounded-xl px-3 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
+                    <input type="text" name="custom_city" id="custom-city-input" value="{{ (!empty($filterCity) && !$availableCities->contains($filterCity)) ? $filterCity : '' }}" class="w-full rounded-xl px-3 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
             </div>
 
             <!-- Filter State Dropdown -->
             <div class="sm:col-span-2">
-                <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">State (e.g. MP)</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">State</label>
                 <select name="state" id="state-select" onchange="toggleCustomFilter(this, 'custom-state-container', 'custom-state-input')" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none cursor-pointer" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    <option value="" class="bg-[#161b22] text-gray-400">All States (Select...)</option>
+                    <option value="" class="bg-[#161b22] text-gray-400">All States</option>
                     @foreach($availableStates as $s)
                         <option value="{{ $s }}" class="bg-[#161b22] text-white" {{ ($filterState ?? '') === $s ? 'selected' : '' }}>
-                            🏛️ {{ $s }}
+                            {{ $s }}
                         </option>
                     @endforeach
                     <option value="custom" class="bg-[#161b22] text-emerald-400 font-bold" {{ (!empty($filterState) && !$availableStates->contains($filterState)) ? 'selected' : '' }}>
-                        ➕ Other (Type Custom State...)
+                        ➕ Other (Custom State...)
                     </option>
                 </select>
                 <div id="custom-state-container" style="{{ (!empty($filterState) && !$availableStates->contains($filterState)) ? 'display: block;' : 'display: none;' }}" class="mt-2">
-                    <input type="text" name="custom_state" id="custom-state-input" value="{{ (!empty($filterState) && !$availableStates->contains($filterState)) ? $filterState : '' }}" placeholder="Type custom state name..." class="w-full rounded-xl px-3 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
+                    <input type="text" name="custom_state" id="custom-state-input" value="{{ (!empty($filterState) && !$availableStates->contains($filterState)) ? $filterState : '' }}" class="w-full rounded-xl px-3 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
             </div>
 
@@ -336,7 +336,7 @@
                             <div class="mt-3 pt-2.5 flex items-center gap-1.5 text-xs" style="border-top: 1px solid var(--border-color);">
                                 <span class="text-gray-400">🏆 Series:</span>
                                 @if($t)
-                                    <a href="{{ route('tournament.public', $t->id) }}" class="font-bold text-sky-400 hover:text-sky-300 hover:underline truncate" title="View Tournament Page">
+                                    <a href="{{ $t->url }}" class="font-bold text-sky-400 hover:text-sky-300 hover:underline truncate" title="View Tournament Page">
                                         {{ $t->name }} ({{ $t->format ?? 'T20' }})
                                     </a>
                                 @else
@@ -556,69 +556,34 @@
             <button type="button" onclick="closeCreateModal()" class="text-xl font-bold p-1" style="color: var(--text-dim); background:none; border:none; cursor:pointer;">&times;</button>
         </div>
 
-        <form method="POST" action="{{ route('local.create-tournament') }}" onsubmit="return prepareModalSubmit(this)" class="overflow-y-auto pr-1 flex-1 flex flex-col gap-3.5">
+        <form method="POST" action="{{ route('local.create-tournament') }}" class="overflow-y-auto pr-1 flex-1 flex flex-col gap-3.5">
             @csrf
             
-            <!-- Series Name: Select Existing Template or Type New -->
+            <!-- Tournament Name -->
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">
-                    Tournament / Series Name * 
-                    <span class="text-[10px] text-gray-500 font-normal lowercase">(pick existing template or type new)</span>
+                    Tournament / Series Name *
                 </label>
-                <input type="text" name="name" list="existing-series-modal-list" required placeholder="e.g. Premier Cricket League" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
-                <datalist id="existing-series-modal-list">
-                    @foreach($existingSeriesTemplates as $st)
-                        <option value="{{ $st->name }} ({{ $st->format ?? 'T20' }})">
-                    @endforeach
-                </datalist>
+                <input type="text" name="name" required class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">City *</label>
-                    <select name="city" id="modal-city-select" onchange="toggleCustomFilter(this, 'modal-city-custom-wrap', 'modal-city-custom-input')" required class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none cursor-pointer" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                        <option value="" class="bg-[#161b22] text-gray-400">Select City...</option>
-                        @foreach($availableCities as $c)
-                            <option value="{{ $c }}" class="bg-[#161b22] text-white">📍 {{ $c }}</option>
-                        @endforeach
-                        <option value="custom" class="bg-[#161b22] text-emerald-400 font-bold">➕ Other (Type Custom City...)</option>
-                    </select>
-                    <div id="modal-city-custom-wrap" style="display: none;" class="mt-2">
-                        <input type="text" name="custom_city" id="modal-city-custom-input" placeholder="Type city name..." class="w-full rounded-xl px-3.5 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
-                    </div>
+                    <input type="text" name="city" required class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">State</label>
-                    <select name="state" id="modal-state-select" onchange="toggleCustomFilter(this, 'modal-state-custom-wrap', 'modal-state-custom-input')" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none cursor-pointer" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                        <option value="" class="bg-[#161b22] text-gray-400">Select State...</option>
-                        @foreach($availableStates as $s)
-                            <option value="{{ $s }}" class="bg-[#161b22] text-white">🏛️ {{ $s }}</option>
-                        @endforeach
-                        <option value="custom" class="bg-[#161b22] text-emerald-400 font-bold">➕ Other (Type Custom State...)</option>
-                    </select>
-                    <div id="modal-state-custom-wrap" style="display: none;" class="mt-2">
-                        <input type="text" name="custom_state" id="modal-state-custom-input" placeholder="Type state name..." class="w-full rounded-xl px-3.5 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
-                    </div>
+                    <input type="text" name="state" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
             </div>
             
-            <!-- Venue / Address with Reusable Selection -->
+            <!-- Venue / Address -->
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">
                     Venue / Ground Address
                 </label>
-                <select name="venue" id="modal-venue-select" onchange="toggleCustomFilter(this, 'modal-venue-custom-wrap', 'modal-venue-custom-input')" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none cursor-pointer" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    <option value="" class="bg-[#161b22] text-gray-400">Select Venue / Ground...</option>
-                    @foreach($existingVenues as $ev)
-                        <option value="{{ $ev->name }}{{ $ev->city ? ', ' . $ev->city : '' }}" class="bg-[#161b22] text-white">
-                            📍 {{ $ev->name }}{{ $ev->city ? ', ' . $ev->city : '' }}
-                        </option>
-                    @endforeach
-                    <option value="custom" class="bg-[#161b22] text-emerald-400 font-bold">➕ Other (Type Custom Ground...)</option>
-                </select>
-                <div id="modal-venue-custom-wrap" style="display: none;" class="mt-2">
-                    <input type="text" name="custom_venue" id="modal-venue-custom-input" placeholder="Type custom ground or stadium name..." class="w-full rounded-xl px-3.5 py-2 text-xs outline-none" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main);">
-                </div>
+                <input type="text" name="venue" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -657,7 +622,7 @@
             
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider mb-1" style="color: var(--text-dim);">Description</label>
-                <textarea name="description" rows="2" placeholder="Rules, prizes or tournament overview..." class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none resize-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);"></textarea>
+                <textarea name="description" rows="2" class="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none resize-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);"></textarea>
             </div>
             
             <div class="flex items-center justify-end gap-2.5 pt-3 mt-2" style="border-top: 1px solid var(--border-color);">
@@ -745,36 +710,6 @@
             if (customState && customState.value.trim() !== '') {
                 stateSelect.name = '';
                 customState.name = 'state';
-            }
-        }
-        return true;
-    }
-
-    function prepareModalSubmit(form) {
-        const citySelect = document.getElementById('modal-city-select');
-        const customCity = document.getElementById('modal-city-custom-input');
-        if (citySelect && citySelect.value === 'custom') {
-            if (customCity && customCity.value.trim() !== '') {
-                citySelect.name = '';
-                customCity.name = 'city';
-            }
-        }
-
-        const stateSelect = document.getElementById('modal-state-select');
-        const customState = document.getElementById('modal-state-custom-input');
-        if (stateSelect && stateSelect.value === 'custom') {
-            if (customState && customState.value.trim() !== '') {
-                stateSelect.name = '';
-                customState.name = 'state';
-            }
-        }
-
-        const venueSelect = document.getElementById('modal-venue-select');
-        const customVenue = document.getElementById('modal-venue-custom-input');
-        if (venueSelect && venueSelect.value === 'custom') {
-            if (customVenue && customVenue.value.trim() !== '') {
-                venueSelect.name = '';
-                customVenue.name = 'venue';
             }
         }
         return true;

@@ -191,7 +191,7 @@
                 @csrf
                 <div class="sm:col-span-9">
                     <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Brand New Team Name *</label>
-                    <input type="text" name="name" placeholder="Enter new team name (e.g. Indore Strikers)..." class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 outline-none placeholder-gray-500">
+                    <input type="text" name="name" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 outline-none">
                 </div>
                 <div class="sm:col-span-3 flex items-end">
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl py-2.5 px-4 text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md">
@@ -329,7 +329,7 @@
                 </div>
                 <div class="sm:col-span-4">
                     <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Player Full Name *</label>
-                    <input type="text" name="name" placeholder="e.g. Rahul Sharma" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-500">
+                    <input type="text" name="name" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
                 </div>
                 <div class="sm:col-span-3">
                     <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Playing Role *</label>
@@ -508,7 +508,7 @@
                             </option>
                         </select>
                         <div id="custom-venue-container" style="display: none;" class="mt-2">
-                            <input type="text" name="venue" id="custom-venue-input" placeholder="Type custom ground name..." class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2 text-xs focus:border-blue-500 outline-none placeholder-gray-500">
+                            <input type="text" name="venue" id="custom-venue-input" class="w-full bg-[#161b22] border border-[#30363d] text-white rounded-xl px-3.5 py-2 text-xs focus:border-blue-500 outline-none">
                         </div>
                     </div>
                     <div class="flex items-end">

@@ -24,7 +24,7 @@
             <!-- Search input & buttons -->
             <div style="display: flex; align-items: center; gap: 6px;">
                 <div class="admin-search-wrapper">
-                    <input type="text" id="ranking-search-input" class="admin-search-input" oninput="filterRankingTable()" onkeyup="filterRankingTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterRankingTable();}" placeholder="Search rankings..." style="width: 220px;">
+                    <input type="text" id="ranking-search-input" class="admin-search-input" oninput="filterRankingTable()" onkeyup="filterRankingTable()" onkeydown="if(event.key==='Enter'){event.preventDefault(); filterRankingTable();}" style="width: 220px;">
                     <button type="button" class="admin-search-clear-btn" title="Clear search">&times;</button>
                 </div>
                 <button type="button" onclick="filterRankingTable()" style="padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #1e293b; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
@@ -90,29 +90,22 @@
             <form method="POST" action="{{ $editTeam ? route('admin.ranking.update', $editTeam->id) : route('admin.ranking.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
                 @csrf
 
-                <!-- ROW 1: Team Name & Slug | Rank # | Display Order -->
-                <div style="display: grid; grid-template-columns: 2.2fr 1fr 1fr; gap: 16px; align-items: flex-start;">
+                <!-- ROW 1: Team Name & Slug | Rank # -->
+                <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 16px; align-items: flex-start;">
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Team Name <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="text" id="team_ranking_name" name="team_name" value="{{ old('team_name', $editTeam->team_name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value, 'team_ranking_slug')" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                        <input type="text" id="team_ranking_name" name="team_name" value="{{ old('team_name', $editTeam->team_name ?? '') }}" required onkeyup="autoSlugify(this.value, 'team_ranking_slug')" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                         
-                        <input type="text" id="team_ranking_slug" name="slug" value="{{ old('slug', $editTeam->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                        <input type="text" id="team_ranking_slug" name="slug" value="{{ old('slug', $editTeam->slug ?? '') }}" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
                     </div>
 
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Rank # <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="number" name="rank_num" min="1" value="{{ old('rank_num', $editTeam->rank_num ?? '') }}" required placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                    </div>
-
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                            Display Order
-                        </label>
-                        <input type="number" name="display_order" min="1" value="{{ old('display_order', $editTeam->display_order ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="number" name="rank_num" min="1" value="{{ old('rank_num', $editTeam->rank_num ?? '') }}" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -122,28 +115,28 @@
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Matches Played
                         </label>
-                        <input type="number" name="matches_played" min="0" value="{{ old('matches_played', $editTeam->matches_played ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="number" name="matches_played" min="0" value="{{ old('matches_played', $editTeam->matches_played ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Won
                         </label>
-                        <input type="number" name="won" min="0" value="{{ old('won', $editTeam->won ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="number" name="won" min="0" value="{{ old('won', $editTeam->won ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             NRR (Net Run Rate)
                         </label>
-                        <input type="text" name="nrr" value="{{ old('nrr', $editTeam->nrr ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="nrr" value="{{ old('nrr', $editTeam->nrr ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Points <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="number" name="points" min="0" value="{{ old('points', $editTeam->points ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="number" name="points" min="0" value="{{ old('points', $editTeam->points ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -153,13 +146,13 @@
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Category
                         </label>
-                        <input type="text" name="category" value="{{ old('category', $editTeam->category ?? 'ALL') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="category" value="{{ old('category', $editTeam->category ?? 'ALL') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Keywords
                         </label>
-                        <input type="text" name="keywords" value="{{ old('keywords', $editTeam->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="keywords" value="{{ old('keywords', $editTeam->keywords ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -174,7 +167,7 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'ranking_team_logo_input', 'ranking-team-logo-preview', 'ranking-team-logo-badge')" style="font-size: 0.82rem; color: #475569;">
-                            <input type="text" id="ranking_team_logo_input" name="logo_url" value="{{ old('logo_url', $editTeam->logo_url ?? '') }}" oninput="previewUrlImage(this, 'ranking-team-logo-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                            <input type="text" id="ranking_team_logo_input" name="logo_url" value="{{ old('logo_url', $editTeam->logo_url ?? '') }}" oninput="previewUrlImage(this, 'ranking-team-logo-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                             <img id="ranking-team-logo-preview" src="{{ old('logo_url', $editTeam->logo_url ?? '') }}" alt="Logo" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('logo_url', $editTeam->logo_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                         </div>
                     </div>
@@ -194,36 +187,29 @@
                 @csrf
                 <input type="hidden" id="player_ranking_type_input" name="type" value="{{ old('type', $editPlayer->type ?? 'batting') }}">
 
-                <!-- ROW 1: Player Name & Slug | Badge / Country | Rank # | Display Order -->
-                <div style="display: grid; grid-template-columns: 2.2fr 1fr 1fr 0.8fr; gap: 16px; align-items: flex-start;">
+                <!-- ROW 1: Player Name & Slug | Badge / Country | Rank # -->
+                <div style="display: grid; grid-template-columns: 2.2fr 1fr 1fr; gap: 16px; align-items: flex-start;">
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Player Name <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="text" id="player_ranking_name" name="player_name" value="{{ old('player_name', $editPlayer->player_name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value, 'player_ranking_slug')" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                        <input type="text" id="player_ranking_name" name="player_name" value="{{ old('player_name', $editPlayer->player_name ?? '') }}" required onkeyup="autoSlugify(this.value, 'player_ranking_slug')" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                         
-                        <input type="text" id="player_ranking_slug" name="slug" value="{{ old('slug', $editPlayer->slug ?? '') }}" placeholder="" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
+                        <input type="text" id="player_ranking_slug" name="slug" value="{{ old('slug', $editPlayer->slug ?? '') }}" style="width: 100%; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #64748b; outline: none; box-sizing: border-box; background: #fafafa;">
                     </div>
 
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Badge / Team (e.g. IND) <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="text" name="badge_text" maxlength="6" value="{{ old('badge_text', $editPlayer->badge_text ?? '') }}" required placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; text-transform: uppercase;">
+                        <input type="text" name="badge_text" maxlength="6" value="{{ old('badge_text', $editPlayer->badge_text ?? '') }}" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; text-transform: uppercase;">
                     </div>
 
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Rank # <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="number" name="rank_num" min="1" value="{{ old('rank_num', $editPlayer->rank_num ?? '') }}" required placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                    </div>
-
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                            Display Order
-                        </label>
-                        <input type="number" name="display_order" min="1" value="{{ old('display_order', $editPlayer->display_order ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="number" name="rank_num" min="1" value="{{ old('rank_num', $editPlayer->rank_num ?? '') }}" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -233,13 +219,13 @@
                         <label id="stat_value_label" style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Stat Value (Runs / Wickets) <span style="color:#ef4444;">*</span>
                         </label>
-                        <input type="number" name="stat_value" min="0" value="{{ old('stat_value', $editPlayer->stat_value ?? '') }}" required placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="number" name="stat_value" min="0" value="{{ old('stat_value', $editPlayer->stat_value ?? '') }}" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                             Keywords
                         </label>
-                        <input type="text" name="keywords" value="{{ old('keywords', $editPlayer->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="keywords" value="{{ old('keywords', $editPlayer->keywords ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -254,7 +240,7 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'ranking_player_photo_input', 'ranking-player-photo-preview', 'ranking-player-photo-badge')" style="font-size: 0.82rem; color: #475569;">
-                            <input type="text" id="ranking_player_photo_input" name="photo_url" value="{{ old('photo_url', $editPlayer->photo_url ?? '') }}" oninput="previewUrlImage(this, 'ranking-player-photo-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                            <input type="text" id="ranking_player_photo_input" name="photo_url" value="{{ old('photo_url', $editPlayer->photo_url ?? '') }}" oninput="previewUrlImage(this, 'ranking-player-photo-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                             <img id="ranking-player-photo-preview" src="{{ old('photo_url', $editPlayer->photo_url ?? '') }}" alt="Photo" style="height: 38px; border-radius: 4px; border: 1px solid #cbd5e1; display: {{ !empty(old('photo_url', $editPlayer->photo_url ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                         </div>
                     </div>
@@ -278,7 +264,6 @@
                 <thead>
                     <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                         <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                        <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                         <th style="padding: 10px 12px; width: 90px;">POSTER</th>
                         <th style="padding: 10px 14px; min-width: 220px;">NAME</th>
                         <th style="padding: 10px 12px; width: 140px;">TYPE</th>
@@ -303,11 +288,6 @@
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     </a>
                                 </div>
-                            </td>
-
-                            <!-- ORDER -->
-                            <td style="padding: 12px 10px; vertical-align: middle; color: #334155; font-weight: 700;">
-                                {{ $tr->display_order ?: $tr->rank_num }}
                             </td>
 
                             <!-- POSTER / LOGO -->
@@ -387,11 +367,6 @@
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     </a>
                                 </div>
-                            </td>
-
-                            <!-- ORDER -->
-                            <td style="padding: 12px 10px; vertical-align: middle; color: #334155; font-weight: 700;">
-                                {{ $pr->display_order ?: $pr->rank_num }}
                             </td>
 
                             <!-- POSTER / LOGO -->

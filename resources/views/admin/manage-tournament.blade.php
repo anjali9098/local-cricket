@@ -159,7 +159,7 @@
 
             <form method="POST" action="{{ route('admin.add-team', $tournament->id) }}" class="input-group">
                 @csrf
-                <input type="text" name="name" placeholder="Team name" required>
+                <input type="text" name="name" required>
                 <button type="submit">+</button>
             </form>
 
@@ -208,7 +208,7 @@
                         <option value="{{ $t->id }}">{{ $t->name }}</option>
                     @endforeach
                 </select>
-                <input type="text" name="name" placeholder="Player name" required>
+                <input type="text" name="name" required>
                 <select name="role" required>
                     <option value="Batsman">Batsman</option>
                     <option value="Bowler">Bowler</option>
@@ -284,7 +284,7 @@
                     @endforeach
                 </select>
                 <input type="datetime-local" name="scheduled_at" style="flex: 1; min-width: 180px; padding: 11px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none;">
-                <input type="text" name="venue" placeholder="Venue" style="flex: 1; min-width: 130px; padding: 11px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none;">
+                <input type="text" name="venue" style="flex: 1; min-width: 130px; padding: 11px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.92rem; color: #0f172a; outline: none;">
                 <button type="submit" style="background: #0f172a; color: white; border: none; border-radius: 8px; padding: 11px 22px; font-size: 0.92rem; font-weight: 800; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
                     <span style="font-size: 1.1rem;">+</span> Add Match
                 </button>
@@ -349,11 +349,11 @@
                 @csrf
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px;">Prediction Title</label>
-                    <input type="text" name="title" placeholder="e.g., Team A to win against Team B" required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem;">
+                    <input type="text" name="title" required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px;">Summary / Key Points</label>
-                    <textarea name="summary" rows="3" placeholder="Brief details about the prediction..." required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem; resize: vertical;"></textarea>
+                    <textarea name="summary" rows="3" required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem; resize: vertical;"></textarea>
                 </div>
                 <button type="submit" style="background: #0f172a; color: white; font-weight: 700; font-size: 0.95rem; padding: 12px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     Publish Prediction
@@ -372,11 +372,11 @@
                 @csrf
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px;">Tip Title</label>
-                    <input type="text" name="title" placeholder="e.g., Must-have players for today" required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem;">
+                    <input type="text" name="title" required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px;">Summary / Players</label>
-                    <textarea name="summary" rows="3" placeholder="Brief details about the fantasy tip..." required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem; resize: vertical;"></textarea>
+                    <textarea name="summary" rows="3" required style="width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem; resize: vertical;"></textarea>
                 </div>
                 <button type="submit" style="background: #0ea5e9; color: white; font-weight: 700; font-size: 0.95rem; padding: 12px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     Publish Fantasy Tip

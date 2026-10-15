@@ -98,7 +98,7 @@
                 Points
             </a>
             <a href="{{ $series->url }}#tab-teams" style="text-align: center; background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-muted); text-decoration: none; padding: 4px 2px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; transition: color 0.15s;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='var(--text-muted)'">
-                Squads
+                Teams
             </a>
         </div>
     </div>

@@ -77,7 +77,7 @@
         
         <!-- Search row -->
         <form method="GET" action="{{ route('glossary.all') }}" style="display: flex; gap: 10px; align-items: center; max-width: 500px;">
-            <input type="text" name="search" value="{{ request('search', '') }}" placeholder="Search term, googly, yorker, LBW..." style="flex: 1; padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card-secondary); color: var(--text-main); font-size: 0.88rem; outline: none;">
+            <input type="text" name="search" value="{{ request('search', '') }}" style="flex: 1; padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card-secondary); color: var(--text-main); font-size: 0.88rem; outline: none;">
             <button type="submit" style="padding: 8px 18px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">
                 Search
             </button>

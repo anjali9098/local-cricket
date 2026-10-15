@@ -79,7 +79,7 @@
                 <a href="{{ route('matches', ['status' => 'live']) }}" class="tag-badge {{ ($status ?? '') === 'live' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Live</a>
                 <a href="{{ route('matches', ['status' => 'upcoming']) }}" class="tag-badge {{ in_array(($status ?? ''), ['upcoming', 'scheduled']) ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Upcoming</a>
                 <a href="{{ route('matches', ['status' => 'completed']) }}" class="tag-badge {{ ($status ?? '') === 'completed' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Completed</a>
-                <a href="{{ route('matches', ['category' => 'local']) }}" class="tag-badge {{ ($category ?? '') === 'local' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/40">Local</a>
+                <a href="{{ route('matches', ['category' => 'local']) }}" class="tag-badge {{ ($category ?? '') === 'local' ? 'primary' : '' }} whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full">Local</a>
             </div>
         </div>
 
@@ -95,7 +95,7 @@
                 <input type="hidden" name="category" value="{{ $category }}">
             @endif
             <div class="relative flex-1 w-full">
-                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="🔍 Search match by team name, tournament, ground..." class="w-full rounded-xl px-3.5 py-2 text-xs sm:text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
+                <input type="text" name="search" value="{{ $search ?? '' }}" class="w-full rounded-xl px-3.5 py-2 text-xs sm:text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
             </div>
             <div class="flex items-center gap-2 w-full sm:w-auto">
                 <button type="submit" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm py-2 px-4 rounded-xl transition-all shadow-md">

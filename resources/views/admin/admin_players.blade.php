@@ -32,7 +32,7 @@
                 <!-- Search input & buttons -->
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <div style="position: relative; display: inline-flex; align-items: center;">
-                        <input type="text" name="search" id="player-search-input" value="{{ $search ?? '' }}" oninput="handlePlayerSearchInput()" onkeyup="handlePlayerSearchInput()" onkeydown="if(event.key==='Enter'){event.preventDefault(); triggerPlayerLiveSearch(1);}" placeholder="Search by name, team, country..." style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 240px; background: white; color: #1e293b;">
+                        <input type="text" name="search" id="player-search-input" value="{{ $search ?? '' }}" oninput="handlePlayerSearchInput()" onkeyup="handlePlayerSearchInput()" onkeydown="if(event.key==='Enter'){event.preventDefault(); triggerPlayerLiveSearch(1);}" style="padding: 6px 28px 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; outline: none; width: 240px; background: white; color: #1e293b;">
                         <button type="button" id="player-search-clear" onclick="clearPlayerSearch()" style="position: absolute; right: 7px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.15rem; color: #94a3b8; cursor: pointer; padding: 0 4px; line-height: 1; display: {{ !empty($search) ? 'inline-block' : 'none' }}; z-index: 2;" title="Clear search">&times;</button>
                     </div>
                     <button type="button" onclick="triggerPlayerLiveSearch(1)" style="padding: 6px 14px; border: 1px solid #0284c7; border-radius: 4px; background: #0284c7; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.15s;">
@@ -73,19 +73,19 @@
         <form method="POST" action="{{ $editItem ? route('admin.players.update', $editItem->id) : route('admin.players.post') }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
             @csrf
 
-            <!-- ROW 1: Player Name, Nickname | Team | Role | Display Order -->
-            <div style="display: grid; grid-template-columns: 2fr 1.3fr 1.2fr 0.8fr; gap: 16px; align-items: flex-start;">
+            <!-- ROW 1: Player Name, Nickname | Team | Role -->
+            <div style="display: grid; grid-template-columns: 2fr 1.3fr 1.2fr; gap: 16px; align-items: flex-start;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Player Full Name <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="player_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required placeholder="" onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
+                    <input type="text" id="player_name" name="name" value="{{ old('name', $editItem->name ?? '') }}" required onkeyup="autoSlugify(this.value)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box; margin-bottom: 8px;">
                     
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.78rem; color: #475569;">
                             Nickname
                         </label>
-                        <input type="text" name="nickname" value="{{ old('nickname', $editItem->nickname ?? '') }}" placeholder="" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                        <input type="text" name="nickname" value="{{ old('nickname', $editItem->nickname ?? '') }}" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box;">
                     </div>
 
                     <input type="hidden" id="player_slug" name="slug" value="{{ old('slug', $editItem->slug ?? '') }}">
@@ -114,13 +114,6 @@
                         @endforeach
                     </select>
                 </div>
-
-                <div>
-                    <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Display Order
-                    </label>
-                    <input type="number" name="display_order" value="{{ old('display_order', $editItem->display_order ?? '') }}" min="1" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
-                </div>
             </div>
 
             <!-- ROW 2: Physical & Personal Specs: Birthplace | Height | DOB | Nationality | Jersey # -->
@@ -129,13 +122,13 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         📍 Birthplace
                     </label>
-                    <input type="text" name="birthplace" value="{{ old('birthplace', $editItem->birthplace ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="birthplace" value="{{ old('birthplace', $editItem->birthplace ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         📏 Height
                     </label>
-                    <input type="text" name="height" value="{{ old('height', $editItem->height ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="height" value="{{ old('height', $editItem->height ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
@@ -147,18 +140,18 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Country / Nationality
                     </label>
-                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? ($editItem->nationality ?? 'India')) }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="country" value="{{ old('country', $editItem->country ?? ($editItem->nationality ?? 'India')) }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Jersey #
                     </label>
-                    <input type="text" name="jersey_number" value="{{ old('jersey_number', $editItem->jersey_number ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="jersey_number" value="{{ old('jersey_number', $editItem->jersey_number ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
-            <!-- ROW 3: Batting & Bowling Style & Played Teams -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 14px;">
+            <!-- ROW 3: Batting & Bowling Style -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Batting Style
@@ -173,28 +166,97 @@
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Bowling Style
                     </label>
-                    <input type="text" name="bowling_style" value="{{ old('bowling_style', $editItem->bowling_style ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="bowling_style" value="{{ old('bowling_style', $editItem->bowling_style ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
-                    <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        🏏 Teams &amp; Squad Affiliation (Automatically synced from Database)
-                    </label>
-                    <div style="font-size: 0.78rem; color: #64748b; line-height: 1.4;">
-                        Teams are automatically fetched from the <strong>Current Team</strong> selected above and match scorecards in MySQL database. No manual tags required!
+                <input type="hidden" name="played_teams" value="{{ old('played_teams', $editItem->played_teams ?? '') }}">
+            </div>
+
+            <!-- ROW: Active Series, Format & Captaincy (Single-Table Squad Architecture) -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 18px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 0.9rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 6px;">
+                        <span>🏆</span> Active Series, Format &amp; Captaincy Mapping
                     </div>
-                    @if(isset($editItem) && $editItem)
-                        <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            @if($editItem->team)
-                                <span style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
-                                    🛡️ {{ $editItem->team->name }} (Active Team)
-                                </span>
-                            @else
-                                <span style="font-size: 0.76rem; color: #94a3b8; font-style: italic;">No primary team assigned yet.</span>
-                            @endif
-                        </div>
-                    @endif
-                    <input type="hidden" name="played_teams" value="{{ old('played_teams', $editItem->played_teams ?? '') }}">
+                    <span style="font-size: 0.75rem; color: #15803d; font-weight: 600; background: #dcfce7; padding: 2px 8px; border-radius: 4px; border: 1px solid #bbf7d0;">
+                        Auto-synced into players.format_squads
+                    </span>
                 </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.5fr 1fr; gap: 14px; align-items: flex-end;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.82rem; color: #166534;">
+                            Active Tournament / Series
+                        </label>
+                        <select name="series_id" style="width: 100%; padding: 8px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; background: white;">
+                            <option value="">-- No Active Series / Free Agent --</option>
+                            @if(isset($tournaments))
+                                @foreach($tournaments as $t)
+                                    <option value="{{ $t->id }}" {{ (old('series_id', $editItem->series_id ?? null) == $t->id) ? 'selected' : '' }}>
+                                        #{{ $t->id }} - {{ $t->name }} ({{ $t->format ?: 'Multi-Format' }})
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.82rem; color: #166534;">
+                            Format
+                        </label>
+                        @php $curFmt = strtoupper(old('format_id', $editItem->format_id ?? '')); @endphp
+                        <select name="format_id" style="width: 100%; padding: 8px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; background: white;">
+                            <option value="">-- Select Format --</option>
+                            @foreach(['ODI', 'T20', 'T20I', 'TEST', 'IPL', 'T10', 'THE HUNDRED'] as $fmt)
+                                <option value="{{ $fmt }}" {{ $curFmt === $fmt ? 'selected' : '' }}>{{ $fmt }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 700; font-size: 0.82rem; color: #166534;">
+                            Team Captain
+                        </label>
+                        @php 
+                            $isSelfCaptain = isset($editItem) && $editItem && ($editItem->captain_id == $editItem->id);
+                        @endphp
+                        <select name="captain_id" id="player_captain_select" {{ $isSelfCaptain ? 'disabled' : '' }} style="width: 100%; padding: 8px 10px; border: 1px solid #86efac; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; background: {{ $isSelfCaptain ? '#f1f5f9' : 'white' }};">
+                            <option value="">-- Select Captain --</option>
+                            @if(isset($allCaptains))
+                                @foreach($allCaptains as $cap)
+                                    <option value="{{ $cap->id }}" {{ (old('captain_id', $editItem->captain_id ?? null) == $cap->id && !$isSelfCaptain) ? 'selected' : '' }}>
+                                        {{ $cap->name }} (#{{ $cap->id }})
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    <div style="padding-bottom: 8px;">
+                        <label style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.85rem; color: #166534; cursor: pointer;">
+                            <input type="checkbox" name="is_captain" value="1" id="is_captain_checkbox" {{ (old('is_captain', $isSelfCaptain ?? false)) ? 'checked' : '' }} onchange="document.getElementById('player_captain_select').disabled = this.checked; if(this.checked){ document.getElementById('player_captain_select').style.background='#f1f5f9'; }else{ document.getElementById('player_captain_select').style.background='white'; }" style="width: 16px; height: 16px; accent-color: #16a34a;">
+                            👑 Is Team Captain?
+                        </label>
+                    </div>
+                </div>
+
+                @if(isset($editItem) && !empty($editItem->format_squads_data))
+                    <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #86efac;">
+                        <div style="font-size: 0.78rem; font-weight: 700; color: #166534; margin-bottom: 6px;">
+                            📋 Multi-Format Squad Breakdown:
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            @foreach($editItem->format_squads_data as $fKey => $fData)
+                                <div style="background: white; border: 1px solid #86efac; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; color: #0f172a;">
+                                    <strong style="color: #16a34a;">[{{ $fKey }}]</strong> 
+                                    <span>{{ $fData['series_name'] ?? ('Series #' . ($fData['series_id'] ?? '')) }}</span>
+                                    @if(!empty($fData['is_captain']))
+                                        <span style="background: #fef08a; color: #854d0e; font-weight: 800; padding: 1px 6px; border-radius: 4px; margin-left: 4px;">👑 Captain</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- ROW 4: Family Details Box -->
@@ -207,31 +269,31 @@
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Father's Name
                         </label>
-                        <input type="text" name="father_name" value="{{ old('father_name', $editItem->father_name ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="father_name" value="{{ old('father_name', $editItem->father_name ?? '') }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Mother's Name
                         </label>
-                        <input type="text" name="mother_name" value="{{ old('mother_name', $editItem->mother_name ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="mother_name" value="{{ old('mother_name', $editItem->mother_name ?? '') }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Spouse / Wife
                         </label>
-                        <input type="text" name="spouse_name" value="{{ old('spouse_name', $editItem->spouse_name ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="spouse_name" value="{{ old('spouse_name', $editItem->spouse_name ?? '') }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Children
                         </label>
-                        <input type="text" name="children" value="{{ old('children', $editItem->children ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="children" value="{{ old('children', $editItem->children ?? '') }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.78rem; color: #475569;">
                             Siblings (Brother/Sister)
                         </label>
-                        <input type="text" name="siblings" value="{{ old('siblings', $editItem->siblings ?? '') }}" placeholder="" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
+                        <input type="text" name="siblings" value="{{ old('siblings', $editItem->siblings ?? '') }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; color: #0f172a; outline: none; box-sizing: border-box; background: white;">
                     </div>
                 </div>
             </div>
@@ -267,24 +329,24 @@
                         <span class="html-editor-divider"></span>
                         <button type="button" class="html-editor-btn" style="color: #0284c7; background: #e0f2fe; border-color: #bae6fd;" onclick="toggleHtmlPreview('player_bio', 'player_bio_preview')">👁️ Live Preview</button>
                     </div>
-                    <textarea id="player_bio" name="bio" class="html-editor-textarea" rows="5" placeholder="Enter player career story, early life, international debut, match-winning knocks, achievements..." style="min-height: 120px;">{{ old('bio', $editItem->bio ?? '') }}</textarea>
+                    <textarea id="player_bio" name="bio" class="html-editor-textarea" rows="5" style="min-height: 120px;">{{ old('bio', $editItem->bio ?? '') }}</textarea>
                     <div id="player_bio_preview" class="html-editor-preview"></div>
                 </div>
             </div>
 
-            <!-- ROW 6: Short Bio / Keywords -->
+            <!-- ROW 6: SEO Meta Description / Keywords -->
             <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px;">
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
-                        Short Tagline / Catchphrase
+                        🔍 SEO Meta Description <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(Recommended: 120-160 characters for Google ranking)</span>
                     </label>
-                    <input type="text" name="description" value="{{ old('description', $editItem->description ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <textarea name="meta_description" rows="2" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; color: #0f172a; outline: none; box-sizing: border-box; resize: vertical;">{{ old('meta_description', $editItem->meta_description ?? '') }}</textarea>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.85rem; color: #1e293b;">
                         Article Keywords &amp; Tags <span style="font-weight: 500; font-size: 0.75rem; color: #64748b;">(for matching articles)</span>
                     </label>
-                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" placeholder="" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
+                    <input type="text" name="keywords" value="{{ old('keywords', $editItem->keywords ?? '') }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.88rem; color: #0f172a; outline: none; box-sizing: border-box;">
                 </div>
             </div>
 
@@ -300,10 +362,7 @@
                     'odi' => 'ODI',
                     't20i' => 'T20I',
                 ];
-                $existingRankings = old('icc_rankings', $editItem->icc_rankings ?? []);
-                if (is_string($existingRankings)) {
-                    $existingRankings = json_decode($existingRankings, true) ?: [];
-                }
+                $existingRankings = old('icc_rankings', $editItem ? $editItem->normalized_icc_rankings : []);
             @endphp
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
@@ -344,14 +403,12 @@
                                                 <input type="text" 
                                                     name="icc_rankings[{{ $catKey }}][{{ $fmtKey }}][current]" 
                                                     value="{{ $currVal }}" 
-                                                    placeholder="--" 
                                                     style="width: 100%; text-align: center; padding: 5px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; font-weight: 700; color: #0f172a; outline: none; box-sizing: border-box; background: #fafafa;">
                                             </td>
                                             <td style="padding: 4px 6px;">
                                                 <input type="text" 
                                                     name="icc_rankings[{{ $catKey }}][{{ $fmtKey }}][best]" 
                                                     value="{{ $bestVal }}" 
-                                                    placeholder="--" 
                                                     style="width: 100%; text-align: center; padding: 5px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; font-weight: 700; color: #0f172a; outline: none; box-sizing: border-box; background: #fafafa;">
                                             </td>
                                         </tr>
@@ -376,7 +433,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <input type="file" name="poster_file" accept="image/*" onchange="previewAndConvertImage(this, 'player_profile_image_input', 'player-poster-preview', 'player-poster-badge')" style="font-size: 0.82rem; color: #475569;">
-                        <input type="text" id="player_profile_image_input" name="profile_image" value="{{ old('profile_image', $editItem->profile_image ?? '') }}" oninput="previewUrlImage(this, 'player-poster-preview')" placeholder="Image URL or auto-filled from upload" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
+                        <input type="text" id="player_profile_image_input" name="profile_image" value="{{ old('profile_image', $editItem->profile_image ?? '') }}" oninput="previewUrlImage(this, 'player-poster-preview')" style="flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem;">
                         <img id="player-poster-preview" src="{{ old('profile_image', $editItem->profile_image ?? '') }}" alt="Photo" style="height: 38px; width: 38px; border-radius: 50%; object-fit: cover; border: 1px solid #cbd5e1; display: {{ !empty(old('profile_image', $editItem->profile_image ?? '')) ? 'block' : 'none' }};" onerror="this.style.display='none';">
                     </div>
                 </div>
@@ -406,7 +463,6 @@
                     <thead>
                         <tr style="border-bottom: 2px solid #cbd5e1; color: #0284c7; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 12px; width: 65px;"># EDIT</th>
-                            <th style="padding: 10px 12px; width: 65px;">ORDER</th>
                             <th style="padding: 10px 12px; width: 90px;">POSTER</th>
                             <th style="padding: 10px 14px; min-width: 220px;">NAME</th>
                             <th style="padding: 10px 14px; min-width: 220px;">PAGE LINK / TEAM</th>

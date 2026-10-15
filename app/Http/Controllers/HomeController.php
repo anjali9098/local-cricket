@@ -11,9 +11,7 @@ use App\Models\Article;
 use App\Models\News;
 use App\Models\Team;
 use App\Models\TeamRanking;
-use App\Models\PlayerRanking;
-use App\Models\PointsTable;
-use App\Models\PlayerBirthday;
+use App\Models\IccPlayerRanking;
 use App\Models\Player;
 use App\Models\Venue;
 use App\Models\WebStory;
@@ -47,11 +45,8 @@ class HomeController extends Controller
             return $m->effective_status === 'upcoming';
         })->sortBy('match_date')->values();
 
-        // Top carousel: strictly LIVE matches first, followed by UPCOMING matches (displayed 8 per slide)
+        // Top carousel: strictly LIVE matches first, followed by UPCOMING matches (no completed matches)
         $allMatches = $liveMatches->merge($upcomingMatches);
-        if ($allMatches->isEmpty()) {
-            $allMatches = $allApprovedMatches->take(24);
-        }
 
         // Fetch all approved tournaments with teams and recent matches
         $allTournaments = Tournament::with([
@@ -62,7 +57,6 @@ class HomeController extends Controller
             ])
             ->where(function($q) { $q->whereNull('is_approved')->orWhere('is_approved', true); })
             ->where(function($q) { $q->whereNull('is_enabled')->orWhere('is_enabled', true); })
-            ->orderBy('display_order', 'asc')
             ->orderBy('id', 'desc')
             ->get();
 
@@ -126,7 +120,20 @@ class HomeController extends Controller
             });
 
         if ($battingRankings->isEmpty()) {
-            $battingRankings = PlayerRanking::where('type', 'batting')->orderBy('rank_num', 'asc')->take(10)->get();
+            $battingRankings = \App\Models\IccPlayerRanking::where('category', 'batting')
+                ->whereNotNull('current_rank')
+                ->where('current_rank', '!=', '--')
+                ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+                ->take(10)
+                ->get()
+                ->map(function($r, $idx) {
+                    return (object)[
+                        'rank_num' => $idx + 1,
+                        'player_name' => $r->player_name,
+                        'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
+                        'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
+                    ];
+                });
         }
 
         // 100% Dynamic Real Bowling Rankings from match bowling scores
@@ -145,7 +152,20 @@ class HomeController extends Controller
             });
 
         if ($bowlingRankings->isEmpty()) {
-            $bowlingRankings = PlayerRanking::where('type', 'bowling')->orderBy('rank_num', 'asc')->take(10)->get();
+            $bowlingRankings = \App\Models\IccPlayerRanking::where('category', 'bowling')
+                ->whereNotNull('current_rank')
+                ->where('current_rank', '!=', '--')
+                ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+                ->take(10)
+                ->get()
+                ->map(function($r, $idx) {
+                    return (object)[
+                        'rank_num' => $idx + 1,
+                        'player_name' => $r->player_name,
+                        'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
+                        'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
+                    ];
+                });
         }
 
         // 100% Dynamic Real Points Table from active tournament & matches
@@ -256,7 +276,7 @@ class HomeController extends Controller
             })->filter()->sortBy('days_until_birthday')->values()->take(6);
 
         // 6 Latest Popular Players for Homepage
-        $popularPlayers = Player::with('team')->orderByRaw("CASE WHEN is_popular = 1 THEN 1 ELSE 2 END")->orderBy('display_order', 'asc')->orderBy('id', 'desc')->take(6)->get();
+        $popularPlayers = Player::with('team')->orderByRaw("CASE WHEN is_popular = 1 THEN 1 ELSE 2 END")->orderBy('id', 'desc')->take(6)->get();
 
         // 6 Latest Venues for Homepage
         $venues = Venue::orderBy('id', 'desc')->take(6)->get();

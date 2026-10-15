@@ -25,12 +25,12 @@
             
             <div class="auth-input-group">
                 <label class="auth-label">Email Address *</label>
-                <input type="email" name="email" required autofocus placeholder="Enter your Google email" class="auth-input">
+                <input type="email" name="email" required autofocus class="auth-input">
             </div>
 
             <div class="auth-input-group">
                 <label class="auth-label">Your Full Name *</label>
-                <input type="text" name="name" required placeholder="Enter your display name" class="auth-input">
+                <input type="text" name="name" required class="auth-input">
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">

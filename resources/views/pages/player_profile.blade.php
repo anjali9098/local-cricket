@@ -88,16 +88,7 @@
             
             <!-- Player Image / Avatar -->
             <div style="flex-shrink: 0; width: 130px; height: 130px; position: relative;">
-                @if(!empty($player->profile_image))
-                    <img src="{{ $player->profile_image }}" alt="{{ $player->name }}" style="width: 130px; height: 130px; border-radius: 18px; object-fit: cover; border: 3px solid #38bdf8; box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div style="width: 130px; height: 130px; border-radius: 18px; background: linear-gradient(135deg, #0284c7, #38bdf8); display: none; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; color: white; box-shadow: 0 8px 24px rgba(2,132,199,0.35);">
-                        {{ $player->initials ?? strtoupper(substr($player->name, 0, 2)) }}
-                    </div>
-                @else
-                    <div style="width: 130px; height: 130px; border-radius: 18px; background: linear-gradient(135deg, #0284c7, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; color: white; box-shadow: 0 8px 24px rgba(2,132,199,0.35);">
-                        {{ $player->initials ?? strtoupper(substr($player->name, 0, 2)) }}
-                    </div>
-                @endif
+                <img src="{{ $player->profile_image ?: $player->default_avatar }}" alt="{{ $player->name }}" style="width: 130px; height: 130px; border-radius: 18px; object-fit: cover; border: 3px solid #38bdf8; box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35); background: var(--bg-card-secondary);" onerror="this.onerror=null; this.src='{{ $player->default_avatar }}';">
                 @if($player->jersey_number)
                     <div style="position: absolute; bottom: -8px; right: -8px; background: #0284c7; color: white; font-weight: 900; font-size: 0.85rem; padding: 2px 8px; border-radius: 8px; border: 2px solid var(--bg-card); box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
                         #{{ $player->jersey_number }}
@@ -317,10 +308,15 @@
             <!-- Teammates Card -->
             @if($teammates && $teammates->isNotEmpty())
                 <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 22px;">
-                    <div style="font-size: 1rem; font-weight: 800; color: var(--text-main); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
-                        <span>👥</span> Team Squad ({{ $player->team->name ?? 'Team' }})
+                    <div style="font-size: 1rem; font-weight: 800; color: var(--text-main); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span>👥</span> Team Squad ({{ $player->team->name ?? 'Team' }})
+                        </span>
+                        <span style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); padding: 2px 8px; border-radius: 6px;">
+                            {{ $teammates->count() }} Players
+                        </span>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; flex-direction: column; gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin;">
                         @foreach($teammates as $mate)
                             @php
                                 $mateAvatar = $mate->default_avatar;

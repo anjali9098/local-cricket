@@ -69,6 +69,10 @@ class CricketMatch extends Model
                 return 'completed';
             }
 
+            if ($st === 'live') {
+                return 'live';
+            }
+
             $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team1_score ?? '0'))[0] ?? '0');
             $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($this->team2_score ?? '0'))[0] ?? '0');
             $w1 = (int) ($this->team1_wickets ?? 0);
@@ -79,10 +83,10 @@ class CricketMatch extends Model
                 return 'completed';
             }
 
-            // Time-based lifecycle analysis
+            // Time-based lifecycle analysis (Asia/Kolkata timezone aligned with Possible11 API)
             if (!empty($this->match_date)) {
-                $matchTime = strtotime($this->match_date);
-                $nowTime = time();
+                $matchTime = \Carbon\Carbon::parse($this->match_date, 'Asia/Kolkata')->getTimestamp();
+                $nowTime = \Carbon\Carbon::now('Asia/Kolkata')->getTimestamp();
                 $hoursPassed = ($nowTime - $matchTime) / 3600;
 
                 $format = strtoupper($this->match_type ?: 'T20');
@@ -102,10 +106,6 @@ class CricketMatch extends Model
                 if ($hoursPassed < 0) {
                     return 'upcoming';
                 }
-            }
-
-            if ($st === 'live') {
-                return 'live';
             }
 
             if ($st === 'upcoming' || $st === 'scheduled') {
@@ -203,6 +203,11 @@ class CricketMatch extends Model
         $t2 = strtolower($this->team2?->name ?? '');
         $allText = $tournamentName . ' ' . $venueName . ' ' . $t1 . ' ' . $t2;
 
+        // 0. World Championship of Legends (WCL), Legends League & T10 Tournaments
+        if (str_contains($allText, 'wcl') || str_contains($allText, 'championship of legends') || str_contains($allText, 'champions') || str_contains($allText, 'legend') || str_contains($allText, 't10') || str_contains($allText, 'masters')) {
+            return 'FanCode, Star Sports Network';
+        }
+
         // 1. English County Championship / Vitality Blast / The Hundred / ECB English Cricket
         $englishCounties = [
             'durham', 'northamptonshire', 'worcestershire', 'lancashire', 'gloucestershire',
@@ -221,7 +226,7 @@ class CricketMatch extends Model
         $cplKeywords = ['trinbago', 'guyana', 'amazon warriors', 'jamaica', 'barbados', 'patriots', 'lucia kings', 'antigua', 'providence', 'kensington', 'bridgetown', 'cpl', 'caribbean'];
         foreach ($cplKeywords as $cpl) {
             if (str_contains($allText, $cpl)) {
-                return 'Star Sports Select, JioCinema';
+                return 'FanCode, Star Sports Select';
             }
         }
 
@@ -233,7 +238,7 @@ class CricketMatch extends Model
             }
         }
 
-        // 4. South Africa (SA20 / CSA T20 Challenge)
+        // 4. South Africa (SA20 / CSA T20 Challenge / CSA Three-Day)
         $saTeams = ['titans', 'western province', 'warriors', 'north west', 'lions', 'dolphins', 'supersport park', 'wanderers', 'csa', 'sa20'];
         foreach ($saTeams as $sa) {
             if (str_contains($allText, $sa)) {
@@ -241,7 +246,7 @@ class CricketMatch extends Model
             }
         }
 
-        // 5. Australia (BBL / Big Bash)
+        // 5. Australia (BBL / Big Bash / Sheffield Shield)
         $bblTeams = ['scorchers', 'sixers', 'stars', 'heat', 'renegades', 'hurricanes', 'strikers', 'thunder', 'bbl', 'big bash', 'mcg', 'scg'];
         foreach ($bblTeams as $bbl) {
             if (str_contains($allText, $bbl)) {
@@ -249,13 +254,19 @@ class CricketMatch extends Model
             }
         }
 
-        // 6. Pakistan (PSL)
+        // 6. Pakistan (PSL) & ILT20
         if (str_contains($allText, 'psl') || str_contains($allText, 'qalandars') || str_contains($allText, 'zalmi') || str_contains($allText, 'karachi kings')) {
             return 'Sony LIV, Sony Sports Ten 5';
         }
+        if (str_contains($allText, 'ilt20') || str_contains($allText, 'zee5')) {
+            return 'Zee5, Sony Sports Ten 5';
+        }
+        if (str_contains($allText, 'bpl') || str_contains($allText, 'bangladesh premier') || str_contains($allText, 'lpl') || str_contains($allText, 'lanka premier')) {
+            return 'FanCode, Sony LIV';
+        }
 
-        // 7. ICC World Cup / Champions Trophy / Asia Cup
-        if (str_contains($allText, 'world cup') || str_contains($allText, 'icc') || str_contains($allText, 'asia cup') || str_contains($allText, 'champions trophy')) {
+        // 7. ICC World Cup / Champions Trophy / Asia Cup / WTC
+        if (str_contains($allText, 'world cup') || str_contains($allText, 'icc') || str_contains($allText, 'asia cup') || str_contains($allText, 'champions trophy') || str_contains($allText, 'wtc')) {
             return 'Disney+ Hotstar, Star Sports 1 HD';
         }
 
@@ -269,8 +280,8 @@ class CricketMatch extends Model
             return 'Disney+ Hotstar, Star Sports Network';
         }
 
-        // 10. Default real TV & streaming network (Never site name)
-        return 'Disney+ Hotstar, Star Sports 1';
+        // 10. Default real TV & streaming network
+        return 'FanCode, Star Sports Network';
     }
 
     public function getSlugAttribute()

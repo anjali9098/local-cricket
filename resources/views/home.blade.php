@@ -15,7 +15,6 @@
     <!-- ========================================================
          SECTION 1: LIVE & UPCOMING MATCHES CAROUSEL
          ======================================================== -->
-    @if($allMatches->isNotEmpty())
     @php
         $matchChunks = $allMatches->chunk(8);
         $totalSlides = $matchChunks->count();
@@ -109,28 +108,15 @@
             <div class="section-header" style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
                     <span class="section-title-icon">⚡</span>
+                    <span>LIVE & UPCOMING MATCHES</span>
                     @if($allMatches->where('effective_status', 'live')->count() > 0)
-                        <span>LIVE MATCHES</span>
                         <span class="badge-live">LIVE</span>
-                    @else
-                        <span>UPCOMING MATCHES</span>
                     @endif
                 </h2>
-                <div style="display: flex; align-items: center; gap: 14px;">
-                    @if($totalSlides > 1)
-                        <!-- Header Arrow Controls -->
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <button type="button" onclick="moveMatchesCarousel(-1)" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 900; font-size: 1rem;" title="Previous Slide">‹</button>
-                            <div id="matchesSlideIndicator" style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; min-width: 44px; text-align: center;">
-                                <span id="currentSlideNum">1</span> / <span>{{ $totalSlides }}</span>
-                            </div>
-                            <button type="button" onclick="moveMatchesCarousel(1)" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 900; font-size: 1rem;" title="Next Slide">›</button>
-                        </div>
-                    @endif
-                    <a href="{{ route('matches') }}" class="view-all-link" style="font-weight: 800; color: #38bdf8; text-decoration: none; font-size: 0.82rem;">FULL SCHEDULE &rarr;</a>
-                </div>
+                <a href="{{ route('matches') }}" class="view-all-link" style="font-weight: 800; color: #38bdf8; text-decoration: none; font-size: 0.82rem;">FULL SCHEDULE &rarr;</a>
             </div>
 
+            @if($allMatches->isNotEmpty())
             <div class="matches-carousel-wrapper">
                 @if($totalSlides > 1)
                     <!-- Left / Previous Floating Navigation Arrow Button -->
@@ -224,9 +210,14 @@
                     </button>
                 @endif
             </div>
+            @else
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px 20px; text-align: center; color: var(--text-dim);">
+                <p style="margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-main);">No Live or Upcoming Matches Right Now</p>
+                <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-dim);">Check the full schedule for recent match results and series fixtures.</p>
+            </div>
+            @endif
         </div>
     </section>
-    @endif
 
     <!-- ========================================================
          SECTION 2: SERIES HUB
@@ -883,12 +874,7 @@
                             @foreach($popularPlayers->take(3) as $pop)
                                 <a href="{{ $pop->url }}" class="popular-players-bar-card">
                                     <div style="position: relative; width: 48px; height: 48px; margin: 0 auto 10px;">
-                                        @if(!empty($pop->profile_image))
-                                            <img src="{{ $pop->profile_image }}" alt="{{ $pop->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        @endif
-                                        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-card-secondary); border: 1.5px solid var(--border-color); color: var(--primary-text); display: {{ !empty($pop->profile_image) ? 'none' : 'flex' }}; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
-                                            {{ $pop->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pop->name), 0, 3)) }}
-                                        </div>
+                                        <img src="{{ $pop->profile_image ?: $pop->default_avatar }}" alt="{{ $pop->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; background: var(--bg-card-secondary);" onerror="this.onerror=null; this.src='{{ $pop->default_avatar }}';" loading="lazy">
                                     </div>
                                     <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;">{{ $pop->name }}</div>
                                     <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">
@@ -954,20 +940,15 @@
                                 @forelse($playerBirthdays->take(4) as $pb)
                                     <a href="{{ $pb->url }}" class="birthday-list-item" style="text-decoration: none;">
                                         <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="position: relative; width: 34px; height: 34px; flex-shrink: 0;">
-                                                @if(!empty($pb->profile_image))
-                                                    <img src="{{ $pb->profile_image }}" alt="{{ $pb->name }}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border-color);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                @endif
-                                                <div style="width: 34px; height: 34px; border-radius: 50%; background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--primary-text); display: {{ !empty($pb->profile_image) ? 'none' : 'flex' }}; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem;">
-                                                    {{ $pb->initials ?: strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $pb->name), 0, 2)) }}
-                                                </div>
+                                            <div style="position: relative; width: 36px; height: 36px; flex-shrink: 0;">
+                                                <img src="{{ $pb->profile_image ?: $pb->default_avatar }}" alt="{{ $pb->name }}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid #38bdf8; background: var(--bg-card-secondary);" onerror="this.onerror=null; this.src='{{ $pb->default_avatar }}';" loading="lazy">
                                             </div>
                                             <div style="min-width: 0;">
                                                 <div style="font-weight: 800; font-size: 0.86rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                     {{ $pb->name }}
                                                 </div>
                                                 <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 1px;">
-                                                    {{ $pb->birthday_date_text }} &bull; turns {{ $pb->turning_age }}
+                                                    {{ $pb->birthday_date_text }} &bull; {{ $pb->is_today_birthday ? 'Today 🎂' : ($pb->days_until_birthday === 1 ? 'Tomorrow' : 'In ' . $pb->days_until_birthday . ' days') }}
                                                 </div>
                                             </div>
                                         </div>

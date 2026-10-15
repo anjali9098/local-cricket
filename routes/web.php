@@ -57,8 +57,16 @@ Route::get('/series', [PageController::class, 'series'])->name('series');
 Route::get('/tournaments', [PageController::class, 'tournaments'])->name('tournaments');
 Route::get('/tournament/{slug}/{id}', [PageController::class, 'tournamentDetail'])->name('tournament.public.slug');
 Route::get('/tournament/{id}', [PageController::class, 'tournamentDetail'])->name('tournament.public');
-Route::get('/series/{slug}/{id}', [PageController::class, 'tournamentDetail'])->name('series.public.slug');
-Route::get('/series/{id}', [PageController::class, 'tournamentDetail'])->name('series.public');
+// Dedicated Series Subnav & Unified Slug Routes
+Route::get('/series/{seriesKey}/stats/{stat}', [PageController::class, 'seriesStatDetail'])->name('series.stat.unified');
+Route::get('/series/{seriesKey}/{tab}', [PageController::class, 'seriesSubnavPage'])
+    ->where('tab', 'teams|players|fixtures|stats|points-table|points|news|news-articles|home')
+    ->name('series.subnav');
+Route::get('/series/{seriesKey}', [PageController::class, 'seriesDetailPage'])->name('series.unified');
+
+// Legacy 2-part and ID routes
+Route::get('/series/{slug}/{id}', [PageController::class, 'tournamentDetail'])->where('id', '[0-9]+')->name('series.public.slug');
+Route::get('/series/{id}', [PageController::class, 'tournamentDetail'])->where('id', '[0-9]+')->name('series.public');
 Route::get('/series/{slug}/{id}/stats/{stat}', [PageController::class, 'seriesStatDetail'])->name('series.stat.slug');
 Route::get('/series/{id}/stats/{stat}', [PageController::class, 'seriesStatDetail'])->name('series.stat');
 Route::get('/tournament/{slug}/{id}/stats/{stat}', [PageController::class, 'seriesStatDetail'])->name('tournament.stat.slug');
@@ -100,6 +108,10 @@ Route::get('/articles/{slug}/{id}', [PageController::class, 'showArticle']);
 Route::get('/articles/{id}', [PageController::class, 'showArticle']);
 
 Route::get('/compare', [PageController::class, 'compare'])->name('compare');
+Route::get('/head-to-head', [PageController::class, 'headToHead'])->name('head-to-head');
+Route::get('/h2h', [PageController::class, 'headToHead'])->name('h2h');
+Route::get('/team-compare', [PageController::class, 'headToHead'])->name('team.compare');
+Route::get('/teams/compare', [PageController::class, 'headToHead']);
 Route::get('/teams', [PageController::class, 'teams'])->name('teams');
 Route::get('/players', [PageController::class, 'players'])->name('players');
 Route::get('/player/{slug}/{id}', [PageController::class, 'playerProfile'])->name('player.profile.slug');
@@ -226,6 +238,8 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/series', [AdminController::class, 'addSeries'])->name('admin.series.post');
     Route::post('/admin/series/update/{id}', [AdminController::class, 'updateSeries'])->name('admin.series.update');
     Route::post('/admin/series/sync-possible11', [AdminController::class, 'syncPossible11Series'])->name('admin.series.sync-possible11');
+    Route::get('/admin/series-squad/get', [AdminController::class, 'getSeriesSquadData'])->name('admin.series.squad.get');
+    Route::post('/admin/series-squad/save', [AdminController::class, 'saveSeriesSquadData'])->name('admin.series.squad.save');
 
     Route::get('/admin/match', [AdminController::class, 'showCreateMatchForm'])->name('admin.match');
     Route::post('/admin/match', [AdminController::class, 'createMatch'])->name('admin.match.post');

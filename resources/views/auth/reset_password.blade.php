@@ -41,13 +41,13 @@
 
             <div class="auth-input-group">
                 <label class="auth-label">Email Address *</label>
-                <input type="email" name="email" value="{{ $email ?? old('email') }}" required autofocus placeholder="name@example.com" class="auth-input">
+                <input type="email" name="email" value="{{ $email ?? old('email') }}" required autofocus class="auth-input">
             </div>
 
             <div class="auth-input-group">
                 <label class="auth-label">New Password * (Min. 6 characters)</label>
                 <div class="password-input-wrapper">
-                    <input type="password" id="reset-password" name="password" minlength="6" required placeholder="Enter new password" class="auth-input">
+                    <input type="password" id="reset-password" name="password" minlength="6" required class="auth-input">
                     <button type="button" class="password-toggle-btn" data-target="reset-password" title="Show password" aria-label="Toggle password visibility">
                         <svg class="eye-icon eye-show" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -64,7 +64,7 @@
             <div class="auth-input-group">
                 <label class="auth-label">Confirm New Password *</label>
                 <div class="password-input-wrapper">
-                    <input type="password" id="reset-password-confirm" name="password_confirmation" minlength="6" required placeholder="Re-enter new password" class="auth-input">
+                    <input type="password" id="reset-password-confirm" name="password_confirmation" minlength="6" required class="auth-input">
                     <button type="button" class="password-toggle-btn" data-target="reset-password-confirm" title="Show password" aria-label="Toggle password visibility">
                         <svg class="eye-icon eye-show" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>

@@ -79,7 +79,7 @@
 
         <!-- Realtime Search Input -->
         <div style="min-width: 240px; flex-grow: 1; max-width: 320px;">
-            <input type="text" id="seriesHubSearch" oninput="filterSeriesCards()" placeholder="Search series or tournament..." style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 9px 16px; border-radius: 10px; font-size: 0.86rem; color: var(--text-main); outline: none;">
+            <input type="text" id="seriesHubSearch" oninput="filterSeriesCards()" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 9px 16px; border-radius: 10px; font-size: 0.86rem; color: var(--text-main); outline: none;">
         </div>
     </div>
 

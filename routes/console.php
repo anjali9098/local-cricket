@@ -86,29 +86,64 @@ Artisan::command('cricket:push-cloud', function () {
             "mysql:host={$host};port={$port};dbname={$dbname}",
             $user,
             $pass,
-            [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, \PDO::ATTR_TIMEOUT => 15]
+            [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, \PDO::ATTR_TIMEOUT => 30]
         );
         $localPdo = \Illuminate\Support\Facades\DB::connection()->getPdo();
         $tables = [
             'users', 'tournaments', 'teams', 'venues', 'players', 'matches',
             'ball_by_ball', 'news', 'articles', 'fantasy_tips', 'predictions',
-            'web_stories', 'glossary_terms', 'player_birthdays', 'player_rankings',
-            'team_rankings', 'points_table', 'player_batting_stats', 'player_bowling_stats'
+            'web_stories', 'glossary_terms', 'team_rankings', 'icc_player_rankings'
         ];
         $cloudPdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
         foreach ($tables as $table) {
             try {
+                $cloudTableExists = $cloudPdo->query("SHOW TABLES LIKE '$table'")->rowCount() > 0;
+                if (!$cloudTableExists) {
+                    $createRes = $localPdo->query("SHOW CREATE TABLE `$table`")->fetch(\PDO::FETCH_ASSOC);
+                    $createSql = $createRes['Create Table'] ?? null;
+                    if ($createSql) {
+                        $cloudPdo->exec($createSql);
+                    }
+                } else {
+                    $localCols = $localPdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(\PDO::FETCH_ASSOC);
+                    $cloudCols = $cloudPdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(\PDO::FETCH_ASSOC);
+                    $cloudColNames = array_column($cloudCols, 'Field');
+                    foreach ($localCols as $col) {
+                        if (!in_array($col['Field'], $cloudColNames)) {
+                            $type = $col['Type'];
+                            $null = ($col['Null'] === 'YES') ? 'NULL' : 'NOT NULL';
+                            $default = ($col['Default'] !== null) ? "DEFAULT " . $cloudPdo->quote($col['Default']) : ($col['Null'] === 'YES' ? "DEFAULT NULL" : "");
+                            try {
+                                $cloudPdo->exec("ALTER TABLE `$table` ADD COLUMN `{$col['Field']}` $type $null $default");
+                            } catch (\Throwable $ex) {}
+                        }
+                    }
+                }
+
                 $rows = $localPdo->query("SELECT * FROM `$table`")->fetchAll(\PDO::FETCH_ASSOC);
-                $cloudPdo->exec("DELETE FROM `$table`;");
+                $cloudPdo->exec("TRUNCATE TABLE `$table`;");
                 if (empty($rows)) {
+                    $this->line(" ✓ Synced table: <info>{$table}</info> (0 rows)");
                     continue;
                 }
-                $columns = array_keys($rows[0]);
-                $colList = implode('`, `', $columns);
-                $placeholders = implode(', ', array_fill(0, count($columns), '?'));
-                $stmt = $cloudPdo->prepare("INSERT INTO `$table` (`$colList`) VALUES ($placeholders)");
-                foreach ($rows as $row) {
-                    $stmt->execute(array_values($row));
+
+                $cloudCols = $cloudPdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(\PDO::FETCH_ASSOC);
+                $cloudColNames = array_column($cloudCols, 'Field');
+                $validCols = array_values(array_intersect(array_keys($rows[0]), $cloudColNames));
+                $colList = implode('`, `', $validCols);
+
+                $chunks = array_chunk($rows, 100);
+                foreach ($chunks as $chunk) {
+                    $placeholders = [];
+                    $values = [];
+                    foreach ($chunk as $row) {
+                        $placeholders[] = '(' . implode(', ', array_fill(0, count($validCols), '?')) . ')';
+                        foreach ($validCols as $colName) {
+                            $values[] = $row[$colName];
+                        }
+                    }
+                    $stmt = $cloudPdo->prepare("INSERT INTO `$table` (`$colList`) VALUES " . implode(', ', $placeholders));
+                    $stmt->execute($values);
                 }
                 $this->line(" ✓ Pushed table: <info>{$table}</info> (" . count($rows) . " rows)");
             } catch (\Throwable $e) {

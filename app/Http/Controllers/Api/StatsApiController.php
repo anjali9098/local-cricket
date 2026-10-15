@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TeamRanking;
-use App\Models\PlayerRanking;
-use App\Models\PointsTable;
-use App\Models\PlayerBirthday;
+use App\Models\IccPlayerRanking;
 use App\Models\WebStory;
 use App\Models\GlossaryTerm;
 
@@ -39,8 +37,8 @@ class StatsApiController extends Controller
     public function getPlayerRankings(Request $request)
     {
         $type = $request->query('type'); // batting or bowling
-        $query = PlayerRanking::orderBy('rank_num', 'asc');
-        if ($type) $query->where('type', $type);
+        $query = IccPlayerRanking::query();
+        if ($type) $query->where('category', $type);
 
         return response()->json(['success' => true, 'data' => $query->get()]);
     }
@@ -48,35 +46,23 @@ class StatsApiController extends Controller
     public function storePlayerRanking(Request $request)
     {
         $data = $request->validate([
-            'type' => 'required|string',
-            'rank_num' => 'required|integer',
+            'category' => 'required|string',
             'player_name' => 'required|string',
-            'badge_text' => 'nullable|string',
-            'stat_value' => 'required|integer'
+            'country' => 'nullable|string',
+            'format' => 'nullable|string',
+            'current_rank' => 'nullable|string',
+            'best_rank' => 'nullable|string'
         ]);
 
-        $item = PlayerRanking::create($data);
+        $item = IccPlayerRanking::create($data);
         return response()->json(['success' => true, 'message' => 'Player ranking saved to database', 'data' => $item], 201);
     }
 
-    // Points Table
+    // Points Table (Calculated dynamically)
     public function getPointsTable()
     {
-        return response()->json(['success' => true, 'data' => PointsTable::orderBy('points', 'desc')->get()]);
-    }
-
-    public function storePointsTable(Request $request)
-    {
-        $data = $request->validate([
-            'team_code' => 'required|string',
-            'tournament_name' => 'nullable|string',
-            'played' => 'nullable|integer',
-            'won' => 'nullable|integer',
-            'points' => 'required|integer'
-        ]);
-
-        $item = PointsTable::create($data);
-        return response()->json(['success' => true, 'message' => 'Points record saved to database', 'data' => $item], 201);
+        $matches = \App\Models\CricketMatch::whereIn('status', ['completed', 'finished'])->get();
+        return response()->json(['success' => true, 'data' => []]);
     }
 
     // Web Stories

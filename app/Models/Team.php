@@ -61,19 +61,19 @@ class Team extends Model
     public function getLogoUrlAttribute($value)
     {
         $val = $value ?: ($this->attributes['logo'] ?? null);
-        if (!empty($val)) {
+        if (!empty($val) && !str_contains($val, 'cricapi.com')) {
             return self::formatImageUrl($val);
         }
-        return $this->getCountryFlagUrl();
+        return $this->getCountryFlagUrl() ?: ($val ? self::formatImageUrl($val) : null);
     }
 
     public function getLogoAttribute($value)
     {
         $val = $value ?: ($this->attributes['logo_url'] ?? null);
-        if (!empty($val)) {
+        if (!empty($val) && !str_contains($val, 'cricapi.com')) {
             return self::formatImageUrl($val);
         }
-        return $this->getCountryFlagUrl();
+        return $this->getCountryFlagUrl() ?: ($val ? self::formatImageUrl($val) : null);
     }
 
     public function getSlugAttribute()
@@ -82,6 +82,11 @@ class Team extends Model
             return $this->attributes['slug'];
         }
         return \Illuminate\Support\Str::slug($this->name ?? ('team-' . $this->id));
+    }
+
+    public function getUrlAttribute()
+    {
+        return route('players', ['team' => $this->id]);
     }
 
     public function players() {

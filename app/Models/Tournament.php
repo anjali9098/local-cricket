@@ -34,6 +34,10 @@ class Tournament extends Model
         return $this->hasMany(CricketMatch::class, 'tournament_id');
     }
 
+    public function players() {
+        return $this->hasMany(Player::class, 'series_id');
+    }
+
     public function getSlugAttribute()
     {
         if (!empty($this->attributes['slug'])) {
@@ -45,7 +49,24 @@ class Tournament extends Model
 
     public function getUrlAttribute()
     {
-        return route('tournament.public.slug', ['slug' => $this->slug, 'id' => $this->id]);
+        return url('/series/' . $this->slug . '-' . $this->id);
+    }
+
+    public function getSubnavUrl($tab = 'home')
+    {
+        $base = url('/series/' . $this->slug . '-' . $this->id);
+        $map = [
+            'home' => '',
+            'stats' => '/stats',
+            'fixtures' => '/fixtures',
+            'points' => '/points-table',
+            'points-table' => '/points-table',
+            'players' => '/players',
+            'teams' => '/teams',
+            'news' => '/news',
+            'articles' => '/news',
+        ];
+        return $base . ($map[$tab] ?? ('/' . $tab));
     }
 
     public function getManageUrlAttribute()

@@ -39,7 +39,7 @@
 
         <form method="GET" action="{{ route('venues') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <!-- Search Input -->
-            <input type="text" name="search" value="{{ request('search', '') }}" placeholder="Search stadium or city..." style="padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card-secondary); color: var(--text-main); font-size: 0.88rem; outline: none; width: 200px;">
+            <input type="text" name="search" value="{{ request('search', '') }}" style="padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card-secondary); color: var(--text-main); font-size: 0.88rem; outline: none; width: 200px;">
 
             <!-- Country Filter -->
             <select name="country" onchange="this.form.submit()" style="padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card-secondary); color: var(--text-main); font-size: 0.88rem; font-weight: 700; outline: none; cursor: pointer;">
