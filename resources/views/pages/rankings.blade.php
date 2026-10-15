@@ -67,7 +67,7 @@
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 @foreach(['TEST', 'ODI', 'T20'] as $fmt)
                     <a href="{{ route('rankings', ['category' => $category, 'format' => $fmt, 'gender' => $gender]) }}"
-                       style="padding: 7px 22px; border-radius: 6px; font-size: 0.85rem; font-weight: 900; letter-spacing: 0.04em; text-decoration: none; transition: all 0.2s; {{ $format === $fmt ? 'background: #22c55e; color: #ffffff; box-shadow: 0 2px 6px rgba(34, 197, 94, 0.35);' : 'background: var(--bg-card, #1e293b); color: var(--text-muted, #94a3b8); border: 1px solid var(--border-color, #334155);' }}">
+                       style="padding: 7px 22px; border-radius: 6px; font-size: 0.85rem; font-weight: 900; letter-spacing: 0.04em; text-decoration: none; transition: all 0.2s; {{ $format === $fmt ? 'background: #0284c7; color: #ffffff; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);' : 'background: var(--bg-card, #1e293b); color: var(--text-muted, #94a3b8); border: 1px solid var(--border-color, #334155);' }}">
                         {{ $fmt }}
                     </a>
                 @endforeach
@@ -83,7 +83,7 @@
                 <option>{{ strtoupper(date('d F Y', strtotime('-14 days'))) }}</option>
                 <option>{{ strtoupper(date('d F Y', strtotime('-30 days'))) }}</option>
             </select>
-            <button type="button" style="background: #64748b; color: white; border: none; padding: 7px 20px; border-radius: 9999px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.05em; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s;">
+            <button type="button" style="background: #0284c7; color: white; border: none; padding: 7px 20px; border-radius: 9999px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.05em; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s;">
                 APPLY &rsaquo;
             </button>
         </div>
@@ -92,7 +92,7 @@
         <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border-color, #334155); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
             
             <!-- Accent Top Line -->
-            <div style="height: 3px; background: linear-gradient(90deg, #22c55e, #38bdf8);"></div>
+            <div style="height: 2px; background: #38bdf8;"></div>
 
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
@@ -118,7 +118,7 @@
                                         <span style="font-weight: 900; font-size: 1.05rem; color: {{ ($loop->iteration <= 3) ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
                                             {{ sprintf('%02d', $item->rank_num ?? $item->current_rank) }}
                                         </span>
-                                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: {{ ($loop->iteration <= 3) ? '#22c55e' : '#64748b' }};"></span>
+                                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: {{ ($loop->iteration <= 3) ? '#38bdf8' : '#64748b' }};"></span>
                                     </div>
                                 </td>
 
@@ -136,7 +136,7 @@
                                         <!-- Player Row -->
                                         <div style="display: flex; align-items: center; gap: 12px;">
                                             <div style="position: relative; width: 38px; height: 38px; flex-shrink: 0;">
-                                                <img src="{{ $item->photo_url }}" alt="{{ $item->player_name }}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; background: var(--bg-main, #0f172a);" onerror="this.onerror=null; this.src='{{ asset('images/default-player-boy.svg') }}';">
+                                                <img src="{{ $item->photo_url }}" alt="{{ $item->player_name }}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; background: var(--bg-main, #0f172a);" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('{{ addslashes($item->player_name) }}') + '&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
                                                 <img src="{{ $item->country_flag }}" alt="{{ $item->country }}" style="position: absolute; bottom: -2px; right: -2px; width: 16px; height: 11px; object-fit: cover; border-radius: 2px; border: 1px solid #000000;" onerror="this.style.display='none';">
                                             </div>
                                             <div>

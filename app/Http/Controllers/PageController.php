@@ -287,7 +287,7 @@ class PageController extends Controller
             'bowling' => 'BOWLING RANKINGS',
             'all_rounder' => 'ALL-ROUNDER RANKINGS',
         };
-        $pageTitle = strtoupper($gender) . "'S " . $titleFormat . " " . $titleCategory;
+        $pageTitle = $titleFormat . " " . $titleCategory;
 
         return view('pages.rankings', compact('rankings', 'category', 'format', 'gender', 'pageTitle'));
     }

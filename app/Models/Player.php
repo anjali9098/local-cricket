@@ -216,6 +216,14 @@ class Player extends Model {
     public function getNormalizedIccRankingsAttribute()
     {
         $dbRanks = $this->relationLoaded('iccRankings') ? $this->iccRankings : $this->iccRankings()->get();
+        if ($dbRanks->isEmpty() && !empty($this->name)) {
+            $pName = trim($this->name);
+            $dbRanks = IccPlayerRanking::where('player_id', $this->id)
+                ->orWhere('player_name', $pName)
+                ->orWhere('player_name', 'like', '%' . $pName . '%')
+                ->get();
+        }
+
         $categories = ['batting', 'bowling', 'all_rounder'];
         $formats = ['test', 'odi', 't20i'];
         $matrix = [];
@@ -231,12 +239,17 @@ class Player extends Model {
         }
 
         foreach ($dbRanks as $r) {
-            $cat = strtolower($r->category);
-            $fmt = strtolower($r->format);
+            $cat = strtolower(str_replace('-', '_', $r->category));
+            $fmt = strtolower(trim((string)$r->format));
+            if ($fmt === 't20') {
+                $fmt = 't20i';
+            }
             if (isset($matrix[$cat][$fmt])) {
+                $curr = !empty($r->current_rank) && $r->current_rank !== '--' ? (string)$r->current_rank : '--';
+                $best = !empty($r->best_rank) && $r->best_rank !== '--' ? (string)$r->best_rank : (!empty($r->rating) ? (string)$r->rating : '--');
                 $matrix[$cat][$fmt] = [
-                    'current' => !empty($r->current_rank) && $r->current_rank !== '--' ? (string)$r->current_rank : '--',
-                    'best' => !empty($r->best_rank) && $r->best_rank !== '--' ? (string)$r->best_rank : '--',
+                    'current' => $curr,
+                    'best' => $best,
                 ];
             }
         }

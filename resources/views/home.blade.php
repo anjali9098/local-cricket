@@ -977,28 +977,28 @@
     </section>
 
     <!-- ========================================================
-         SECTION 6.1: OFFICIAL ICC RANKINGS (Image 1 Showcase)
+         SECTION 6.1: OFFICIAL ICC RANKINGS (Theme Compact Style)
          ======================================================== -->
-    <section class="icc-rankings-section" style="padding: 40px 0 30px; background: var(--bg-main, #0f172a); border-top: 1px solid var(--border-color, #334155);">
+    <section class="icc-rankings-section" style="padding: 28px 0 24px; background: var(--bg-main, #0b1118); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
             
-            <!-- SECTION 1: MEN'S TEAM RANKINGS -->
-            <div style="margin-bottom: 44px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
-                    <h2 style="font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: -0.01em; text-transform: uppercase;">
-                        MEN'S <span style="color: #38bdf8;">TEAM RANKINGS</span>
+            <!-- SECTION 1: TEAM RANKINGS -->
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <h2 style="font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: 0.02em; text-transform: uppercase;">
+                        TEAM <span style="color: #38bdf8;">RANKINGS</span>
                     </h2>
-                    <a href="{{ route('rankings', ['category' => 'teams', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.82rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                    <a href="{{ route('rankings', ['category' => 'teams', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                         VIEW ALL TEAMS &rarr;
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
                     @php
                         $teamFormats = [
-                            'TEST' => ['color' => '#ef4444', 'title' => 'TEST - TEAM RANKINGS'],
-                            'ODI'  => ['color' => '#06b6d4', 'title' => 'ODI - TEAM RANKINGS'],
-                            'T20'  => ['color' => '#d946ef', 'title' => 'T20 - TEAM RANKINGS']
+                            'TEST' => ['title' => 'TEST - TEAM RANKINGS'],
+                            'ODI'  => ['title' => 'ODI - TEAM RANKINGS'],
+                            'T20'  => ['title' => 'T20 - TEAM RANKINGS']
                         ];
                     @endphp
 
@@ -1006,43 +1006,43 @@
                         @php
                             $fmtTeams = $iccRankings['teams'][$fmtKey] ?? collect();
                         @endphp
-                        <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border-color, #334155); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-                            <!-- Top accent bar -->
-                            <div style="height: 3px; background: {{ $fmtMeta['color'] }};"></div>
+                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                            <!-- Subtle theme top border -->
+                            <div style="height: 2px; background: #38bdf8;"></div>
                             
                             <!-- Card Header -->
-                            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color, #334155); font-weight: 800; font-size: 0.78rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase;">
+                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
                                 {{ $fmtMeta['title'] }}
                             </div>
 
                             <!-- List of Top 5 Teams -->
                             <div style="flex: 1; display: flex; flex-direction: column;">
                                 @forelse($fmtTeams->take(5) as $team)
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-bottom: 1px solid var(--border-color, #334155); transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(255,255,255,0.03))';" onmouseout="this.style.background='none';">
-                                        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-                                            <div style="display: flex; align-items: center; gap: 6px; width: 34px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.92rem; color: {{ $loop->iteration <= 3 ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.04))';" onmouseout="this.style.background='none';">
+                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
+                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $loop->iteration === 1 ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
                                                     {{ sprintf('%02d', $team->rank_num) }}
                                                 </span>
-                                                <span style="display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: {{ $loop->iteration <= 3 ? '#22c55e' : '#64748b' }};"></span>
+                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $loop->iteration === 1 ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
                                             </div>
-                                            <img src="{{ $team->logo_url }}" alt="{{ $team->team_name }}" style="width: 24px; height: 16px; object-fit: contain; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.9rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.02em;">
+                                            <img src="{{ $team->logo_url }}" alt="{{ $team->team_name }}" style="width: 20px; height: 14px; object-fit: contain; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
+                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 {{ strtoupper($team->team_name) }}
                                             </span>
                                         </div>
-                                        <div style="font-weight: 900; font-size: 0.95rem; color: var(--text-main, #ffffff); margin-left: 12px;">
+                                        <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff); margin-left: 10px;">
                                             {{ $team->rating ?: $team->points }}
                                         </div>
                                     </div>
                                 @empty
-                                    <div style="padding: 24px 16px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.85rem;">No ranking data recorded.</div>
+                                    <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
 
                             <!-- Footer Link -->
-                            <div style="padding: 12px 16px; text-align: center; background: var(--bg-card, #1e293b); border-top: 1px solid var(--border-color, #334155);">
-                                <a href="{{ route('rankings', ['category' => 'teams', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 900; color: #0284c7; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+                                <a href="{{ route('rankings', ['category' => 'teams', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                                     FULL RANKINGS &rsaquo;
                                 </a>
                             </div>
@@ -1051,23 +1051,23 @@
                 </div>
             </div>
 
-            <!-- SECTION 2: MEN'S BATTING RANKINGS -->
-            <div style="margin-bottom: 44px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
-                    <h2 style="font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: -0.01em; text-transform: uppercase;">
-                        MEN'S <span style="color: #f59e0b; text-decoration: underline; text-decoration-color: #f59e0b; text-underline-offset: 4px;">BATTING</span> RANKINGS
+            <!-- SECTION 2: BATTING RANKINGS -->
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <h2 style="font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: 0.02em; text-transform: uppercase;">
+                        BATTING <span style="color: #38bdf8;">RANKINGS</span>
                     </h2>
-                    <a href="{{ route('rankings', ['category' => 'batting', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.82rem; font-weight: 800; color: #f59e0b; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                    <a href="{{ route('rankings', ['category' => 'batting', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                         VIEW ALL BATSMEN &rarr;
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
                     @php
                         $battingFormats = [
-                            'TEST' => ['color' => '#ef4444', 'title' => 'TEST - BATTING RANKINGS'],
-                            'ODI'  => ['color' => '#06b6d4', 'title' => 'ODI - BATTING RANKINGS'],
-                            'T20'  => ['color' => '#d946ef', 'title' => 'T20 - BATTING RANKINGS']
+                            'TEST' => ['title' => 'TEST - BATTING RANKINGS'],
+                            'ODI'  => ['title' => 'ODI - BATTING RANKINGS'],
+                            'T20'  => ['title' => 'T20 - BATTING RANKINGS']
                         ];
                     @endphp
 
@@ -1076,53 +1076,53 @@
                             $fmtPlayers = $iccRankings['batting'][$fmtKey] ?? collect();
                             $topPlayer = $fmtPlayers->first();
                         @endphp
-                        <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border-color, #334155); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-                            <div style="height: 3px; background: {{ $fmtMeta['color'] }};"></div>
+                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                            <div style="height: 2px; background: #38bdf8;"></div>
                             
-                            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color, #334155); font-weight: 800; font-size: 0.78rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase;">
+                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
                                 {{ $fmtMeta['title'] }}
                             </div>
 
-                            <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                            <div style="flex: 1; display: flex; flex-direction: column;">
                                 @forelse($fmtPlayers->take(5) as $player)
                                     @php
                                         $isRankOne = $loop->first;
                                     @endphp
-                                    <div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '14px 16px' : '10px 16px' }}; border-bottom: 1px solid var(--border-color, #334155); {{ $isRankOne ? 'background: rgba(245, 158, 11, 0.05);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(255,255,255,0.03))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(245, 158, 11, 0.05)' : 'none' }}';">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '9px 14px' : '8px 14px' }}; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); {{ $isRankOne ? 'background: rgba(56, 189, 248, 0.04);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.06))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(56, 189, 248, 0.04)' : 'none' }}';">
                                         
-                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; z-index: 2;">
-                                            <div style="display: flex; align-items: center; gap: 5px; width: 34px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.92rem; color: {{ $isRankOne ? '#f59e0b' : 'var(--text-main, #ffffff)' }};">
+                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
+                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $isRankOne ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
                                                     {{ sprintf('%02d', $player->current_rank) }}
                                                 </span>
-                                                <span style="display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: {{ $isRankOne ? '#22c55e' : '#64748b' }};"></span>
+                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $isRankOne ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
                                             </div>
                                             <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" style="width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.88rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 {{ $player->player_name }}
                                             </span>
                                         </div>
 
                                         <!-- Rating + Rank 1 Image Cutout -->
-                                        <div style="display: flex; align-items: center; gap: 10px; z-index: 2;">
-                                            <div style="font-weight: 900; font-size: 0.95rem; color: var(--text-main, #ffffff);">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff);">
                                                 {{ $player->rating }}
                                             </div>
 
                                             @if($isRankOne)
-                                                <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: #e0f2fe; border: 2px solid #38bdf8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='{{ asset('images/default-player-boy.svg') }}';">
+                                                <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #0b1120; border: 1.5px solid #38bdf8; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
                                                 </div>
                                             @endif
                                         </div>
                                     </div>
                                 @empty
-                                    <div style="padding: 24px 16px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.85rem;">No ranking data recorded.</div>
+                                    <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
 
-                            <div style="padding: 12px 16px; text-align: center; background: var(--bg-card, #1e293b); border-top: 1px solid var(--border-color, #334155);">
-                                <a href="{{ route('rankings', ['category' => 'batting', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 900; color: #0284c7; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+                                <a href="{{ route('rankings', ['category' => 'batting', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                                     FULL RANKINGS &rsaquo;
                                 </a>
                             </div>
@@ -1131,43 +1131,23 @@
                 </div>
             </div>
 
-            <!-- AD / LOGISTICS PARTNER BANNER (Image 1 style) -->
-            <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 18px 24px; margin-bottom: 44px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
-                <div style="display: flex; align-items: center; gap: 16px;">
-                    <div style="background: #38bdf8; color: #0f172a; font-weight: 900; font-size: 0.8rem; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.05em;">
-                        ICC RANKINGS
-                    </div>
-                    <div>
-                        <div style="font-weight: 900; font-size: 1.05rem; color: #ffffff; letter-spacing: 0.02em;">
-                            GLOBAL PLAYER & TEAM STANDINGS
-                        </div>
-                        <div style="font-size: 0.8rem; color: #94a3b8;">
-                            Official multi-format ratings updated live following every international cricket encounter.
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ route('rankings') }}" style="background: #38bdf8; color: #0f172a; font-weight: 800; font-size: 0.82rem; padding: 8px 20px; border-radius: 6px; text-decoration: none; letter-spacing: 0.04em; white-space: nowrap;">
-                    EXPLORE ALL RANKINGS &rarr;
-                </a>
-            </div>
-
-            <!-- SECTION 3: MEN'S BOWLING RANKINGS -->
-            <div style="margin-bottom: 44px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
-                    <h2 style="font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: -0.01em; text-transform: uppercase;">
-                        MEN'S <span style="color: #22c55e; text-decoration: underline; text-decoration-color: #22c55e; text-underline-offset: 4px;">BOWLING</span> RANKINGS
+            <!-- SECTION 3: BOWLING RANKINGS -->
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <h2 style="font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: 0.02em; text-transform: uppercase;">
+                        BOWLING <span style="color: #38bdf8;">RANKINGS</span>
                     </h2>
-                    <a href="{{ route('rankings', ['category' => 'bowling', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.82rem; font-weight: 800; color: #22c55e; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                    <a href="{{ route('rankings', ['category' => 'bowling', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                         VIEW ALL BOWLERS &rarr;
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
                     @php
                         $bowlingFormats = [
-                            'TEST' => ['color' => '#ef4444', 'title' => 'TEST - BOWLING RANKINGS'],
-                            'ODI'  => ['color' => '#06b6d4', 'title' => 'ODI - BOWLING RANKINGS'],
-                            'T20'  => ['color' => '#d946ef', 'title' => 'T20 - BOWLING RANKINGS']
+                            'TEST' => ['title' => 'TEST - BOWLING RANKINGS'],
+                            'ODI'  => ['title' => 'ODI - BOWLING RANKINGS'],
+                            'T20'  => ['title' => 'T20 - BOWLING RANKINGS']
                         ];
                     @endphp
 
@@ -1176,10 +1156,10 @@
                             $fmtPlayers = $iccRankings['bowling'][$fmtKey] ?? collect();
                             $topPlayer = $fmtPlayers->first();
                         @endphp
-                        <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border-color, #334155); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-                            <div style="height: 3px; background: {{ $fmtMeta['color'] }};"></div>
+                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                            <div style="height: 2px; background: #38bdf8;"></div>
                             
-                            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color, #334155); font-weight: 800; font-size: 0.78rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase;">
+                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
                                 {{ $fmtMeta['title'] }}
                             </div>
 
@@ -1188,38 +1168,38 @@
                                     @php
                                         $isRankOne = $loop->first;
                                     @endphp
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '14px 16px' : '10px 16px' }}; border-bottom: 1px solid var(--border-color, #334155); {{ $isRankOne ? 'background: rgba(34, 197, 94, 0.05);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(255,255,255,0.03))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(34, 197, 94, 0.05)' : 'none' }}';">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '9px 14px' : '8px 14px' }}; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); {{ $isRankOne ? 'background: rgba(56, 189, 248, 0.04);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.06))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(56, 189, 248, 0.04)' : 'none' }}';">
                                         <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="display: flex; align-items: center; gap: 5px; width: 34px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.92rem; color: {{ $isRankOne ? '#22c55e' : 'var(--text-main, #ffffff)' }};">
+                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
+                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $isRankOne ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
                                                     {{ sprintf('%02d', $player->current_rank) }}
                                                 </span>
-                                                <span style="display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: {{ $isRankOne ? '#22c55e' : '#64748b' }};"></span>
+                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $isRankOne ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
                                             </div>
                                             <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" style="width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.88rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 {{ $player->player_name }}
                                             </span>
                                         </div>
 
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <div style="font-weight: 900; font-size: 0.95rem; color: var(--text-main, #ffffff);">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff);">
                                                 {{ $player->rating }}
                                             </div>
                                             @if($isRankOne)
-                                                <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: #dcfce7; border: 2px solid #22c55e; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='{{ asset('images/default-player-boy.svg') }}';">
+                                                <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #0b1120; border: 1.5px solid #38bdf8; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
                                                 </div>
                                             @endif
                                         </div>
                                     </div>
                                 @empty
-                                    <div style="padding: 24px 16px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.85rem;">No ranking data recorded.</div>
+                                    <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
 
-                            <div style="padding: 12px 16px; text-align: center; background: var(--bg-card, #1e293b); border-top: 1px solid var(--border-color, #334155);">
-                                <a href="{{ route('rankings', ['category' => 'bowling', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 900; color: #0284c7; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+                                <a href="{{ route('rankings', ['category' => 'bowling', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                                     FULL RANKINGS &rsaquo;
                                 </a>
                             </div>
@@ -1228,23 +1208,23 @@
                 </div>
             </div>
 
-            <!-- SECTION 4: MEN'S ALL-ROUNDER RANKINGS -->
-            <div style="margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
-                    <h2 style="font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: -0.01em; text-transform: uppercase;">
-                        MEN'S <span style="color: #a855f7; text-decoration: underline; text-decoration-color: #a855f7; text-underline-offset: 4px;">ALL-ROUNDER</span> RANKINGS
+            <!-- SECTION 4: ALL-ROUNDER RANKINGS -->
+            <div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <h2 style="font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-weight: 900; color: var(--text-main, #ffffff); margin: 0; letter-spacing: 0.02em; text-transform: uppercase;">
+                        ALL-ROUNDER <span style="color: #38bdf8;">RANKINGS</span>
                     </h2>
-                    <a href="{{ route('rankings', ['category' => 'all_rounder', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.82rem; font-weight: 800; color: #a855f7; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                    <a href="{{ route('rankings', ['category' => 'all_rounder', 'format' => 'TEST', 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                         VIEW ALL ALL-ROUNDERS &rarr;
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
                     @php
                         $allRounderFormats = [
-                            'TEST' => ['color' => '#ef4444', 'title' => 'TEST - ALL-ROUNDER RANKINGS'],
-                            'ODI'  => ['color' => '#06b6d4', 'title' => 'ODI - ALL-ROUNDER RANKINGS'],
-                            'T20'  => ['color' => '#d946ef', 'title' => 'T20 - ALL-ROUNDER RANKINGS']
+                            'TEST' => ['title' => 'TEST - ALL-ROUNDER RANKINGS'],
+                            'ODI'  => ['title' => 'ODI - ALL-ROUNDER RANKINGS'],
+                            'T20'  => ['title' => 'T20 - ALL-ROUNDER RANKINGS']
                         ];
                     @endphp
 
@@ -1253,10 +1233,10 @@
                             $fmtPlayers = $iccRankings['all_rounder'][$fmtKey] ?? collect();
                             $topPlayer = $fmtPlayers->first();
                         @endphp
-                        <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border-color, #334155); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-                            <div style="height: 3px; background: {{ $fmtMeta['color'] }};"></div>
+                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
+                            <div style="height: 2px; background: #38bdf8;"></div>
                             
-                            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color, #334155); font-weight: 800; font-size: 0.78rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase;">
+                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
                                 {{ $fmtMeta['title'] }}
                             </div>
 
@@ -1265,38 +1245,38 @@
                                     @php
                                         $isRankOne = $loop->first;
                                     @endphp
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '14px 16px' : '10px 16px' }}; border-bottom: 1px solid var(--border-color, #334155); {{ $isRankOne ? 'background: rgba(168, 85, 247, 0.05);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(255,255,255,0.03))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(168, 85, 247, 0.05)' : 'none' }}';">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '9px 14px' : '8px 14px' }}; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); {{ $isRankOne ? 'background: rgba(56, 189, 248, 0.04);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.06))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(56, 189, 248, 0.04)' : 'none' }}';">
                                         <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="display: flex; align-items: center; gap: 5px; width: 34px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.92rem; color: {{ $isRankOne ? '#a855f7' : 'var(--text-main, #ffffff)' }};">
+                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
+                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $isRankOne ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
                                                     {{ sprintf('%02d', $player->current_rank) }}
                                                 </span>
-                                                <span style="display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: {{ $isRankOne ? '#22c55e' : '#64748b' }};"></span>
+                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $isRankOne ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
                                             </div>
                                             <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" style="width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.88rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 {{ $player->player_name }}
                                             </span>
                                         </div>
 
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <div style="font-weight: 900; font-size: 0.95rem; color: var(--text-main, #ffffff);">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff);">
                                                 {{ $player->rating }}
                                             </div>
                                             @if($isRankOne)
-                                                <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: #f3e8ff; border: 2px solid #a855f7; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='{{ asset('images/default-player-boy.svg') }}';">
+                                                <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #0b1120; border: 1.5px solid #38bdf8; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
                                                 </div>
                                             @endif
                                         </div>
                                     </div>
                                 @empty
-                                    <div style="padding: 24px 16px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.85rem;">No ranking data recorded.</div>
+                                    <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
 
-                            <div style="padding: 12px 16px; text-align: center; background: var(--bg-card, #1e293b); border-top: 1px solid var(--border-color, #334155);">
-                                <a href="{{ route('rankings', ['category' => 'all_rounder', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.78rem; font-weight: 900; color: #0284c7; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+                                <a href="{{ route('rankings', ['category' => 'all_rounder', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
                                     FULL RANKINGS &rsaquo;
                                 </a>
                             </div>

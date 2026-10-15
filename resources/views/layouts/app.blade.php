@@ -111,7 +111,6 @@
                 <li><a href="{{ route('live') }}" class="nav-link {{ request()->routeIs('live') ? 'active' : '' }}">Live</a></li>
                 <li><a href="{{ route('matches') }}" class="nav-link {{ request()->routeIs('matches') ? 'active' : '' }}">Matches</a></li>
                 <li><a href="{{ route('stats') }}" class="nav-link {{ request()->routeIs('stats') ? 'active' : '' }}">Stats</a></li>
-                <li><a href="{{ route('rankings') }}" class="nav-link {{ request()->routeIs('rankings*') ? 'active' : '' }}">Rankings</a></li>
                 <li><a href="{{ route('series') }}" class="nav-link {{ request()->routeIs('series*') || request()->routeIs('tournaments*') ? 'active' : '' }}">Series</a></li>
                 <li><a href="{{ route('news') }}" class="nav-link {{ request()->routeIs('news') && (!request('type') || request('type') === 'news') ? 'active' : '' }}">News</a></li>
                 <li><a href="{{ route('local.dashboard') }}" class="nav-link {{ request()->routeIs('local.*') ? 'active' : '' }}">Local Cricket</a></li>
@@ -245,7 +244,7 @@
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Glossary Terms</span>
                     </a>
-                    <a href="{{ route('stats') }}" class="side-menu-link">
+                    <a href="{{ route('rankings') }}" class="side-menu-link {{ request()->routeIs('rankings*') ? 'active' : '' }}">
                         <span class="side-arrow">&rsaquo;</span>
                         <span>Rankings</span>
                     </a>

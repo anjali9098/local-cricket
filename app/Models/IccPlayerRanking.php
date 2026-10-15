@@ -19,13 +19,28 @@ class IccPlayerRanking extends Model
 
     public function getPhotoUrlAttribute($value)
     {
-        if (!empty($value)) {
+        if (!empty($value) && !str_contains($value, 'images.icc-cricket.com') && !str_contains($value, 'default-player')) {
             return self::formatImageUrl($value);
         }
-        if ($this->player && !empty($this->player->profile_image)) {
-            return $this->player->profile_image;
+
+        // Try linked player profile_image
+        if ($this->player_id) {
+            $p = Player::find($this->player_id);
+            if ($p && !empty($p->profile_image) && !str_contains($p->profile_image, 'default-player')) {
+                return $p->profile_image;
+            }
         }
-        return asset('images/default-player-boy.svg');
+
+        // Try matching by name in Player table
+        if (!empty($this->player_name)) {
+            $p = Player::where('name', 'like', '%' . trim($this->player_name) . '%')->first();
+            if ($p && !empty($p->profile_image) && !str_contains($p->profile_image, 'default-player')) {
+                return $p->profile_image;
+            }
+        }
+
+        // Sleek fallback theme avatar with player initials
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->player_name ?: 'CR') . '&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';
     }
 
     public function getCountryFlagAttribute($value)
