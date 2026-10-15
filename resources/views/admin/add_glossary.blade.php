@@ -45,8 +45,14 @@
             </form>
         </div>
 
-        <!-- Right: + Add New Button -->
-        <div>
+        <!-- Right: Actions Buttons -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <form method="POST" action="{{ route('admin.glossary.sync-wiki') }}" onsubmit="return confirm('Fetch and synchronize all A-Z cricket terms from Wikipedia API?');" style="margin: 0; display: inline;">
+                @csrf
+                <button type="submit" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; color: #16a34a; font-weight: 800; font-size: 0.82rem; cursor: pointer;">
+                    📖 Fetch from Wikipedia
+                </button>
+            </form>
             <button type="button" onclick="toggleGlossaryForm()" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 18px; border: 1px solid #cbd5e1; border-radius: 4px; background: white; color: #0f172a; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                 <span style="font-size: 1.1rem; line-height: 1; color: #0284c7;">+</span> Add Glossary Term
             </button>

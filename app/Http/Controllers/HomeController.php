@@ -105,6 +105,30 @@ class HomeController extends Controller
 
         $teamRankings = TeamRanking::orderBy('rank_num', 'asc')->take(10)->get();
 
+        // ICC Multi-format Rankings for Homepage Widget
+        $iccRankings = [
+            'teams' => [
+                'TEST' => TeamRanking::where('gender', 'men')->where('format', 'TEST')->orderBy('rank_num')->take(5)->get(),
+                'ODI' => TeamRanking::where('gender', 'men')->where('format', 'ODI')->orderBy('rank_num')->take(5)->get(),
+                'T20' => TeamRanking::where('gender', 'men')->where('format', 'T20')->orderBy('rank_num')->take(5)->get(),
+            ],
+            'batting' => [
+                'TEST' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                'ODI' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                'T20' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+            ],
+            'bowling' => [
+                'TEST' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                'ODI' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                'T20' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+            ],
+            'all_rounder' => [
+                'TEST' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                'ODI' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                'T20' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+            ],
+        ];
+
         // 100% Dynamic Real Batting Rankings from match batting scores
         $battingRankings = \Illuminate\Support\Facades\DB::table('player_batting_stats')
             ->select('player_name', \Illuminate\Support\Facades\DB::raw('SUM(runs) as stat_value'))
@@ -310,7 +334,8 @@ class HomeController extends Controller
             'popularPlayers',
             'venues',
             'webStories',
-            'glossaryTerms'
+            'glossaryTerms',
+            'iccRankings'
         ));
     }
 }

@@ -156,3 +156,74 @@ Artisan::command('cricket:push-cloud', function () {
         $this->error("Failed to connect to Cloud DB: " . $e->getMessage());
     }
 })->purpose('Push all data from Local MySQL to Aiven Cloud DB');
+
+Artisan::command('cricket:fetch-wikipedia-glossary', function () {
+    $this->info("Fetching Glossary of Cricket Terms from Wikipedia API...");
+    try {
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'User-Agent' => 'CricketKaScore/1.0 (https://cricketkascore.com; contact@cricketkascore.com)'
+        ])->timeout(30)->get('https://en.wikipedia.org/w/api.php', [
+            'action' => 'parse',
+            'page' => 'Glossary_of_cricket_terms',
+            'format' => 'json',
+            'prop' => 'text'
+        ]);
+
+        if (!$response->successful()) {
+            $this->error("Failed to fetch from Wikipedia API. Status: " . $response->status());
+            return;
+        }
+
+        $html = $response->json()['parse']['text']['*'] ?? '';
+        $dom = new \DOMDocument();
+        @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xpath = new \DOMXPath($dom);
+
+        $dts = $xpath->query('//dt');
+        $this->line("Found " . $dts->length . " terms in Wikipedia article.");
+
+        $saved = 0;
+        foreach ($dts as $dt) {
+            $termName = trim(preg_replace('/\[.*?\]/', '', $dt->textContent));
+            $termName = preg_replace('/\s+/', ' ', $termName);
+
+            $next = $dt->nextSibling;
+            while ($next && $next->nodeName !== 'dd' && $next->nodeName !== 'dt') {
+                $next = $next->nextSibling;
+            }
+            $def = '';
+            if ($next && $next->nodeName === 'dd') {
+                $def = trim(preg_replace('/\[.*?\]/', '', $next->textContent));
+                $def = preg_replace('/\s+/', ' ', $def);
+            }
+
+            if (!empty($termName) && !empty($def) && strlen($termName) <= 80 && strlen($def) >= 10) {
+                $letter = strtoupper(substr($termName, 0, 1));
+                if (!preg_match('/[A-Z]/', $letter)) {
+                    $letter = '#';
+                }
+
+                \App\Models\GlossaryTerm::updateOrCreate(
+                    ['term' => $termName],
+                    [
+                        'slug' => \Illuminate\Support\Str::slug($termName),
+                        'definition' => $def,
+                        'letter' => $letter,
+                        'keywords' => $termName . ', cricket terminology, glossary, rules, definitions',
+                    ]
+                );
+                $saved++;
+            }
+        }
+
+        $this->info("✓ Successfully synchronized {$saved} cricket glossary terms from Wikipedia A-Z!");
+    } catch (\Throwable $e) {
+        $this->error("Error syncing Wikipedia glossary: " . $e->getMessage());
+    }
+})->purpose('Fetch and sync all A to Z cricket terms from Wikipedia API');
+
+Artisan::command('cricket:seed-icc-rankings', function () {
+    $this->info("Seeding authentic ICC Team & Player Rankings across TEST, ODI, T20...");
+    require base_path('scratch/seed_icc.php');
+})->purpose('Seed comprehensive baseline ICC rankings for Men and Women');
+

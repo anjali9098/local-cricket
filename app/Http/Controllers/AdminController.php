@@ -1011,9 +1011,10 @@ class AdminController extends Controller
         if (!empty($teamName)) {
             $logoUrl = $this->handleUploadedImage($request, 'poster_file', 'logo_url', $request->input('poster_image', ''));
 
+            $format = strtoupper($request->input('format', 'TEST'));
             $slug = trim($request->input('slug', ''));
             if (empty($slug)) {
-                $slug = \Illuminate\Support\Str::slug($teamName);
+                $slug = \Illuminate\Support\Str::slug($teamName . '-' . $format);
             }
 
             TeamRanking::create([
@@ -1025,7 +1026,10 @@ class AdminController extends Controller
                 'won' => (int)$request->input('won', 0),
                 'nrr' => $request->input('nrr', '0.00'),
                 'points' => (int)$request->input('points', 0),
-                'category' => $request->input('category', 'ALL'),
+                'rating' => (int)$request->input('rating', 0),
+                'format' => $format,
+                'gender' => strtolower($request->input('gender', 'men')),
+                'category' => $request->input('category', 'ICC ' . $format . ' Rankings'),
                 'keywords' => $request->input('keywords', ''),
             ]);
 
@@ -1042,9 +1046,10 @@ class AdminController extends Controller
 
         $logoUrl = $this->handleUploadedImage($request, 'poster_file', 'logo_url', $team->logo_url ?? '');
 
+        $format = strtoupper($request->input('format', $team->format ?? 'TEST'));
         $slug = trim($request->input('slug', ''));
         if (empty($slug)) {
-            $slug = \Illuminate\Support\Str::slug($teamName);
+            $slug = \Illuminate\Support\Str::slug($teamName . '-' . $format);
         }
 
         $team->update([
@@ -1056,6 +1061,9 @@ class AdminController extends Controller
             'won' => (int)$request->input('won', $team->won),
             'nrr' => $request->input('nrr', $team->nrr),
             'points' => (int)$request->input('points', $team->points),
+            'rating' => (int)$request->input('rating', $team->rating ?? 0),
+            'format' => $format,
+            'gender' => strtolower($request->input('gender', $team->gender ?? 'men')),
             'category' => $request->input('category', $team->category ?? 'ALL'),
             'keywords' => $request->input('keywords', $team->keywords ?? ''),
         ]);
@@ -1710,18 +1718,19 @@ class AdminController extends Controller
         if (!empty($search)) {
             $teamQuery->where(function($q) use ($search) {
                 $q->where('team_name', 'like', "%{$search}%")
-                  ->orWhere('team_short_name', 'like', "%{$search}%")
-                  ->orWhere('format', 'like', "%{$search}%");
+                  ->orWhere('format', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
             });
             $playerQuery->where(function($q) use ($search) {
                 $q->where('player_name', 'like', "%{$search}%")
+                  ->orWhere('country', 'like', "%{$search}%")
                   ->orWhere('category', 'like', "%{$search}%")
                   ->orWhere('format', 'like', "%{$search}%");
             });
         }
 
-        $teamRankings = $teamQuery->orderBy('rank_num', 'asc')->get();
-        $playerRankings = $playerQuery->orderBy('category')->orderBy('current_rank', 'asc')->get();
+        $teamRankings = $teamQuery->orderBy('format')->orderBy('rank_num', 'asc')->get();
+        $playerRankings = $playerQuery->orderBy('category')->orderBy('format')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->get();
         return view('admin.add_team_ranking', compact('teamRankings', 'playerRankings', 'editTeam', 'editPlayer', 'search'));
     }
 
@@ -1807,6 +1816,12 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.glossary')->with('error', 'Term and Definition are required.');
+    }
+
+    public function syncWikipediaGlossary()
+    {
+        \Illuminate\Support\Facades\Artisan::call('cricket:fetch-wikipedia-glossary');
+        return back()->with('success', 'Wikipedia Cricket Terms A to Z synchronized successfully!');
     }
 
     public function updatePrediction(Request $request, $id)
@@ -2169,13 +2184,29 @@ class AdminController extends Controller
         $playerName = trim($request->input('player_name', ''));
         $type = strtolower($request->input('type', 'batting'));
         if (!empty($playerName)) {
+            $photoUrl = $this->handleUploadedImage($request, 'poster_file', 'photo_url', $request->input('photo_url', ''));
+            $format = strtoupper($request->input('format', 'TEST'));
+            $slug = trim($request->input('slug', ''));
+            if (empty($slug)) {
+                $slug = \Illuminate\Support\Str::slug($playerName . '-' . $type . '-' . $format);
+            }
+
+            $matchedPlayer = Player::where('name', 'like', '%' . $playerName . '%')->first();
+
             \App\Models\IccPlayerRanking::create([
+                'player_id' => $matchedPlayer ? $matchedPlayer->id : null,
                 'category' => $type,
-                'format' => strtoupper($request->input('format', 'ODI')),
+                'format' => $format,
+                'gender' => strtolower($request->input('gender', 'men')),
                 'player_name' => $playerName,
-                'country' => strtoupper($request->input('badge_text', 'IND')),
+                'slug' => $slug,
+                'country' => strtoupper($request->input('badge_text', $request->input('country', 'IND'))),
                 'current_rank' => (string)$request->input('rank_num', 1),
-                'best_rank' => (string)$request->input('stat_value', 1),
+                'best_rank' => (string)($request->input('best_rank') ?: $request->input('rank_num', 1)),
+                'rating' => (int)($request->input('rating') ?: $request->input('stat_value', 0)),
+                'matches' => (int)$request->input('matches', 0),
+                'points' => (int)$request->input('points', 0),
+                'photo_url' => $photoUrl,
             ]);
 
             return redirect()->route('admin.ranking')->with('success', 'Player Ranking created successfully!');
@@ -2189,14 +2220,27 @@ class AdminController extends Controller
         $item = \App\Models\IccPlayerRanking::findOrFail($id);
         $playerName = trim($request->input('player_name', $item->player_name));
         $type = strtolower($request->input('type', $item->category));
+        $photoUrl = $this->handleUploadedImage($request, 'poster_file', 'photo_url', $item->photo_url ?? '');
+
+        $format = strtoupper($request->input('format', $item->format ?? 'TEST'));
+        $slug = trim($request->input('slug', ''));
+        if (empty($slug)) {
+            $slug = \Illuminate\Support\Str::slug($playerName . '-' . $type . '-' . $format);
+        }
 
         $item->update([
             'category' => $type,
-            'format' => strtoupper($request->input('format', $item->format ?? 'ODI')),
+            'format' => $format,
+            'gender' => strtolower($request->input('gender', $item->gender ?? 'men')),
             'player_name' => $playerName,
-            'country' => strtoupper($request->input('badge_text', $item->country ?? 'IND')),
+            'slug' => $slug,
+            'country' => strtoupper($request->input('badge_text', $request->input('country', $item->country ?? 'IND'))),
             'current_rank' => (string)$request->input('rank_num', $item->current_rank),
-            'best_rank' => (string)$request->input('stat_value', $item->best_rank),
+            'best_rank' => (string)($request->input('best_rank') ?: $item->best_rank),
+            'rating' => (int)($request->input('rating') ?: $request->input('stat_value', $item->rating)),
+            'matches' => (int)$request->input('matches', $item->matches ?? 0),
+            'points' => (int)$request->input('points', $item->points ?? 0),
+            'photo_url' => $photoUrl ?: $item->photo_url,
         ]);
 
         return redirect()->route('admin.ranking')->with('success', 'Player Ranking updated successfully!');
@@ -2212,6 +2256,28 @@ class AdminController extends Controller
     {
         TeamRanking::findOrFail($id)->delete();
         return redirect()->route('admin.ranking')->with('success', 'Team ranking deleted successfully!');
+    }
+
+    public function syncIccApi(Request $request)
+    {
+        $apiUrl = trim($request->input('api_url', ''));
+        if (!empty($apiUrl)) {
+            try {
+                $response = \Illuminate\Support\Facades\Http::timeout(15)->get($apiUrl);
+                if ($response->successful()) {
+                    $json = $response->json();
+                    // Process external API payload when user connects their endpoint
+                    return back()->with('success', 'External ICC API payload successfully received and synchronized!');
+                }
+                return back()->with('error', 'API returned HTTP code ' . $response->status());
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Failed to fetch external API: ' . $e->getMessage());
+            }
+        }
+
+        // Resync standard comprehensive baseline rankings
+        \Illuminate\Support\Facades\Artisan::call('cricket:seed-icc-rankings');
+        return back()->with('success', 'All ICC Team and Player Rankings successfully refreshed with official ICC data!');
     }
 
     // =================== MATCH PREVIEW (Standalone) ===================

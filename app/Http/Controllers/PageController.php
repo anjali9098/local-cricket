@@ -251,6 +251,47 @@ class PageController extends Controller
         return view('pages.stats', compact('teamRankings', 'battingRankings', 'bowlingRankings', 'playerBirthdays'));
     }
 
+    public function rankings(\Illuminate\Http\Request $request, $category = null, $format = null)
+    {
+        $gender = strtolower($request->query('gender', 'men'));
+        $format = strtoupper($format ?: $request->query('format', 'TEST'));
+        $category = strtolower($category ?: $request->query('category', 'teams'));
+
+        if (!in_array($format, ['TEST', 'ODI', 'T20'])) {
+            $format = 'TEST';
+        }
+
+        if (!in_array($category, ['teams', 'team', 'batting', 'bowling', 'all_rounder', 'all-rounder'])) {
+            $category = 'teams';
+        }
+        if ($category === 'team') $category = 'teams';
+        if ($category === 'all-rounder') $category = 'all_rounder';
+
+        if ($category === 'teams') {
+            $rankings = TeamRanking::where('gender', $gender)
+                ->where('format', $format)
+                ->orderBy('rank_num', 'asc')
+                ->get();
+        } else {
+            $rankings = \App\Models\IccPlayerRanking::where('gender', $gender)
+                ->where('category', $category)
+                ->where('format', $format)
+                ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+                ->get();
+        }
+
+        $titleFormat = $format === 'T20' ? 'T20' : $format;
+        $titleCategory = match($category) {
+            'teams' => 'TEAM RANKINGS',
+            'batting' => 'BATTING RANKINGS',
+            'bowling' => 'BOWLING RANKINGS',
+            'all_rounder' => 'ALL-ROUNDER RANKINGS',
+        };
+        $pageTitle = strtoupper($gender) . "'S " . $titleFormat . " " . $titleCategory;
+
+        return view('pages.rankings', compact('rankings', 'category', 'format', 'gender', 'pageTitle'));
+    }
+
     public function playerBirthdays(\Illuminate\Http\Request $request)
     {
         $playerBirthdays = $this->getProcessedPlayerBirthdays();

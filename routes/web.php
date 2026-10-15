@@ -53,6 +53,8 @@ Route::get('/match/{slug}/{id}', [PageController::class, 'matchDetail']);
 Route::get('/match/{id}', [PageController::class, 'matchDetail']);
 
 Route::get('/stats', [PageController::class, 'stats'])->name('stats');
+Route::get('/rankings', [PageController::class, 'rankings'])->name('rankings');
+Route::get('/rankings/{category}/{format}', [PageController::class, 'rankings'])->name('rankings.format');
 Route::get('/series', [PageController::class, 'series'])->name('series');
 Route::get('/tournaments', [PageController::class, 'tournaments'])->name('tournaments');
 Route::get('/tournament/{slug}/{id}', [PageController::class, 'tournamentDetail'])->name('tournament.public.slug');
@@ -148,7 +150,6 @@ Route::get('/glossary-term/{id}', [PageController::class, 'showGlossaryTerm']);
 Route::get('/player-birthdays', [PageController::class, 'playerBirthdays'])->name('player.birthdays');
 Route::get('/player-birthday', [PageController::class, 'playerBirthdays']);
 Route::get('/birthdays', [PageController::class, 'playerBirthdays']);
-Route::get('/rankings', [PageController::class, 'stats']);
 Route::get('/search', [PageController::class, 'globalSearch'])->name('search');
 Route::get('/api/admin/search', [\App\Http\Controllers\Api\SearchApiController::class, 'adminSearch'])->name('api.admin.search');
 
@@ -277,6 +278,7 @@ Route::middleware(['superadmin'])->group(function () {
 
     Route::get('/admin/glossary', [AdminController::class, 'showAddGlossaryForm'])->name('admin.glossary');
     Route::post('/admin/glossary', [AdminController::class, 'addGlossary'])->name('admin.glossary.post');
+    Route::post('/admin/glossary/sync-wiki', [AdminController::class, 'syncWikipediaGlossary'])->name('admin.glossary.sync-wiki');
 
     // Delete & Update routes for admin content management
     Route::post('/admin/prediction/{id}/delete', [AdminController::class, 'deletePrediction'])->name('admin.prediction.delete');
@@ -309,6 +311,7 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/player-ranking/update/{id}', [AdminController::class, 'updatePlayerRanking'])->name('admin.player-ranking.update');
     Route::post('/admin/ranking/delete/{id}', [AdminController::class, 'deleteTeamRanking'])->name('admin.ranking.delete');
     Route::post('/admin/player-ranking/delete/{id}', [AdminController::class, 'deletePlayerRanking'])->name('admin.player-ranking.delete');
+    Route::post('/admin/ranking/sync-api', [AdminController::class, 'syncIccApi'])->name('admin.ranking.sync-api');
 
     // Match Preview (alag section)
     Route::get('/admin/match-preview', [AdminController::class, 'showMatchPreviewForm'])->name('admin.match-preview');
