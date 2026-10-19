@@ -56,7 +56,7 @@
     <!-- Header -->
     <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
         <div style="display: flex; align-items: center; gap: 14px;">
-            <span style="font-size: 2.4rem; color: #22c55e;">📖</span>
+            <span style="font-size: 2.4rem; color: #38bdf8;">📖</span>
             <div>
                 <h1 style="font-size: 1.9rem; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.02em;">
                     Cricket Glossary &amp; Terminology
@@ -78,7 +78,7 @@
         <!-- Search row -->
         <form method="GET" action="{{ route('glossary.all') }}" style="display: flex; gap: 10px; align-items: center; max-width: 500px;">
             <input type="text" name="search" value="{{ request('search', '') }}" style="flex: 1; padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card-secondary); color: var(--text-main); font-size: 0.88rem; outline: none;">
-            <button type="submit" style="padding: 8px 18px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">
+            <button type="submit" style="padding: 8px 18px; background: var(--primary, #2563eb); color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">
                 Search
             </button>
             @if(request('search') || request('letter'))
@@ -90,12 +90,12 @@
 
         <!-- Alphabet Bar -->
         <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-            <a href="{{ route('glossary.all') }}" style="text-decoration: none; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; {{ empty(request('letter')) ? 'background: #22c55e; color: white;' : 'background: var(--bg-card-secondary); color: var(--text-dim);' }}">
+            <a href="{{ route('glossary.all') }}" style="text-decoration: none; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; {{ empty(request('letter')) ? 'background: var(--primary, #2563eb); color: white;' : 'background: var(--bg-card-secondary); color: var(--text-dim);' }}">
                 ALL
             </a>
             @foreach(range('A', 'Z') as $char)
                 @php $isActive = strtolower(request('letter')) === strtolower($char); @endphp
-                <a href="{{ route('glossary.all', ['letter' => strtolower($char)]) }}" style="text-decoration: none; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 800; font-size: 0.8rem; {{ $isActive ? 'background: #22c55e; color: white;' : 'background: var(--bg-card-secondary); color: var(--text-main);' }}">
+                <a href="{{ route('glossary.all', ['letter' => strtolower($char)]) }}" style="text-decoration: none; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 800; font-size: 0.8rem; {{ $isActive ? 'background: var(--primary, #2563eb); color: white;' : 'background: var(--bg-card-secondary); color: var(--text-main);' }}">
                     {{ $char }}
                 </a>
             @endforeach
@@ -106,16 +106,16 @@
     @if($glossaryTerms->isNotEmpty())
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px;">
             @foreach($glossaryTerms as $term)
-                <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; gap: 16px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.5)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
+                <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; gap: 16px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(56, 189, 248, 0.5)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
                     
                     <!-- Poster Image or Letter Badge -->
                     @if(!empty($term->poster_image))
-                        <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 54px; height: 54px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1.5px solid rgba(34, 197, 94, 0.4);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div style="display: none; width: 44px; height: 44px; border-radius: 8px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; flex-shrink: 0;">
+                        <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 54px; height: 54px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1.5px solid rgba(56, 189, 248, 0.4);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div style="display: none; width: 44px; height: 44px; border-radius: 8px; background: rgba(37, 99, 235, 0.15); color: #38bdf8; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; flex-shrink: 0;">
                             {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
                         </div>
                     @else
-                        <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; flex-shrink: 0;">
+                        <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(37, 99, 235, 0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; flex-shrink: 0;">
                             {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
                         </div>
                     @endif

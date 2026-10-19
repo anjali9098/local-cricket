@@ -57,23 +57,89 @@
     </div>
 
     <!-- API SYNC MODAL -->
-    <div id="api-sync-modal" style="display: none; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 20px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-            <h4 style="margin: 0; font-size: 1rem; font-weight: 800; color: #0f172a;">
-                🌐 Fetch & Synchronize ICC Rankings API
-            </h4>
-            <button type="button" onclick="toggleApiModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">&times;</button>
+    <div id="api-sync-modal" style="display: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 22px 26px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.3rem;">🌐</span>
+                <div>
+                    <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a;">
+                        Possible11 Official ICC Rankings Synchronization
+                    </h4>
+                    <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #64748b;">
+                        Live official ICC rankings across TEST, ODI, and T20 for Teams, Batting, Bowling, and All-Rounders.
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="toggleApiModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
         </div>
-        <p style="margin: 0 0 14px 0; font-size: 0.85rem; color: #475569; line-height: 1.5;">
-            You can enter your custom ICC rankings API endpoint below, or click <strong>Refresh Official ICC Baseline</strong> to reload authentic multi-format data.
-        </p>
-        <form method="POST" action="{{ route('admin.ranking.sync-api') }}" style="display: flex; gap: 10px; flex-wrap: wrap;">
-            @csrf
-            <input type="url" name="api_url" placeholder="https://api.example.com/v1/icc-rankings (Optional)" style="flex: 1; min-width: 260px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
-            <button type="submit" style="background: #0284c7; color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">
-                Fetch & Save API Data
-            </button>
-        </form>
+
+        <!-- QUICK FULL SYNC SECTION -->
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <strong style="color: #0369a1; font-size: 0.92rem; display: block;">⚡ Sync All 12 Possible11 Endpoints in One Click</strong>
+                <span style="font-size: 0.8rem; color: #0284c7;">
+                    Updates Teams + Batting + Bowling + All-Rounder rankings for TEST, ODI, and T20, and automatically links player profiles!
+                </span>
+            </div>
+            <form method="POST" action="{{ route('admin.ranking.sync-api') }}" style="display: flex; align-items: center; gap: 10px;">
+                @csrf
+                <select name="limit" style="padding: 7px 12px; border: 1px solid #93c5fd; border-radius: 4px; font-size: 0.82rem; font-weight: 700; color: #0369a1; background: white; outline: none;">
+                    <option value="5">Top 5 Each</option>
+                    <option value="10" selected>Top 10 Each (Recommended)</option>
+                    <option value="15">Top 15 Each</option>
+                </select>
+                <button type="submit" style="background: #0284c7; color: white; border: none; padding: 8px 22px; border-radius: 4px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);">
+                    ⚡ Sync All 12 Endpoints
+                </button>
+            </form>
+        </div>
+
+        <!-- INDIVIDUAL ENDPOINT SYNC FORM -->
+        <div style="border-top: 1px dashed #e2e8f0; padding-top: 14px;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                Sync Specific Endpoint or Custom URL:
+            </div>
+            <form method="POST" action="{{ route('admin.ranking.sync-api') }}" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                @csrf
+                <input type="url" id="api_url_input" name="api_url" placeholder="Paste any Possible11 URL or custom API endpoint..." style="flex: 1; min-width: 320px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
+                
+                <select name="limit" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; font-weight: 600; color: #334155; background: white;">
+                    <option value="5">Limit: 5</option>
+                    <option value="10" selected>Limit: 10</option>
+                    <option value="15">Limit: 15</option>
+                </select>
+
+                <button type="submit" style="background: #1e293b; color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">
+                    Sync Single Endpoint
+                </button>
+            </form>
+
+            <!-- Quick Endpoint Presets Buttons -->
+            <div style="margin-top: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #64748b;">Quick Presets:</span>
+                @php
+                    $presetUrls = [
+                        'T20 Teams' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=t20&rank=teams&limit=10',
+                        'T20 Batting' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=t20&rank=batting&limit=10',
+                        'T20 Bowling' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=t20&rank=bowling&limit=10',
+                        'T20 All-Rounder' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=t20&rank=allrounder&limit=10',
+                        'ODI Teams' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=odi&rank=teams&limit=10',
+                        'ODI Batting' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=odi&rank=batting&limit=10',
+                        'ODI Bowling' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=odi&rank=bowling&limit=10',
+                        'ODI All-Rounder' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=odi&rank=allrounder&limit=10',
+                        'TEST Teams' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=test&rank=teams&limit=10',
+                        'TEST Batting' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=test&rank=batting&limit=10',
+                        'TEST Bowling' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=test&rank=bowling&limit=10',
+                        'TEST All-Rounder' => 'https://possible11.com/api/?action=rankWidget&sport=Cricket&format=test&rank=allrounder&limit=10',
+                    ];
+                @endphp
+                @foreach($presetUrls as $pLabel => $pUrl)
+                    <button type="button" onclick="document.getElementById('api_url_input').value='{{ $pUrl }}';" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 8px; font-size: 0.72rem; font-weight: 700; color: #475569; cursor: pointer;" title="{{ $pUrl }}">
+                        {{ $pLabel }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
     </div>
 
     <!-- Add / Edit Ranking Form Panel -->

@@ -8,10 +8,10 @@
     $canonicalUrl = $tip->url;
 
     // Image resolution: priority is poster_image, then image_url, then default match photo
-    $fallbackImage = asset('images/articles/1788433528_India.jpg');
+    $fallbackImage = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=900&auto=format&fit=crop&q=80';
     $posterImg = $tip->poster_image ?: ($tip->image_url ?: null);
     if (empty($posterImg)) {
-        $posterImg = asset('uploads/predictions/repaired_1789022057_CYsotwvY.webp');
+        $posterImg = $fallbackImage;
     }
     $ogImage = $posterImg ?: $fallbackImage;
     $authorName = !empty($tip->author) ? $tip->author : 'Anjali Malviya';
@@ -187,7 +187,7 @@
                             <a href="{{ $rt->url }}" class="sidebar-stream-card" title="{{ $rt->title }}">
                                 @if(!empty($pThumb))
                                     <div class="stream-card-thumb">
-                                        <img src="{{ $pThumb }}" alt="{{ $rt->title }}" loading="lazy" onerror="this.parentElement.style.display='none';">
+                                        <img src="{{ $pThumb }}" alt="{{ $rt->title }}" loading="lazy" onerror="this.onerror=null; this.src='{{ $fallbackImage }}';">
                                     </div>
                                 @endif
                                 <div class="stream-card-content">

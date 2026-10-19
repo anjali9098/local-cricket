@@ -187,15 +187,19 @@ Artisan::command('cricket:fetch-wikipedia-glossary', function () {
             $termName = trim(preg_replace('/\[.*?\]/', '', $dt->textContent));
             $termName = preg_replace('/\s+/', ' ', $termName);
 
-            $next = $dt->nextSibling;
-            while ($next && $next->nodeName !== 'dd' && $next->nodeName !== 'dt') {
-                $next = $next->nextSibling;
+            $defs = [];
+            $curr = $dt->nextSibling;
+            while ($curr && $curr->nodeName !== 'dt') {
+                if ($curr->nodeName === 'dd') {
+                    $dText = trim(preg_replace('/\[.*?\]/', '', $curr->textContent));
+                    $dText = preg_replace('/\s+/', ' ', $dText);
+                    if (!empty($dText)) {
+                        $defs[] = $dText;
+                    }
+                }
+                $curr = $curr->nextSibling;
             }
-            $def = '';
-            if ($next && $next->nodeName === 'dd') {
-                $def = trim(preg_replace('/\[.*?\]/', '', $next->textContent));
-                $def = preg_replace('/\s+/', ' ', $def);
-            }
+            $def = implode("\n\n", $defs);
 
             if (!empty($termName) && !empty($def) && strlen($termName) <= 80 && strlen($def) >= 10) {
                 $letter = strtoupper(substr($termName, 0, 1));
@@ -223,7 +227,17 @@ Artisan::command('cricket:fetch-wikipedia-glossary', function () {
 })->purpose('Fetch and sync all A to Z cricket terms from Wikipedia API');
 
 Artisan::command('cricket:seed-icc-rankings', function () {
-    $this->info("Seeding authentic ICC Team & Player Rankings across TEST, ODI, T20...");
-    require base_path('scratch/seed_icc.php');
-})->purpose('Seed comprehensive baseline ICC rankings for Men and Women');
+    $this->info("Fetching and syncing official live ICC Team & Player Rankings from Possible11 API...");
+    try {
+        $service = app(\App\Services\Possible11RankingService::class);
+        $res = $service->syncAll(10, function($msg) {
+            $this->line($msg);
+        });
+        $this->info("✓ Successfully synchronized {$res['total_teams']} teams and {$res['total_players']} players from Possible11 API!");
+    } catch (\Throwable $e) {
+        $this->warn("Possible11 API sync error: " . $e->getMessage() . ". Falling back to baseline seeder...");
+        require base_path('scratch/seed_icc.php');
+    }
+})->purpose('Synchronize authentic ICC rankings across TEST, ODI, T20 from Possible11 API with fallback');
+
 

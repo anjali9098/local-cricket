@@ -215,14 +215,13 @@ class Player extends Model {
 
     public function getNormalizedIccRankingsAttribute()
     {
-        $dbRanks = $this->relationLoaded('iccRankings') ? $this->iccRankings : $this->iccRankings()->get();
-        if ($dbRanks->isEmpty() && !empty($this->name)) {
-            $pName = trim($this->name);
-            $dbRanks = IccPlayerRanking::where('player_id', $this->id)
-                ->orWhere('player_name', $pName)
-                ->orWhere('player_name', 'like', '%' . $pName . '%')
-                ->get();
+        $pName = trim($this->name ?? '');
+        $query = IccPlayerRanking::where('player_id', $this->id);
+        if (!empty($pName)) {
+            $query->orWhere('player_name', $pName)
+                  ->orWhere('player_name', 'like', '%' . $pName . '%');
         }
+        $dbRanks = $query->get();
 
         $categories = ['batting', 'bowling', 'all_rounder'];
         $formats = ['test', 'odi', 't20i'];
@@ -239,9 +238,12 @@ class Player extends Model {
         }
 
         foreach ($dbRanks as $r) {
-            $cat = strtolower(str_replace('-', '_', $r->category));
+            $cat = strtolower(str_replace(['-', ' '], '_', (string)$r->category));
+            if ($cat === 'allrounder') {
+                $cat = 'all_rounder';
+            }
             $fmt = strtolower(trim((string)$r->format));
-            if ($fmt === 't20') {
+            if ($fmt === 't20' || $fmt === 't20i') {
                 $fmt = 't20i';
             }
             if (isset($matrix[$cat][$fmt])) {

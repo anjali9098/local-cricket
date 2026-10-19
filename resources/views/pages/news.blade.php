@@ -166,13 +166,13 @@
                             <a href="{{ $detailRoute }}" style="text-decoration: none; display: block;">
                                 <div style="position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: #0b1120; display: flex; align-items: center; justify-content: center;">
                                     <div style="position: absolute; inset: -10px; background-image: url('{{ $item->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
-                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">
+                                    <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';">
                                 </div>
                             </a>
                         @else
                             <div style="position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; margin-bottom: 12px; background: #0b1120; display: flex; align-items: center; justify-content: center;">
                                 <div style="position: absolute; inset: -10px; background-image: url('{{ $item->image_url }}'); background-size: cover; background-position: center; filter: blur(14px) brightness(0.35); opacity: 0.8; transform: scale(1.1); pointer-events: none;"></div>
-                                <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+                                <img src="{{ $item->image_url }}" alt="{{ $item->title }}" style="position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';">
                             </div>
                         @endif
                     @endif

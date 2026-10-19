@@ -110,10 +110,15 @@ Route::get('/articles/{slug}/{id}', [PageController::class, 'showArticle']);
 Route::get('/articles/{id}', [PageController::class, 'showArticle']);
 
 Route::get('/compare', [PageController::class, 'compare'])->name('compare');
+
+// Teams Head to Head Clean SEO Routes (matching MyKhel structure)
+Route::get('/head-to-head-records-in-{format}', [PageController::class, 'headToHeadFormatHub'])->name('head-to-head.format-hub');
+Route::get('/head-to-head/{matchup}', [PageController::class, 'headToHeadMatchupSlug'])->name('head-to-head.matchup-slug');
 Route::get('/head-to-head', [PageController::class, 'headToHead'])->name('head-to-head');
 Route::get('/h2h', [PageController::class, 'headToHead'])->name('h2h');
 Route::get('/team-compare', [PageController::class, 'headToHead'])->name('team.compare');
 Route::get('/teams/compare', [PageController::class, 'headToHead']);
+
 Route::get('/teams', [PageController::class, 'teams'])->name('teams');
 Route::get('/players', [PageController::class, 'players'])->name('players');
 Route::get('/player/{slug}/{id}', [PageController::class, 'playerProfile'])->name('player.profile.slug');
@@ -324,6 +329,14 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/teams', [AdminController::class, 'createTeam'])->name('admin.teams.post');
     Route::post('/admin/teams/update/{id}', [AdminController::class, 'updateTeam'])->name('admin.teams.update');
     Route::post('/admin/teams/delete/{id}', [AdminController::class, 'deleteTeamEntry'])->name('admin.teams.delete');
+
+    // Teams Head to Head Management
+    Route::get('/admin/head-to-head', [AdminController::class, 'showHeadToHead'])->name('admin.head-to-head');
+    Route::post('/admin/head-to-head', [AdminController::class, 'saveHeadToHead'])->name('admin.head-to-head.post');
+    Route::post('/admin/head-to-head/update/{id}', [AdminController::class, 'updateHeadToHead'])->name('admin.head-to-head.update');
+    Route::post('/admin/head-to-head/delete/{id}', [AdminController::class, 'deleteHeadToHead'])->name('admin.head-to-head.delete');
+    Route::post('/admin/head-to-head/sync-scraper', [AdminController::class, 'syncHeadToHeadScraper'])->name('admin.head-to-head.sync-scraper');
+
 
     // Players Management
     Route::get('/admin/players', [AdminController::class, 'showPlayersForm'])->name('admin.players');

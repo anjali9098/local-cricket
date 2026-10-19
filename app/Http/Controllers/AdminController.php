@@ -19,6 +19,8 @@ use App\Models\GlossaryTerm;
 use App\Models\BallByBall;
 use App\Models\PlayerBattingStat;
 use App\Models\PlayerBowlingStat;
+use App\Models\HeadToHead;
+use App\Services\HeadToHeadScraperService;
 
 class AdminController extends Controller
 {
@@ -2056,7 +2058,7 @@ class AdminController extends Controller
 
         $author = trim($request->input('author', ''));
         if (empty($author)) {
-            $author = $item->author ?? 'Admin';
+            $author = $item->author ?? (\Illuminate\Support\Facades\Auth::user()?->name ?: 'Admin');
         }
 
         $title = trim($request->input('title', $item->title));
@@ -2258,26 +2260,33 @@ class AdminController extends Controller
         return redirect()->route('admin.ranking')->with('success', 'Team ranking deleted successfully!');
     }
 
-    public function syncIccApi(Request $request)
+    public function syncIccApi(Request $request, \App\Services\Possible11RankingService $rankingService)
     {
         $apiUrl = trim($request->input('api_url', ''));
+        $limit = (int)$request->input('limit', 100);
+        if ($limit <= 0) {
+            $limit = 100;
+        }
+
         if (!empty($apiUrl)) {
             try {
-                $response = \Illuminate\Support\Facades\Http::timeout(15)->get($apiUrl);
-                if ($response->successful()) {
-                    $json = $response->json();
-                    // Process external API payload when user connects their endpoint
-                    return back()->with('success', 'External ICC API payload successfully received and synchronized!');
-                }
-                return back()->with('error', 'API returned HTTP code ' . $response->status());
+                $result = $rankingService->syncUrl($apiUrl, $limit);
+                return back()->with('success', $result['message'] . ' successfully synchronized from Possible11 API!');
             } catch (\Throwable $e) {
-                return back()->with('error', 'Failed to fetch external API: ' . $e->getMessage());
+                return back()->with('error', 'Failed to fetch ranking API: ' . $e->getMessage());
             }
         }
 
-        // Resync standard comprehensive baseline rankings
-        \Illuminate\Support\Facades\Artisan::call('cricket:seed-icc-rankings');
-        return back()->with('success', 'All ICC Team and Player Rankings successfully refreshed with official ICC data!');
+        try {
+            $report = $rankingService->syncAll($limit);
+            if ($report['synced_endpoints'] > 0) {
+                return back()->with('success', "All 12 ICC Rankings (Teams, Batting, Bowling, All-Rounder across TEST, ODI, T20) successfully synchronized from Possible11 API! ({$report['total_teams']} teams, {$report['total_players']} players updated)");
+            }
+            return back()->with('error', 'Unable to synchronize ICC Rankings: ' . implode(', ', $report['errors']));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Artisan::call('cricket:seed-icc-rankings');
+            return back()->with('warning', 'Live API sync encountered an issue (' . $e->getMessage() . '). Standard baseline rankings were loaded.');
+        }
     }
 
     // =================== MATCH PREVIEW (Standalone) ===================
@@ -3255,6 +3264,261 @@ class AdminController extends Controller
             'message' => "Squad for format {$format} saved successfully into players table with " . count($playerIds) . " players!",
             'player_count' => count($playerIds),
         ]);
+    }
+
+    /**
+     * Teams Head to Head Management (Super Admin)
+     */
+    public function showHeadToHead(Request $request)
+    {
+        $allTeams = Team::orderBy('name', 'asc')->get();
+
+        $format = strtoupper(trim($request->query('format', '')));
+        $search = trim($request->query('search', ''));
+        $editId = $request->query('edit_id');
+
+        $query = HeadToHead::with(['team1', 'team2'])->orderBy('format', 'asc')->orderBy('total_matches', 'desc');
+
+        if (!empty($format)) {
+            $query->where('format', $format);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('team1_name', 'like', "%{$search}%")
+                  ->orWhere('team2_name', 'like', "%{$search}%")
+                  ->orWhereHas('team1', function ($tq) use ($search) {
+                      $tq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('team2', function ($tq) use ($search) {
+                      $tq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $records = $query->paginate(20)->withQueryString();
+
+        $editH2h = null;
+        if ($editId) {
+            $editH2h = HeadToHead::find($editId);
+        }
+
+        $statsSummary = [
+            'total' => HeadToHead::count(),
+            'test' => HeadToHead::where('format', 'TEST')->count(),
+            'odi' => HeadToHead::where('format', 'ODI')->count(),
+            't20' => HeadToHead::where('format', 'T20')->count(),
+        ];
+
+        return view('admin.manage_head_to_head', compact(
+            'allTeams', 'records', 'editH2h', 'format', 'search', 'statsSummary'
+        ));
+    }
+
+    /**
+     * Save (Add / Update) Head to Head Record manually
+     */
+    public function saveHeadToHead(Request $request)
+    {
+        $request->validate([
+            'team1_id' => 'required|exists:teams,id',
+            'team2_id' => 'required|exists:teams,id|different:team1_id',
+            'format' => 'required|string',
+        ]);
+
+        $team1 = Team::findOrFail($request->team1_id);
+        $team2 = Team::findOrFail($request->team2_id);
+        $format = strtoupper(trim($request->format));
+
+        $t1Won = (int)$request->input('team1_won', 0);
+        $t2Won = (int)$request->input('team2_won', 0);
+        $drawn = (int)$request->input('drawn', 0);
+        $tied = (int)$request->input('tied', 0);
+        $noResult = (int)$request->input('no_result', 0);
+
+        $totalMatches = (int)$request->input('total_matches', 0);
+        if ($totalMatches <= 0) {
+            $totalMatches = $t1Won + $t2Won + $drawn + $tied + $noResult;
+        }
+
+        $t1HomeWon = (int)$request->input('team1_home_won', 0);
+        $t2HomeWon = (int)$request->input('team2_home_won', 0);
+        $t1AwayWon = (int)$request->input('team1_away_won', 0);
+        $t2AwayWon = (int)$request->input('team2_away_won', 0);
+        $t1NeutralWon = (int)$request->input('team1_neutral_won', 0);
+        $t2NeutralWon = (int)$request->input('team2_neutral_won', 0);
+
+        $narrative = trim($request->input('summary_narrative', ''));
+        if (empty($narrative)) {
+            $narrative = "{$team1->name} and {$team2->name} have faced each other in {$totalMatches} matches in {$format}. Out of these {$totalMatches} games, {$team1->name} have won {$t1Won} whereas {$team2->name} have come out victorious on {$t2Won} occasions.";
+            if ($drawn > 0) $narrative .= " {$drawn} matches ended with draw.";
+            if ($tied > 0) $narrative .= " {$tied} matches ended tied.";
+        }
+
+        // Look for existing record (either order)
+        $h2h = HeadToHead::findMatchup($team1, $team2, $format);
+
+        if ($h2h) {
+            // Update existing
+            $isSameOrder = ($h2h->team1_id == $team1->id);
+            if ($isSameOrder) {
+                $h2h->update([
+                    'total_matches' => $totalMatches,
+                    'team1_won' => $t1Won,
+                    'team2_won' => $t2Won,
+                    'drawn' => $drawn,
+                    'tied' => $tied,
+                    'no_result' => $noResult,
+                    'team1_home_won' => $t1HomeWon,
+                    'team2_home_won' => $t2HomeWon,
+                    'team1_away_won' => $t1AwayWon,
+                    'team2_away_won' => $t2AwayWon,
+                    'team1_neutral_won' => $t1NeutralWon,
+                    'team2_neutral_won' => $t2NeutralWon,
+                    'summary_narrative' => $narrative,
+                    'source' => 'manual',
+                ]);
+            } else {
+                // Inverted order in DB
+                $h2h->update([
+                    'total_matches' => $totalMatches,
+                    'team1_won' => $t2Won,
+                    'team2_won' => $t1Won,
+                    'drawn' => $drawn,
+                    'tied' => $tied,
+                    'no_result' => $noResult,
+                    'team1_home_won' => $t2HomeWon,
+                    'team2_home_won' => $t1HomeWon,
+                    'team1_away_won' => $t2AwayWon,
+                    'team2_away_won' => $t1AwayWon,
+                    'team1_neutral_won' => $t2NeutralWon,
+                    'team2_neutral_won' => $t1NeutralWon,
+                    'summary_narrative' => $narrative,
+                    'source' => 'manual',
+                ]);
+            }
+        } else {
+            // Create new
+            HeadToHead::create([
+                'team1_id' => $team1->id,
+                'team2_id' => $team2->id,
+                'team1_name' => $team1->name,
+                'team2_name' => $team2->name,
+                'format' => $format,
+                'total_matches' => $totalMatches,
+                'team1_won' => $t1Won,
+                'team2_won' => $t2Won,
+                'drawn' => $drawn,
+                'tied' => $tied,
+                'no_result' => $noResult,
+                'team1_home_won' => $t1HomeWon,
+                'team2_home_won' => $t2HomeWon,
+                'team1_away_won' => $t1AwayWon,
+                'team2_away_won' => $t2AwayWon,
+                'team1_neutral_won' => $t1NeutralWon,
+                'team2_neutral_won' => $t2NeutralWon,
+                'summary_narrative' => $narrative,
+                'source' => 'manual',
+            ]);
+        }
+
+        return redirect()->route('admin.head-to-head', ['format' => $format])
+            ->with('success', "Head-to-Head record for {$team1->name} vs {$team2->name} ({$format}) saved successfully!");
+    }
+
+    /**
+     * Update an existing Head to Head record by ID
+     */
+    public function updateHeadToHead(Request $request, $id)
+    {
+        $h2h = HeadToHead::findOrFail($id);
+
+        $t1Won = (int)$request->input('team1_won', 0);
+        $t2Won = (int)$request->input('team2_won', 0);
+        $drawn = (int)$request->input('drawn', 0);
+        $tied = (int)$request->input('tied', 0);
+        $noResult = (int)$request->input('no_result', 0);
+
+        $totalMatches = (int)$request->input('total_matches', 0);
+        if ($totalMatches <= 0) {
+            $totalMatches = $t1Won + $t2Won + $drawn + $tied + $noResult;
+        }
+
+        $h2h->update([
+            'total_matches' => $totalMatches,
+            'team1_won' => $t1Won,
+            'team2_won' => $t2Won,
+            'drawn' => $drawn,
+            'tied' => $tied,
+            'no_result' => $noResult,
+            'team1_home_won' => (int)$request->input('team1_home_won', 0),
+            'team2_home_won' => (int)$request->input('team2_home_won', 0),
+            'team1_away_won' => (int)$request->input('team1_away_won', 0),
+            'team2_away_won' => (int)$request->input('team2_away_won', 0),
+            'team1_neutral_won' => (int)$request->input('team1_neutral_won', 0),
+            'team2_neutral_won' => (int)$request->input('team2_neutral_won', 0),
+            'summary_narrative' => trim($request->input('summary_narrative', $h2h->summary_narrative ?? '')),
+            'source' => 'manual',
+        ]);
+
+        return redirect()->route('admin.head-to-head', ['format' => $h2h->format])
+            ->with('success', "Head-to-head record updated successfully!");
+    }
+
+    /**
+     * Delete Head to Head record
+     */
+    public function deleteHeadToHead($id)
+    {
+        $h2h = HeadToHead::findOrFail($id);
+        $format = $h2h->format;
+        $title = "{$h2h->team1_name} vs {$h2h->team2_name} ({$format})";
+        $h2h->delete();
+
+        return redirect()->route('admin.head-to-head', ['format' => $format])
+            ->with('success', "Record for {$title} deleted successfully.");
+    }
+
+    /**
+     * Sync Head to Head from Scraper on demand (supports AJAX with live timing)
+     */
+    public function syncHeadToHeadScraper(Request $request, HeadToHeadScraperService $scraper)
+    {
+        @set_time_limit(300);
+        $startTime = microtime(true);
+        $format = strtoupper(trim($request->input('format', 'TEST')));
+        $limit = (int) $request->input('limit', 10);
+
+        try {
+            $res = $scraper->syncFromMyKhel($format, $limit);
+            $count = $res['synced'] ?? 0;
+            $duration = round(microtime(true) - $startTime, 2);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'synced' => $count,
+                    'duration' => $duration . 's',
+                    'message' => "Successfully synced {$count} head-to-head records in {$duration}s!",
+                    'details' => $res['details'] ?? [],
+                ]);
+            }
+
+            return redirect()->route('admin.head-to-head', ['format' => $format === 'ALL' ? '' : $format])
+                ->with('success', "Synced {$count} head-to-head records successfully in {$duration}s for {$format}!");
+        } catch (\Throwable $e) {
+            $duration = round(microtime(true) - $startTime, 2);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Scraper error: " . $e->getMessage(),
+                    'duration' => $duration . 's',
+                ], 500);
+            }
+
+            return redirect()->route('admin.head-to-head', ['format' => $format === 'ALL' ? '' : $format])
+                ->with('error', "Scraper error: " . $e->getMessage());
+        }
     }
 }
 

@@ -16,6 +16,7 @@ use App\Models\Prediction;
 use App\Models\FantasyTip;
 use App\Models\TeamRanking;
 use App\Models\IccPlayerRanking;
+use App\Models\HeadToHead;
 use Illuminate\Support\Str;
 
 class PageController extends Controller
@@ -2379,6 +2380,95 @@ class PageController extends Controller
     }
 
     /**
+     * Resolve a team by ID, slug, hyphenated name, or strict country match.
+     */
+    protected function resolveTeamBySlugOrName(?string $val): ?Team
+    {
+        if (empty($val)) return null;
+        $val = trim($val);
+
+        if (is_numeric($val)) {
+            $t = Team::find($val);
+            if ($t) return $t;
+        }
+
+        $spaceName = str_replace('-', ' ', $val);
+
+        // 1. Direct slug or exact name match
+        $team = Team::where('slug', $val)
+            ->orWhere('slug', Str::slug($val))
+            ->orWhere('name', $val)
+            ->orWhere('name', $spaceName)
+            ->first();
+
+        if ($team) return $team;
+
+        // 2. Strict LIKE match (excluding club / women / youth / second XI qualifiers)
+        return Team::where(function($q) use ($spaceName, $val) {
+            $q->where('name', 'like', "%{$spaceName}%")
+              ->orWhere('name', 'like', "%{$val}%");
+        })
+        ->where('name', 'not like', '%Women%')
+        ->where('name', 'not like', '%Champions%')
+        ->where('name', 'not like', '%Emerging%')
+        ->where('name', 'not like', '%Club%')
+        ->where('name', 'not like', '%-A%')
+        ->where('name', 'not like', '% XI%')
+        ->first();
+    }
+
+    /**
+     * Head-to-Head Format Hub (Clean SEO URL: /head-to-head-records-in-test)
+     */
+    public function headToHeadFormatHub(Request $request, string $format)
+    {
+        $fmt = strtoupper(trim($format));
+        if (!in_array($fmt, ['TEST', 'ODI', 'T20', 'ALL', 'T10', 'IPL'])) {
+            $fmt = 'TEST';
+        }
+        $request->merge(['format' => $fmt, 'is_hub' => 1]);
+        return $this->headToHead($request);
+    }
+
+    /**
+     * Head-to-Head Matchup Slug (Clean SEO URL: /head-to-head/australia-vs-england-in-test)
+     */
+    public function headToHeadMatchupSlug(Request $request, string $matchup)
+    {
+        $matchup = trim(strtolower($matchup));
+
+        // Format pattern: extract trailing -in-{format} first
+        $fmt = 'TEST';
+        if (preg_match('/-in-([a-z0-9]+)$/i', $matchup, $fmtMatch)) {
+            $fmt = strtoupper($fmtMatch[1]);
+            $matchupWithoutFmt = substr($matchup, 0, -strlen($fmtMatch[0]));
+        } else {
+            $matchupWithoutFmt = $matchup;
+        }
+
+        if (str_contains($matchupWithoutFmt, '-vs-')) {
+            $parts = explode('-vs-', $matchupWithoutFmt, 2);
+            $t1Slug = trim($parts[0]);
+            $t2Slug = trim($parts[1]);
+
+            $t1 = $this->resolveTeamBySlugOrName($t1Slug);
+            $t2 = $this->resolveTeamBySlugOrName($t2Slug);
+
+            if ($t1 && $t2) {
+                $request->merge([
+                    'team1' => $t1->id,
+                    'team2' => $t2->id,
+                    'format' => $fmt,
+                    'is_hub' => 0,
+                ]);
+            }
+        }
+
+        return $this->headToHead($request);
+    }
+
+
+    /**
      * Head to Head (H2H) Team vs Team Comparison
      */
     public function headToHead(Request $request)
@@ -2395,28 +2485,52 @@ class PageController extends Controller
                 'matches' => collect(),
                 't1Players' => collect(),
                 't2Players' => collect(),
+                'topTeams' => collect(),
+                'isHub' => true,
             ]);
         }
 
-        // Selected teams resolution
-        $t1Param = $request->query('team1');
-        $t2Param = $request->query('team2');
-        $format = strtoupper(trim($request->query('format', 'ALL')));
+        // Top international teams for the visual grid matching reference/screenshot
+        $topTeamIds = [87, 39, 89, 90, 91, 92, 86, 40, 144, 88, 300, 121]; // Australia, England, India, New Zealand, South Africa, Sri Lanka, West Indies, Pakistan, Zimbabwe, Bangladesh, Ireland, Afghanistan
+        $topTeams = Team::whereIn('id', $topTeamIds)
+            ->get()
+            ->sortBy(function($t) use ($topTeamIds) {
+                return array_search($t->id, $topTeamIds);
+            })
+            ->values();
+
+        if ($topTeams->isEmpty()) {
+            $topTeams = $allTeams->take(12);
+        }
+
+        // Selected teams resolution & Hub check
+        $isHub = $request->has('is_hub')
+            ? (bool)$request->input('is_hub')
+            : (!$request->has('team1') && !$request->has('team2'));
+
+        $format = strtoupper(trim($request->input('format', 'TEST')));
+        if (!in_array($format, ['TEST', 'ODI', 'T20', 'ALL', 'T10', 'IPL'])) {
+            $format = 'TEST';
+        }
+
+        $t1Param = $request->input('team1');
+        $t2Param = $request->input('team2');
 
         $team1 = null;
         if ($t1Param) {
-            $team1 = is_numeric($t1Param) ? Team::find($t1Param) : Team::where('slug', $t1Param)->orWhere('name', 'like', "%{$t1Param}%")->first();
+            $team1 = $this->resolveTeamBySlugOrName((string)$t1Param);
         }
         if (!$team1) {
-            $team1 = Team::where('name', 'like', '%India%')->first() ?? $allTeams->first();
+            $team1 = Team::where('name', 'India')->first() ?? $topTeams->first() ?? $allTeams->first();
         }
 
         $team2 = null;
         if ($t2Param) {
-            $team2 = is_numeric($t2Param) ? Team::find($t2Param) : Team::where('slug', $t2Param)->orWhere('name', 'like', "%{$t2Param}%")->first();
+            $team2 = $this->resolveTeamBySlugOrName((string)$t2Param);
         }
         if (!$team2 || $team2->id == $team1->id) {
-            $team2 = Team::where('name', 'like', '%Australia%')->orWhere('name', 'like', '%Pakistan%')->where('id', '!=', $team1->id)->first()
+            $team2 = Team::where('name', 'Australia')->where('id', '!=', $team1->id)->first()
+                ?? Team::where('name', 'England')->where('id', '!=', $team1->id)->first()
                 ?? ($allTeams->where('id', '!=', $team1->id)->first() ?? $team1);
         }
 
@@ -2670,6 +2784,72 @@ class PageController extends Controller
             }
         }
 
+        // Official Head-to-Head Statistics (from MyKhel scraper & Admin manual records)
+        $h2hRecord = null;
+        $drawn = 0;
+        $narrative = null;
+
+        if ($format === 'ALL') {
+            $h2hList = HeadToHead::where(function ($q) use ($team1, $team2) {
+                $q->where(function ($sub) use ($team1, $team2) {
+                    $sub->where('team1_id', $team1->id)->where('team2_id', $team2->id);
+                })->orWhere(function ($sub) use ($team1, $team2) {
+                    $sub->where('team1_id', $team2->id)->where('team2_id', $team1->id);
+                });
+            })->get();
+
+            if ($h2hList->isNotEmpty()) {
+                $totalMatches = 0;
+                $t1Wins = 0;
+                $t2Wins = 0;
+                $drawn = 0;
+                $ties = 0;
+                $noResults = 0;
+                $t1HomeWins = 0;
+                $t2HomeWins = 0;
+                $t1AwayWins = 0;
+                $t2AwayWins = 0;
+                $t1NeutralWins = 0;
+                $t2NeutralWins = 0;
+
+                foreach ($h2hList as $rec) {
+                    $ps = $rec->getPerspectiveStats($team1);
+                    $totalMatches += $ps['totalMatches'];
+                    $t1Wins += $ps['t1Wins'];
+                    $t2Wins += $ps['t2Wins'];
+                    $drawn += $ps['drawn'];
+                    $ties += $ps['ties'];
+                    $noResults += $ps['noResults'];
+                    $t1HomeWins += $ps['t1HomeWins'];
+                    $t2HomeWins += $ps['t2HomeWins'];
+                    $t1AwayWins += $ps['t1AwayWins'];
+                    $t2AwayWins += $ps['t2AwayWins'];
+                    $t1NeutralWins += $ps['t1NeutralWins'];
+                    $t2NeutralWins += $ps['t2NeutralWins'];
+                }
+
+                $narrative = "{$team1->name} and {$team2->name} have faced each other in {$totalMatches} matches across all formats. Out of these {$totalMatches} games, {$team1->name} have won {$t1Wins} whereas {$team2->name} have come out victorious on {$t2Wins} occasions" . ($drawn > 0 ? ", with {$drawn} matches drawn" : "") . ($ties > 0 ? ", and {$ties} tied" : "") . ".";
+            }
+        } else {
+            $h2hRecord = HeadToHead::findMatchup($team1, $team2, $format);
+            if ($h2hRecord) {
+                $ps = $h2hRecord->getPerspectiveStats($team1);
+                $totalMatches = $ps['totalMatches'];
+                $t1Wins = $ps['t1Wins'];
+                $t2Wins = $ps['t2Wins'];
+                $drawn = $ps['drawn'];
+                $ties = $ps['ties'];
+                $noResults = $ps['noResults'];
+                $t1HomeWins = $ps['t1HomeWins'];
+                $t2HomeWins = $ps['t2HomeWins'];
+                $t1AwayWins = $ps['t1AwayWins'];
+                $t2AwayWins = $ps['t2AwayWins'];
+                $t1NeutralWins = $ps['t1NeutralWins'];
+                $t2NeutralWins = $ps['t2NeutralWins'];
+                $narrative = $ps['narrative'];
+            }
+        }
+
         $t1Highest = !empty($t1Scores) ? max($t1Scores) : 0;
         $t2Highest = !empty($t2Scores) ? max($t2Scores) : 0;
         $t1Lowest = !empty($t1Scores) ? min($t1Scores) : 0;
@@ -2691,8 +2871,10 @@ class PageController extends Controller
             't2Wins' => $t2Wins,
             't1Lost' => $t2Wins,
             't2Lost' => $t1Wins,
+            'drawn' => $drawn,
             'ties' => $ties,
             'noResults' => $noResults,
+            'narrative' => $narrative,
             't1HomeWins' => $t1HomeWins,
             't2HomeWins' => $t2HomeWins,
             't1AwayWins' => $t1AwayWins,
@@ -2717,7 +2899,7 @@ class PageController extends Controller
         ];
 
         return view('pages.head_to_head', compact(
-            'allTeams', 'team1', 'team2', 'format', 'formatLabels', 'formatLabel', 'stats', 'matches', 't1Players', 't2Players'
+            'allTeams', 'topTeams', 'isHub', 'h2hRecord', 'team1', 'team2', 'format', 'formatLabels', 'formatLabel', 'stats', 'matches', 't1Players', 't2Players'
         ));
     }
 }

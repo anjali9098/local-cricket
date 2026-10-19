@@ -39,7 +39,7 @@ class VenueCatalog
                 'city' => 'Worcester',
                 'country' => 'England',
                 'capacity' => '5,500',
-                'image_url' => 'https://images.unsplash.com/photo-1531415074868-036b1c5c53ec?w=800&auto=format&fit=crop&q=80',
+                'image_url' => 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80',
                 'description' => 'Iconic picturesque cricket ground along the River Severn with Worcester Cathedral backdrop.',
             ],
             'riverside ground, chester-le-street' => [
@@ -87,7 +87,7 @@ class VenueCatalog
                 'city' => 'Cardiff',
                 'country' => 'Wales',
                 'capacity' => '15,643',
-                'image_url' => 'https://images.unsplash.com/photo-1531415074868-036b1c5c53ec?w=800&auto=format&fit=crop&q=80',
+                'image_url' => 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80',
                 'description' => 'Home of Glamorgan Cricket with state of the art facilities and high-scoring white-ball wickets.',
             ],
             'headingley, leeds' => [
@@ -151,7 +151,7 @@ class VenueCatalog
                 'city' => 'Sydney',
                 'country' => 'Australia',
                 'capacity' => '48,000',
-                'image_url' => 'https://images.unsplash.com/photo-1531415074868-036b1c5c53ec?w=800&auto=format&fit=crop&q=80',
+                'image_url' => 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80',
                 'description' => 'Classic traditional ground famous for spin bowling and New Year Tests.',
             ],
             'dubai international cricket stadium' => [
@@ -201,7 +201,7 @@ class VenueCatalog
             'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80',
             'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80',
             'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1531415074868-036b1c5c53ec?w=800&auto=format&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80',
             'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=800&auto=format&fit=crop&q=80',
         ];
         $img = $fallbackImages[abs(crc32($rawName)) % count($fallbackImages)];

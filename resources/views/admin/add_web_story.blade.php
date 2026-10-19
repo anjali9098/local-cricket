@@ -179,7 +179,12 @@
                         <!-- Author -->
                         <div>
                             <label style="display: block; margin-bottom: 4px; font-weight: 700; font-size: 0.8rem; color: #334155;">Author</label>
-                            <input type="text" name="author" value="{{ old('author', $editItem->author ?? 'Admin') }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none;">
+                            @php
+                                $loggedInAuthor = auth()->user()?->name ?: 'Admin';
+                                $currentAuthor = old('author', $editItem->author ?? $loggedInAuthor);
+                            @endphp
+                            <input type="text" name="author" value="{{ $currentAuthor }}" placeholder="Author name" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.82rem; outline: none; background: #ffffff;">
+                            <span style="font-size: 0.72rem; color: #64748b; margin-top: 3px; display: block;">Default: {{ $loggedInAuthor }} (You can edit or type another name)</span>
                         </div>
                     </div>
                 </div>

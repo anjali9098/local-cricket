@@ -530,6 +530,30 @@
                     't20i' => 'T20I',
                 ];
                 $iccData = $player->normalized_icc_rankings;
+
+                $hasRanksIn = function($cat) use ($iccData) {
+                    foreach (['test', 'odi', 't20i'] as $f) {
+                        if (($iccData[$cat][$f]['current'] ?? '--') !== '--') return true;
+                    }
+                    return false;
+                };
+
+                $activeTabKey = 'batting';
+                $roleLower = strtolower($player->role ?? '');
+                if (str_contains($roleLower, 'all-round') || str_contains($roleLower, 'allround')) {
+                    $activeTabKey = 'all_rounder';
+                } elseif (str_contains($roleLower, 'bowl')) {
+                    $activeTabKey = 'bowling';
+                }
+
+                if (!$hasRanksIn($activeTabKey)) {
+                    foreach (['batting', 'bowling', 'all_rounder'] as $candidate) {
+                        if ($hasRanksIn($candidate)) {
+                            $activeTabKey = $candidate;
+                            break;
+                        }
+                    }
+                }
             @endphp
             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
                 <!-- Card Header with subtle dashed divider line -->
@@ -543,20 +567,30 @@
                 <!-- Segmented Tab Pills: Batting | Bowling | All-Rounder (Loop Engineering) -->
                 <div style="display: flex; background: var(--bg-card-secondary, #f1f5f9); padding: 4px; border-radius: 12px; margin-bottom: 18px; gap: 4px; max-width: 380px;">
                     @foreach($rankingTabs as $catKey => $catLabel)
+                        @php
+                            $isTabActive = ($catKey === $activeTabKey);
+                            $hasRank = $hasRanksIn($catKey);
+                        @endphp
                         <button type="button"
                             onclick="switchIccRankingTab('{{ $catKey }}')"
                             id="icc-tab-btn-{{ $catKey }}"
                             class="icc-ranking-tab-btn"
                             data-tab="{{ $catKey }}"
-                            style="flex: 1; padding: 7px 10px; border-radius: 9px; font-size: 0.85rem; font-weight: {{ $loop->first ? '800' : '600' }}; border: none; cursor: pointer; transition: all 0.2s ease; {{ $loop->first ? 'background: var(--bg-card, #ffffff); color: var(--text-main); box-shadow: 0 2px 6px rgba(0,0,0,0.08);' : 'background: transparent; color: var(--text-dim);' }}">
+                            style="flex: 1; padding: 7px 10px; border-radius: 9px; font-size: 0.85rem; font-weight: {{ $isTabActive ? '800' : '600' }}; border: none; cursor: pointer; transition: all 0.2s ease; {{ $isTabActive ? 'background: var(--bg-card, #ffffff); color: var(--text-main); box-shadow: 0 2px 6px rgba(0,0,0,0.08);' : 'background: transparent; color: var(--text-dim);' }}">
                             {{ $catLabel }}
+                            @if($hasRank)
+                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #38bdf8; margin-left: 4px; vertical-align: middle;" title="Rankings recorded"></span>
+                            @endif
                         </button>
                     @endforeach
                 </div>
 
                 <!-- Tab Content Panes (Loop Engineering) -->
                 @foreach($rankingTabs as $catKey => $catLabel)
-                    <div id="icc-pane-{{ $catKey }}" class="icc-ranking-pane" style="display: {{ $loop->first ? 'block' : 'none' }};">
+                    @php
+                        $isTabActive = ($catKey === $activeTabKey);
+                    @endphp
+                    <div id="icc-pane-{{ $catKey }}" class="icc-ranking-pane" style="display: {{ $isTabActive ? 'block' : 'none' }};">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
                             <thead>
                                 <tr style="border-bottom: 1px solid var(--border-color);">
@@ -584,15 +618,20 @@
                                              {{ $fmtLabel }}
                                         </td>
                                         <td style="padding: 13px 10px; text-align: center; {{ $isRankedCurr ? 'font-weight: 900; color: var(--text-main); font-size: 0.98rem;' : 'font-weight: 600; color: var(--text-dim);' }}">
-                                            {{ $curr }}
+                                            {{ ($isRankedCurr && is_numeric($curr) && !str_starts_with($curr, '#')) ? '#' . $curr : $curr }}
                                         </td>
                                         <td style="padding: 13px 10px; text-align: center; {{ $isRankedBest ? 'font-weight: 700; color: var(--text-main); font-size: 0.95rem;' : 'font-weight: 600; color: var(--text-dim);' }}">
-                                            {{ $best }}
+                                            {{ ($isRankedBest && is_numeric($best) && !str_starts_with($best, '#')) ? '#' . $best : $best }}
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
+                        @if(!$hasRanksIn($catKey))
+                            <div style="text-align: center; font-size: 0.74rem; color: var(--text-dim); padding: 10px 12px 2px; opacity: 0.75;">
+                                Outside ICC Top 50 international {{ strtolower($catLabel) }} standings
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>

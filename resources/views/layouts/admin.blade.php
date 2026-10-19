@@ -1266,6 +1266,9 @@
                 <a href="{{ route('admin.ranking') }}" class="admin-subnav-item {{ request()->routeIs('admin.ranking') ? 'active' : '' }}">
                     <span class="subnav-icon">📊</span> Team Rankings
                 </a>
+                <a href="{{ route('admin.head-to-head') }}" class="admin-subnav-item {{ request()->routeIs('admin.head-to-head*') ? 'active' : '' }}">
+                    <span class="subnav-icon">⚔️</span> Teams Head to Head
+                </a>
                 <a href="{{ route('admin.story') }}" class="admin-subnav-item {{ request()->routeIs('admin.story') ? 'active' : '' }}">
                     <span class="subnav-icon">📖</span> Web Stories
                 </a>

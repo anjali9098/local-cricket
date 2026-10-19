@@ -25,10 +25,10 @@
     $metaKeywords = $prediction->keywords ?: $defaultKeywords;
 
     // Image resolution: priority is poster_image, then image_url, then local fallback
-    $fallbackImage = asset('images/articles/1788433528_India.jpg');
+    $fallbackImage = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=900&auto=format&fit=crop&q=80';
     $posterImg = $prediction->poster_image ?: ($prediction->image_url ?: null);
     if (empty($posterImg)) {
-        $posterImg = asset('uploads/predictions/repaired_1789022057_UGSu6Bh2.jpg');
+        $posterImg = $fallbackImage;
     }
     $ogImage = $posterImg ?: $fallbackImage;
     $authorName = !empty($prediction->author) ? $prediction->author : 'Anjali Malviya';
@@ -204,7 +204,7 @@
                             <a href="{{ $rp->url }}" class="sidebar-stream-card" title="{{ $rp->title }}">
                                 @if(!empty($pThumb))
                                     <div class="stream-card-thumb">
-                                        <img src="{{ $pThumb }}" alt="{{ $rp->title }}" loading="lazy" onerror="this.parentElement.style.display='none';">
+                                        <img src="{{ $pThumb }}" alt="{{ $rp->title }}" loading="lazy" onerror="this.onerror=null; this.src='{{ $fallbackImage }}';">
                                     </div>
                                 @endif
                                 <div class="stream-card-content">

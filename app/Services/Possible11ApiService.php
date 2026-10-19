@@ -1093,9 +1093,10 @@ class Possible11ApiService
             $player->short_name = Str::limit($name, 15);
         }
 
-        // Profile Image (update if currently default or empty)
-        if (!empty($pData['icon']) && (empty($player->profile_image) || str_contains($player->profile_image, 'default-player-image'))) {
-            $player->profile_image = $pData['icon'];
+        // Profile Image (update if currently default, empty, or player has no custom photo)
+        $pIcon = trim((string)($pData['icon'] ?? ''));
+        if (!empty($pIcon) && !$player->has_custom_image) {
+            $player->profile_image = $pIcon;
         }
 
         // Batting Style

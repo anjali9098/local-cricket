@@ -337,7 +337,7 @@
                     <a href="{{ $venue->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;"
                        onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color)';">
                         @if($venue->image_url)
-                            <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" style="width: 100%; height: 120px; object-fit: cover;">
+                            <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" style="width: 100%; height: 120px; object-fit: cover;" onerror="this.style.display='none';">
                         @endif
                         <div style="padding: 14px;">
                             <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #38bdf8; display: block; margin-bottom: 4px;">

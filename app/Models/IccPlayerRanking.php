@@ -70,6 +70,7 @@ class IccPlayerRanking extends Model
             'west indies' => 'https://flagcdn.com/w80/jm.png',
             'afg' => 'https://flagcdn.com/w80/af.png',
             'afghanistan' => 'https://flagcdn.com/w80/af.png',
+            'afganistan' => 'https://flagcdn.com/w80/af.png',
             'zim' => 'https://flagcdn.com/w80/zw.png',
             'zimbabwe' => 'https://flagcdn.com/w80/zw.png',
             'ire' => 'https://flagcdn.com/w80/ie.png',

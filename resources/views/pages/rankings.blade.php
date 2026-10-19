@@ -75,18 +75,6 @@
 
         </div>
 
-        <!-- FILTER BAR (Image 2 style: Date + Apply) -->
-        <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border-color, #334155); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <select style="background: var(--bg-main, #0f172a); border: 1px solid var(--border-color, #334155); color: var(--text-main, #ffffff); font-size: 0.85rem; font-weight: 700; padding: 7px 14px; border-radius: 6px; outline: none; cursor: pointer; min-width: 180px;">
-                <option selected>{{ strtoupper(date('d F Y')) }} (LATEST)</option>
-                <option>{{ strtoupper(date('d F Y', strtotime('-7 days'))) }}</option>
-                <option>{{ strtoupper(date('d F Y', strtotime('-14 days'))) }}</option>
-                <option>{{ strtoupper(date('d F Y', strtotime('-30 days'))) }}</option>
-            </select>
-            <button type="button" style="background: #0284c7; color: white; border: none; padding: 7px 20px; border-radius: 9999px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.05em; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: background 0.2s;">
-                APPLY &rsaquo;
-            </button>
-        </div>
 
         <!-- FULL RANKINGS TABLE (Image 2 exact style) -->
         <div style="background: var(--bg-card, #1e293b); border: 1px solid var(--border-color, #334155); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">

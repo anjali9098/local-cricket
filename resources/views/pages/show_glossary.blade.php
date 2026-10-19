@@ -79,7 +79,7 @@
 <main class="container" style="padding: 40px 24px 80px; max-width: 860px; margin: 0 auto; font-family: var(--font-body, 'Inter', sans-serif);">
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
-        <a href="{{ route('glossary.all') }}" style="display: inline-flex; align-items: center; gap: 8px; color: #22c55e; text-decoration: none; font-weight: 800; font-size: 0.9rem;">
+        <a href="{{ route('glossary.all') }}" style="display: inline-flex; align-items: center; gap: 8px; color: #38bdf8; text-decoration: none; font-weight: 800; font-size: 0.9rem;">
             &larr; Back to Full Glossary
         </a>
         <a href="{{ route('home') }}" style="color: var(--text-dim); text-decoration: none; font-weight: 700; font-size: 0.85rem;">
@@ -92,17 +92,17 @@
         <!-- Top Badge & Label -->
         <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
             @if(!empty($term->poster_image))
-                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 72px; height: 72px; border-radius: 12px; object-fit: cover; border: 2px solid #22c55e; box-shadow: 0 4px 12px rgba(34,197,94,0.25);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div style="display: none; width: 64px; height: 64px; border-radius: 12px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 950; font-size: 2rem; flex-shrink: 0;">
+                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 72px; height: 72px; border-radius: 12px; object-fit: cover; border: 2px solid #38bdf8; box-shadow: 0 4px 12px rgba(56,189,248,0.25);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="display: none; width: 64px; height: 64px; border-radius: 12px; background: rgba(37, 99, 235, 0.15); color: #38bdf8; align-items: center; justify-content: center; font-weight: 950; font-size: 2rem; flex-shrink: 0;">
                     {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
                 </div>
             @else
-                <div style="width: 64px; height: 64px; border-radius: 12px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 950; font-size: 2rem; flex-shrink: 0;">
+                <div style="width: 64px; height: 64px; border-radius: 12px; background: rgba(37, 99, 235, 0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-weight: 950; font-size: 2rem; flex-shrink: 0;">
                     {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
                 </div>
             @endif
             <div>
-                <span style="font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #22c55e;">CRICKET GLOSSARY TERM</span>
+                <span style="font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #38bdf8;">CRICKET GLOSSARY TERM</span>
                 <h1 style="font-size: 2.2rem; font-weight: 900; color: var(--text-main); margin: 4px 0 0 0; letter-spacing: -0.02em;">
                     {{ $term->term }}
                 </h1>
@@ -123,9 +123,9 @@
             <h3 style="font-size: 0.92rem; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">
                 Definition &amp; Explanation
             </h3>
-            <p style="font-size: 1.15rem; color: var(--text-main); line-height: 1.7; margin: 0;">
+            <div style="font-size: 1.12rem; color: var(--text-main); line-height: 1.8; margin: 0; white-space: pre-line;">
                 {{ $term->definition }}
-            </p>
+            </div>
         </div>
 
         @if($term->keywords)

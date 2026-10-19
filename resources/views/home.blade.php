@@ -482,75 +482,101 @@
     </section>
 
 
-    @if($predictions->isNotEmpty() || $fantasyTips->isNotEmpty())
-    <section class="split-content-section">
+    <!-- ========================================================
+         SECTION 5.1: MATCH PREDICTIONS (Preview Form Style)
+         ======================================================== -->
+    @if($predictions->isNotEmpty())
+    <section class="predictions-section" style="padding: 32px 0 20px;">
         <div class="container">
-            <div class="two-col-grid">
-                <!-- Column 1: Match Predictions -->
-                <div>
-                    <div class="section-header">
-                        <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
-                            <span class="section-title-icon">🎯</span>
-                            <span>MATCH PREDICTIONS</span>
-                        </h2>
-                        <a href="{{ route('predictions') }}" class="view-all-link">ALL PREDICTIONS &rarr;</a>
-                    </div>
-                    @forelse($predictions->take(6) as $p)
-                        <a href="{{ $p->url }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #f97316; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(249, 115, 22, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                            <div>
-                                <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">{{ $p->tag && $p->tag !== 'PREDICTION' ? $p->tag : 'MATCH PREDICTION' }}</span>
-                                <h3 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $p->title }}</h3>
-                                <p class="article-desc" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
-                                    {{ Str::limit($p->summary, 180) }}
-                                    <span style="color: #38bdf8; font-weight: 700; font-size: 0.8rem; margin-left: 4px;">Read More &rarr;</span>
-                                </p>
-                            </div>
-                            <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 10px; font-size: 0.72rem; color: var(--text-dim); display: flex; justify-content: space-between;">
-                                <span>CricketKaScore Desk</span>
-                                <span>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('M d') : 'Today' }}</span>
-                            </div>
-                        </a>
-                    @empty
-                        <p style="color:var(--text-dim);font-size:0.85rem;">No match predictions published yet.</p>
-                    @endforelse
-                </div>
+            <div class="section-header">
+                <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
+                    <span class="section-title-icon">🎯</span>
+                    <span>MATCH PREDICTIONS</span>
+                </h2>
+                <a href="{{ route('predictions') }}" class="view-all-link">ALL PREDICTIONS &rarr;</a>
+            </div>
 
-                <!-- Column 2: Fantasy Tips -->
-                <div>
-                    <div class="section-header">
-                        <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
-                            <span class="section-title-icon">⭐</span>
-                            <span>FANTASY CRICKET TIPS</span>
-                        </h2>
-                        <a href="{{ route('fantasy') }}" class="view-all-link">ALL FANTASY TIPS &rarr;</a>
-                    </div>
-                    @forelse($fantasyTips->take(6) as $f)
-                        <a href="{{ $f->url }}" class="fantasy-card" style="text-decoration: none; color: inherit; padding: 14px 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #22c55e; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(34, 197, 94, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                            <div>
-                                <span class="card-tag fantasy" style="font-size: 0.68rem; padding: 2px 7px;">{{ $f->tag ?? 'FANTASY' }}</span>
-                                <h3 class="article-title" style="margin: 6px 0 8px 0; font-size: 0.95rem; line-height: 1.35; font-weight: 800; color: var(--text-main);">{{ $f->title }}</h3>
-                                <p class="article-desc" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
-                                    {{ Str::limit($f->summary, 180) }}
-                                    <span style="color: #22c55e; font-weight: 700; font-size: 0.8rem; margin-left: 4px;">Read More &rarr;</span>
-                                </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                @foreach($predictions->take(6) as $p)
+                    @php
+                        $predImg = $p->poster_image ?: $p->image_url;
+                        if (empty($predImg)) {
+                            $predImg = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';
+                        }
+                    @endphp
+                    <a href="{{ $p->url }}" class="prediction-card" style="text-decoration: none; color: inherit; padding: 14px 16px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #f97316; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(249, 115, 22, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <div>
+                            <div style="width: 100%; height: 140px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-card-secondary);">
+                                <img src="{{ $predImg }}" alt="{{ $p->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)';" onmouseout="this.style.transform='scale(1)';" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';">
                             </div>
-                            <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 10px; font-size: 0.72rem; color: var(--text-dim); display: flex; justify-content: space-between;">
-                                <span>Fantasy Expert</span>
-                                <span>{{ $f->created_at ? \Carbon\Carbon::parse($f->created_at)->format('M d') : 'Today' }}</span>
-                            </div>
-                        </a>
-                    @empty
-                        <p style="color:var(--text-dim);font-size:0.85rem;">No fantasy tips published yet.</p>
-                    @endforelse
-                </div>
+                            <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">{{ $p->tag && $p->tag !== 'PREDICTION' ? $p->tag : 'MATCH PREDICTION' }}</span>
+                            <h3 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35; color: var(--text-main);">{{ $p->title }}</h3>
+                            <p class="article-desc" style="font-size: 0.83rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
+                                {{ Str::limit($p->summary, 150) }}
+                                <span style="color: #38bdf8; font-weight: 700; font-size: 0.82rem; margin-left: 5px;">Read More &rarr;</span>
+                            </p>
+                        </div>
+                        <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 12px; font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between;">
+                            <span>{{ $p->author ?: 'CricketKaScore Desk' }}</span>
+                            <span>{{ $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('M d') : 'Today' }}</span>
+                        </div>
+                    </a>
+                @endforeach
             </div>
         </div>
     </section>
     @endif
 
-    <!-- MATCH PREVIEWS SECTION (Directly below Prediction/Fantasy and above Articles) -->
+    <!-- ========================================================
+         SECTION 5.2: FANTASY CRICKET TIPS (Preview Form Style)
+         ======================================================== -->
+    @if($fantasyTips->isNotEmpty())
+    <section class="fantasy-section" style="padding: 32px 0 20px;">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title" style="margin: 0; display: inline-flex; align-items: center; gap: 8px;">
+                    <span class="section-title-icon">⭐</span>
+                    <span>FANTASY CRICKET TIPS</span>
+                </h2>
+                <a href="{{ route('fantasy') }}" class="view-all-link">ALL FANTASY TIPS &rarr;</a>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                @foreach($fantasyTips->take(6) as $f)
+                    @php
+                        $fantImg = $f->poster_image ?: $f->image_url;
+                        if (empty($fantImg)) {
+                            $fantImg = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';
+                        }
+                    @endphp
+                    <a href="{{ $f->url }}" class="fantasy-card" style="text-decoration: none; color: inherit; padding: 14px 16px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid #2563eb; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(37, 99, 235, 0.18)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <div>
+                            <div style="width: 100%; height: 140px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-card-secondary);">
+                                <img src="{{ $fantImg }}" alt="{{ $f->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)';" onmouseout="this.style.transform='scale(1)';" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';">
+                            </div>
+                            <span class="card-tag fantasy" style="font-size: 0.68rem; padding: 2px 7px;">{{ $f->tag ?? 'FANTASY TIP' }}</span>
+                            <h3 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35; color: var(--text-main);">{{ $f->title }}</h3>
+                            <p class="article-desc" style="font-size: 0.83rem; line-height: 1.5; color: var(--text-dim); margin-bottom: 0;">
+                                {{ Str::limit($f->summary, 150) }}
+                                <span style="color: #38bdf8; font-weight: 700; font-size: 0.82rem; margin-left: 5px;">Read More &rarr;</span>
+                            </p>
+                        </div>
+                        <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 12px; font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between;">
+                            <span>{{ $f->author ?: 'Fantasy Expert' }}</span>
+                            <span>{{ $f->created_at ? \Carbon\Carbon::parse($f->created_at)->format('M d') : 'Today' }}</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
+    <!-- ========================================================
+         SECTION 5.3: CRICKET MATCH PREVIEWS
+         ======================================================== -->
     @if(isset($matchPreviews) && $matchPreviews->isNotEmpty())
     <section class="match-previews-section" style="padding: 32px 0 20px;">
         <div class="container">
@@ -574,7 +600,7 @@
                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(56, 189, 248, 0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                         <div>
                             <div style="width: 100%; height: 140px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; background: var(--bg-card-secondary);">
-                                <img src="{{ $previewImg }}" alt="{{ $preview->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)';" onmouseout="this.style.transform='scale(1)';" loading="lazy">
+                                <img src="{{ $previewImg }}" alt="{{ $preview->title }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.04)';" onmouseout="this.style.transform='scale(1)';" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop&q=80';">
                             </div>
                             <span class="card-tag prediction" style="font-size: 0.68rem; padding: 2px 7px;">MATCH PREVIEW</span>
                             <h3 class="article-title" style="margin: 8px 0; font-size: 0.98rem; font-weight: 800; line-height: 1.35; color: var(--text-main);">{{ $preview->title }}</h3>
@@ -584,7 +610,7 @@
                             </p>
                         </div>
                         <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 12px; font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between;">
-                            <span>CricketKaScore Desk</span>
+                            <span>{{ $preview->author ?: 'CricketKaScore Desk' }}</span>
                             <span>{{ $preview->created_at ? \Carbon\Carbon::parse($preview->created_at)->format('M d') : 'Today' }}</span>
                         </div>
                     </a>
@@ -594,6 +620,39 @@
     </section>
     @endif
 
+    <!-- ========================================================
+         SECTION 5.4: LATEST CRICKET NEWS (News upar)
+         ======================================================== -->
+    @if($newsList->isNotEmpty())
+    <section id="news" class="news-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">LATEST CRICKET NEWS</h2>
+                </div>
+                <a href="{{ route('news') }}" class="view-all-link">ALL NEWS &rarr;</a>
+            </div>
+
+            <div class="news-grid-2col">
+                @foreach($newsList->take(6) as $n)
+                    <a href="{{ $n->url }}" class="news-card-horizontal" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="flex: 1;">
+                            <span class="card-tag prediction">{{ $n->category }}</span>
+                            <h3 class="article-title" style="margin-top:6px; color: var(--text-main); font-size: 0.95rem; font-weight: 700; line-height: 1.35;">{{ $n->title }}</h3>
+                        </div>
+                        @if(!empty($n->image_url))
+                            <img src="{{ $n->image_url }}" alt="News" class="news-thumb" loading="lazy" style="width: 72px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0;" onerror="this.style.display='none';">
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
+    <!-- ========================================================
+         SECTION 5.5: LATEST CRICKET ARTICLES (Articles niche)
+         ======================================================== -->
     @if($articles->isNotEmpty())
     <section class="articles-section">
         <div class="container">
@@ -622,33 +681,6 @@
                                 <span>⏱️ {{ $art->read_time ?? '3 MIN READ' }}</span>
                             </div>
                         </div>
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
-
-    @if($newsList->isNotEmpty())
-    <section id="news" class="news-section">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-title">
-                    <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">LATEST CRICKET NEWS</h2>
-                </div>
-                <a href="{{ route('news') }}" class="view-all-link">ALL NEWS &rarr;</a>
-            </div>
-
-            <div class="news-grid-2col">
-                @foreach($newsList->take(6) as $n)
-                    <a href="{{ $n->url }}" class="news-card-horizontal" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <div style="flex: 1;">
-                            <span class="card-tag prediction">{{ $n->category }}</span>
-                            <h3 class="article-title" style="margin-top:6px; color: var(--text-main); font-size: 0.95rem; font-weight: 700; line-height: 1.35;">{{ $n->title }}</h3>
-                        </div>
-                        @if(!empty($n->image_url))
-                            <img src="{{ $n->image_url }}" alt="News" class="news-thumb" loading="lazy" style="width: 72px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0;" onerror="this.style.display='none';">
-                        @endif
                     </a>
                 @endforeach
             </div>
@@ -703,7 +735,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px;">
                 @foreach($venues as $venue)
                     <a href="{{ $venue->url }}" style="text-decoration: none; display: block; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer;"
-                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 24px rgba(0,0,0,0.35)';this.style.borderColor='rgba(34, 197, 94, 0.4)';"
+                        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 24px rgba(0,0,0,0.35)';this.style.borderColor='rgba(56, 189, 248, 0.4)';"
                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='var(--border)';">
                         @if(!empty($venue->image_url))
                             <img src="{{ $venue->image_url }}" alt="{{ $venue->name }}" loading="lazy"
@@ -735,7 +767,7 @@
                     <div class="section-title" style="display: flex; align-items: center; gap: 8px;">
                         <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">CRICKET WEB STORIES</h2>
                     </div>
-                    <a href="{{ route('webstories.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">ALL STORIES &rarr;</a>
+                    <a href="{{ route('webstories.all') }}" style="color: #38bdf8; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">ALL STORIES &rarr;</a>
                 </div>
 
                 <div style="position: relative; display: flex; align-items: center;">
@@ -749,8 +781,8 @@
                         @foreach($webStories as $story)
                             <a href="{{ $story->url }}" style="text-decoration: none; flex: 0 0 170px; height: 250px; border-radius: 12px; position: relative; overflow: hidden; border: none; cursor: pointer; display: block; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)';" onmouseout="this.style.transform='translateY(0)';">
                                 <!-- Play Badge -->
-                                <div style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 22px; height: 22px; border-radius: 50%; background: rgba(15, 23, 42, 0.6); border: 1.5px solid #22c55e; display: flex; align-items: center; justify-content: center;">
-                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="#22c55e" stroke="#22c55e" stroke-width="2">
+                                <div style="position: absolute; top: 12px; right: 12px; z-index: 3; width: 22px; height: 22px; border-radius: 50%; background: rgba(15, 23, 42, 0.6); border: 1.5px solid #38bdf8; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="#38bdf8" stroke="#38bdf8" stroke-width="2">
                                         <polygon points="5 3 19 12 5 21 5 3"></polygon>
                                     </svg>
                                 </div>
@@ -979,7 +1011,7 @@
     <!-- ========================================================
          SECTION 6.1: OFFICIAL ICC RANKINGS (Theme Compact Style)
          ======================================================== -->
-    <section class="icc-rankings-section" style="padding: 28px 0 24px; background: var(--bg-main, #0b1118); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
+    <section class="icc-rankings-section" style="padding: 28px 0 24px; background: var(--bg-main, #0b1118); border-top: none;">
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
             
             <!-- SECTION 1: TEAM RANKINGS -->
@@ -1296,23 +1328,23 @@
             <div class="container">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; margin-bottom: 24px;">
                     <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
-                        <span style="color: #22c55e; font-size: 1.2rem;">📖</span>
+                        <span style="color: #38bdf8; font-size: 1.2rem;">📖</span>
                         <h2 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: 0.03em;">GLOSSARY OF CRICKET TERMS</h2>
                     </div>
-                    <a href="{{ route('glossary.all') }}" style="color: #22c55e; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">FULL GLOSSARY &rarr;</a>
+                    <a href="{{ route('glossary.all') }}" style="color: #38bdf8; font-size: 0.85rem; font-weight: 800; text-decoration: none; letter-spacing: 0.05em;">FULL GLOSSARY &rarr;</a>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px;">
                     @foreach($glossaryTerms as $term)
-                        <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(34, 197, 94, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
+                        <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(56, 189, 248, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
                             <!-- Poster Image or Letter Badge -->
                             @if(!empty($term->poster_image))
                                 <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div style="display: none; width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
+                                <div style="display: none; width: 36px; height: 36px; border-radius: 6px; background: rgba(37, 99, 235, 0.15); color: #38bdf8; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
                                     {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
                                 </div>
                             @else
-                                <div style="width: 36px; height: 36px; border-radius: 6px; background: rgba(34, 197, 94, 0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
+                                <div style="width: 36px; height: 36px; border-radius: 6px; background: rgba(37, 99, 235, 0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
                                     {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
                                 </div>
                             @endif
