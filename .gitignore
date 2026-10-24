@@ -26,4 +26,5 @@ Thumbs.db
 /public/uploads
 *.sql
 *.sql.zip
+*.zip
 
