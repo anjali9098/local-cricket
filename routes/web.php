@@ -34,6 +34,9 @@ Route::get('/sitemap/venues.xml', [SitemapController::class, 'venues']);
 Route::get('/sitemap/local-cricket.xml', [SitemapController::class, 'localCricket'])->name('sitemap.local-cricket');
 Route::get('/sitemap/local.xml', [SitemapController::class, 'localCricket'])->name('sitemap.local');
 Route::get('/sitemap/web-stories.xml', [SitemapController::class, 'webStories'])->name('sitemap.webstories');
+Route::get('/match-previews/sitemap.xml', [SitemapController::class, 'predictions']);
+Route::get('/match-preview/sitemap.xml', [SitemapController::class, 'predictions']);
+Route::get('/sitemap/match-previews.xml', [SitemapController::class, 'predictions']);
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/ping', function () {
@@ -285,24 +288,24 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/glossary', [AdminController::class, 'addGlossary'])->name('admin.glossary.post');
     Route::post('/admin/glossary/sync-wiki', [AdminController::class, 'syncWikipediaGlossary'])->name('admin.glossary.sync-wiki');
 
-    // Delete & Update routes for admin content management
-    Route::post('/admin/prediction/{id}/delete', [AdminController::class, 'deletePrediction'])->name('admin.prediction.delete');
-    Route::post('/admin/prediction/update/{id}', [AdminController::class, 'updatePrediction'])->name('admin.prediction.update');
+    // Delete & Update URL aliases for admin content management
+    Route::post('/admin/prediction/{id}/delete', [AdminController::class, 'deletePrediction']);
+    Route::post('/admin/prediction/{id}/update', [AdminController::class, 'updatePrediction']);
 
-    Route::post('/admin/fantasy/{id}/delete', [AdminController::class, 'deleteFantasyTip'])->name('admin.fantasy.delete');
-    Route::post('/admin/fantasy/update/{id}', [AdminController::class, 'updateFantasyTip'])->name('admin.fantasy.update');
+    Route::post('/admin/fantasy/{id}/delete', [AdminController::class, 'deleteFantasyTip']);
+    Route::post('/admin/fantasy/{id}/update', [AdminController::class, 'updateFantasyTip']);
 
-    Route::post('/admin/article/{id}/delete', [AdminController::class, 'deleteArticle'])->name('admin.article.delete');
-    Route::post('/admin/article/update/{id}', [AdminController::class, 'updateArticle'])->name('admin.article.update');
+    Route::post('/admin/article/{id}/delete', [AdminController::class, 'deleteArticle']);
+    Route::post('/admin/article/{id}/update', [AdminController::class, 'updateArticle']);
 
-    Route::post('/admin/news/{id}/delete', [AdminController::class, 'deleteNews'])->name('admin.news.delete');
-    Route::post('/admin/news/update/{id}', [AdminController::class, 'updateNews'])->name('admin.news.update');
+    Route::post('/admin/news/{id}/delete', [AdminController::class, 'deleteNews']);
+    Route::post('/admin/news/{id}/update', [AdminController::class, 'updateNews']);
 
-    Route::post('/admin/story/{id}/delete', [AdminController::class, 'deleteWebStory'])->name('admin.story.delete');
-    Route::post('/admin/story/update/{id}', [AdminController::class, 'updateWebStory'])->name('admin.story.update');
+    Route::post('/admin/story/{id}/delete', [AdminController::class, 'deleteWebStory']);
+    Route::post('/admin/story/{id}/update', [AdminController::class, 'updateWebStory']);
 
-    Route::post('/admin/glossary/{id}/delete', [AdminController::class, 'deleteGlossaryTerm'])->name('admin.glossary.delete');
-    Route::post('/admin/glossary/update/{id}', [AdminController::class, 'updateGlossaryTerm'])->name('admin.glossary.update');
+    Route::post('/admin/glossary/{id}/delete', [AdminController::class, 'deleteGlossaryTerm']);
+    Route::post('/admin/glossary/{id}/update', [AdminController::class, 'updateGlossaryTerm']);
 
     // Approval / Deletion requests routes
     Route::get('/admin/notifications', [AdminController::class, 'showNotifications'])->name('admin.notifications');
@@ -318,11 +321,6 @@ Route::middleware(['superadmin'])->group(function () {
     Route::post('/admin/player-ranking/delete/{id}', [AdminController::class, 'deletePlayerRanking'])->name('admin.player-ranking.delete');
     Route::post('/admin/ranking/sync-api', [AdminController::class, 'syncIccApi'])->name('admin.ranking.sync-api');
 
-    // Match Preview (alag section)
-    Route::get('/admin/match-preview', [AdminController::class, 'showMatchPreviewForm'])->name('admin.match-preview');
-    Route::post('/admin/match-preview', [AdminController::class, 'addMatchPreview'])->name('admin.match-preview.post');
-    Route::post('/admin/match-preview/update/{id}', [AdminController::class, 'updateMatchPreview'])->name('admin.match-preview.update');
-    Route::post('/admin/match-preview/delete/{id}', [AdminController::class, 'deleteMatchPreview'])->name('admin.match-preview.delete');
 
     // Teams Management
     Route::get('/admin/teams', [AdminController::class, 'showTeamsForm'])->name('admin.teams');

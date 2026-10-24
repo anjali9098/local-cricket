@@ -121,6 +121,7 @@ class AuthWorkflowTest extends TestCase
             'email' => 'redir_user_' . Str::random(5) . '@example.com',
             'password' => Hash::make('password123'),
             'role' => 'user',
+            'email_verified_at' => now(),
         ]);
 
         $response = $this->post('/login', [
@@ -141,6 +142,7 @@ class AuthWorkflowTest extends TestCase
             'email' => 'owner_' . Str::random(5) . '@example.com',
             'password' => Hash::make('password123'),
             'role' => 'user',
+            'email_verified_at' => now(),
         ]);
 
         $attacker = User::create([
@@ -148,6 +150,7 @@ class AuthWorkflowTest extends TestCase
             'email' => 'attacker_' . Str::random(5) . '@example.com',
             'password' => Hash::make('password123'),
             'role' => 'user',
+            'email_verified_at' => now(),
         ]);
 
         $tournament = \App\Models\Tournament::create([
@@ -171,12 +174,12 @@ class AuthWorkflowTest extends TestCase
         $response->assertStatus(403);
 
         // 3. Attacker CAN view owner's tournament preview -> 200 OK
-        $response = $this->actingAs($attacker)->get("/local/tournament/{$tournament->id}/preview");
+        $response = $this->actingAs($attacker)->get("/local/tournament/{$tournament->slug}/{$tournament->id}/preview");
         $response->assertStatus(200);
         $response->assertSee('Owner Tournament');
 
         // 4. Owner CAN manage own tournament -> 200 OK
-        $response = $this->actingAs($owner)->get("/local/tournament/{$tournament->id}/manage");
+        $response = $this->actingAs($owner)->get("/local/tournament/{$tournament->slug}/{$tournament->id}/manage");
         $response->assertStatus(200);
         $response->assertSee('Owner Tournament');
 

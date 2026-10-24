@@ -86,23 +86,34 @@
     </div>
 
     <!-- Match Search Bar (Mobile & Desktop) -->
-    <div class="rounded-2xl p-3 sm:p-4 mb-6 shadow-md" style="background: var(--bg-card); border: 1px solid var(--border-color);">
-        <form method="GET" action="{{ route('matches') }}" class="flex flex-col sm:flex-row items-center gap-2.5">
+    <div class="match-search-container">
+        <form method="GET" action="{{ route('matches') }}" class="match-search-form">
             @if(!empty($status))
                 <input type="hidden" name="status" value="{{ $status }}">
             @endif
             @if(!empty($category))
                 <input type="hidden" name="category" value="{{ $category }}">
             @endif
-            <div class="relative flex-1 w-full">
-                <input type="text" name="search" value="{{ $search ?? '' }}" class="w-full rounded-xl px-3.5 py-2 text-xs sm:text-sm outline-none" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-main);">
+            <div class="match-search-input-wrap">
+                <svg class="match-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" name="search" value="{{ $search ?? '' }}" 
+                       class="match-search-input" 
+                       placeholder="Search match by team, series, venue..." 
+                       autocomplete="off">
             </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <button type="submit" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm py-2 px-4 rounded-xl transition-all shadow-md">
-                    Search
+            <div class="match-search-btn-group">
+                <button type="submit" class="match-search-submit-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Search</span>
                 </button>
                 @if(!empty($search))
-                    <a href="{{ route('matches', array_filter(['status' => $status, 'category' => $category])) }}" class="font-bold text-xs py-2 px-3 rounded-xl transition-all" style="background: var(--bg-card-secondary); border: 1px solid var(--border-color); color: var(--text-dim);" title="Clear Search">
+                    <a href="{{ route('matches', array_filter(['status' => $status, 'category' => $category])) }}" class="match-search-clear-btn" title="Clear Search">
                         ✕ Clear
                     </a>
                 @endif

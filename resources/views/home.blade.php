@@ -7,7 +7,6 @@
 
 @section('content')
 <main class="home-container">
-    <h1 class="sr-only">CricketKaScore &mdash; Live Cricket Scores, Today Match Predictions &amp; Fantasy Tips</h1>
 
     <!-- ========================================================
          SECTION 1: LIVE & UPCOMING MATCHES CAROUSEL
@@ -131,7 +130,7 @@
                         @foreach($matchChunks as $slideIdx => $chunk)
                             <div class="matches-carousel-slide" data-slide="{{ $slideIdx }}">
                                 <div class="carousel-grid">
-                                    @foreach($chunk as $m)
+                                    @foreach($chunk as $cardIdx => $m)
                                         <a href="{{ $m->url }}" class="match-card" style="text-decoration:none;display:block;">
                                             <div class="match-card-header">
                                                 <span>{{ $m->tournament->name ?? ($m->level_type ?? ($m->match_type . ' - ' . ($m->venue->name ?? 'MATCH'))) }}</span>
@@ -149,7 +148,7 @@
                                                     <div class="team-info">
                                                         <div class="team-avatar" style="border-color: {{ $m->team1?->color_code ?? 'var(--primary)' }}; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                                                             @if(!empty($m->team1?->logo))
-                                                                <img src="{{ $m->team1->logo }}" alt="{{ $m->team1->name }}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentElement.innerText='{{ $m->team1?->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team1?->name ?? 'TM'), 0, 3)) }}';">
+                                                                <img src="{{ $m->team1->logo }}" alt="{{ $m->team1->name }}" width="24" height="24" decoding="async" {{ ($slideIdx === 0 && $cardIdx === 0) ? 'fetchpriority="high"' : 'loading="lazy"' }} style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentElement.innerText='{{ $m->team1?->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team1?->name ?? 'TM'), 0, 3)) }}';">
                                                             @else
                                                                 {{ $m->team1?->short_name ?? ($m->team1?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team1->name), 0, 3)) : '') }}
                                                             @endif
@@ -169,7 +168,7 @@
                                                     <div class="team-info">
                                                         <div class="team-avatar" style="border-color: {{ $m->team2?->color_code ?? '#38bdf8' }}; overflow: hidden; display: flex; align-items: center; justify-content: center;">
                                                             @if(!empty($m->team2?->logo))
-                                                                <img src="{{ $m->team2->logo }}" alt="{{ $m->team2->name }}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentElement.innerText='{{ $m->team2?->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team2?->name ?? 'TM'), 0, 3)) }}';">
+                                                                <img src="{{ $m->team2->logo }}" alt="{{ $m->team2->name }}" width="24" height="24" decoding="async" {{ ($slideIdx === 0 && $cardIdx === 0) ? 'fetchpriority="high"' : 'loading="lazy"' }} style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentElement.innerText='{{ $m->team2?->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team2?->name ?? 'TM'), 0, 3)) }}';">
                                                             @else
                                                                 {{ $m->team2?->short_name ?? ($m->team2?->name ? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $m->team2->name), 0, 3)) : '') }}
                                                             @endif
@@ -788,7 +787,7 @@
                                 </div>
                                 
                                 <!-- BG Image -->
-                                <img src="{{ $story->image_url ?: $story->first_slide_image }}" alt="{{ $story->title }}" onerror="if (!this.dataset.tried && '{{ $story->first_slide_image }}') { this.dataset.tried='1'; this.src='{{ $story->first_slide_image }}'; } else { this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80'; }" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                                <img src="{{ $story->image_url ?: ($story->first_slide_image ?: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80') }}" alt="{{ $story->title }}" width="170" height="250" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=400&h=600&q=80';" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
                                 
                                 <!-- Gradient Overlay -->
                                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(11,15,23,0.95) 100%); z-index: 2;"></div>
@@ -1011,7 +1010,7 @@
     <!-- ========================================================
          SECTION 6.1: OFFICIAL ICC RANKINGS (Theme Compact Style)
          ======================================================== -->
-    <section class="icc-rankings-section" style="padding: 28px 0 24px; background: var(--bg-main, #0b1118); border-top: none;">
+    <section class="icc-rankings-section">
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
             
             <!-- SECTION 1: TEAM RANKINGS -->
@@ -1025,7 +1024,7 @@
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
+                <div class="icc-rank-grid">
                     @php
                         $teamFormats = [
                             'TEST' => ['title' => 'TEST - TEAM RANKINGS'],
@@ -1035,48 +1034,29 @@
                     @endphp
 
                     @foreach($teamFormats as $fmtKey => $fmtMeta)
-                        @php
-                            $fmtTeams = $iccRankings['teams'][$fmtKey] ?? collect();
-                        @endphp
-                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                            <!-- Subtle theme top border -->
-                            <div style="height: 2px; background: #38bdf8;"></div>
-                            
-                            <!-- Card Header -->
-                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
-                                {{ $fmtMeta['title'] }}
-                            </div>
-
-                            <!-- List of Top 5 Teams -->
-                            <div style="flex: 1; display: flex; flex-direction: column;">
+                        @php $fmtTeams = $iccRankings['teams'][$fmtKey] ?? collect(); @endphp
+                        <div class="icc-rank-card">
+                            <div class="icc-rank-accent"></div>
+                            <div class="icc-rank-header">{{ $fmtMeta['title'] }}</div>
+                            <div class="icc-rank-list">
                                 @forelse($fmtTeams->take(5) as $team)
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.04))';" onmouseout="this.style.background='none';">
-                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $loop->iteration === 1 ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
-                                                    {{ sprintf('%02d', $team->rank_num) }}
-                                                </span>
-                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $loop->iteration === 1 ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
+                                    <div class="icc-rank-row {{ $loop->first ? 'rank-1' : '' }}">
+                                        <div class="icc-rank-left">
+                                            <div class="icc-rank-badge">
+                                                <span class="icc-rank-num">{{ sprintf('%02d', $team->rank_num) }}</span>
+                                                <span class="icc-rank-dot"></span>
                                             </div>
-                                            <img src="{{ $team->logo_url }}" alt="{{ $team->team_name }}" style="width: 20px; height: 14px; object-fit: contain; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ strtoupper($team->team_name) }}
-                                            </span>
+                                            <img src="{{ $team->logo_url }}" alt="{{ $team->team_name }}" width="20" height="14" loading="lazy" decoding="async" class="icc-rank-flag" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
+                                            <span class="icc-rank-name">{{ strtoupper($team->team_name) }}</span>
                                         </div>
-                                        <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff); margin-left: 10px;">
-                                            {{ $team->rating ?: $team->points }}
-                                        </div>
+                                        <div class="icc-rank-val">{{ $team->rating ?: $team->points }}</div>
                                     </div>
                                 @empty
                                     <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
-
-                            <!-- Footer Link -->
-                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
-                                <a href="{{ route('rankings', ['category' => 'teams', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
-                                    FULL RANKINGS &rsaquo;
-                                </a>
+                            <div class="icc-rank-footer">
+                                <a href="{{ route('rankings', ['category' => 'teams', 'format' => $fmtKey, 'gender' => 'men']) }}">FULL RANKINGS &rsaquo;</a>
                             </div>
                         </div>
                     @endforeach
@@ -1094,7 +1074,7 @@
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
+                <div class="icc-rank-grid">
                     @php
                         $battingFormats = [
                             'TEST' => ['title' => 'TEST - BATTING RANKINGS'],
@@ -1104,46 +1084,27 @@
                     @endphp
 
                     @foreach($battingFormats as $fmtKey => $fmtMeta)
-                        @php
-                            $fmtPlayers = $iccRankings['batting'][$fmtKey] ?? collect();
-                            $topPlayer = $fmtPlayers->first();
-                        @endphp
-                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                            <div style="height: 2px; background: #38bdf8;"></div>
-                            
-                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
-                                {{ $fmtMeta['title'] }}
-                            </div>
-
-                            <div style="flex: 1; display: flex; flex-direction: column;">
+                        @php $fmtPlayers = $iccRankings['batting'][$fmtKey] ?? collect(); @endphp
+                        <div class="icc-rank-card">
+                            <div class="icc-rank-accent"></div>
+                            <div class="icc-rank-header">{{ $fmtMeta['title'] }}</div>
+                            <div class="icc-rank-list">
                                 @forelse($fmtPlayers->take(5) as $player)
-                                    @php
-                                        $isRankOne = $loop->first;
-                                    @endphp
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '9px 14px' : '8px 14px' }}; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); {{ $isRankOne ? 'background: rgba(56, 189, 248, 0.04);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.06))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(56, 189, 248, 0.04)' : 'none' }}';">
-                                        
-                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $isRankOne ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
-                                                    {{ sprintf('%02d', $player->current_rank) }}
-                                                </span>
-                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $isRankOne ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
+                                    @php $isRankOne = $loop->first; @endphp
+                                    <div class="icc-rank-row {{ $isRankOne ? 'rank-1' : '' }}">
+                                        <div class="icc-rank-left">
+                                            <div class="icc-rank-badge">
+                                                <span class="icc-rank-num">{{ sprintf('%02d', $player->current_rank) }}</span>
+                                                <span class="icc-rank-dot"></span>
                                             </div>
-                                            <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" style="width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ $player->player_name }}
-                                            </span>
+                                            <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" width="20" height="14" loading="lazy" decoding="async" class="icc-rank-flag" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
+                                            <span class="icc-rank-name">{{ $player->player_name }}</span>
                                         </div>
-
-                                        <!-- Rating + Rank 1 Image Cutout -->
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff);">
-                                                {{ $player->rating }}
-                                            </div>
-
+                                        <div class="icc-rank-right">
+                                            <div class="icc-rank-val">{{ $player->rating }}</div>
                                             @if($isRankOne)
-                                                <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #0b1120; border: 1.5px solid #38bdf8; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
+                                                <div class="icc-rank-avatar">
+                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" width="36" height="36" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
                                                 </div>
                                             @endif
                                         </div>
@@ -1152,11 +1113,8 @@
                                     <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
-
-                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
-                                <a href="{{ route('rankings', ['category' => 'batting', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
-                                    FULL RANKINGS &rsaquo;
-                                </a>
+                            <div class="icc-rank-footer">
+                                <a href="{{ route('rankings', ['category' => 'batting', 'format' => $fmtKey, 'gender' => 'men']) }}">FULL RANKINGS &rsaquo;</a>
                             </div>
                         </div>
                     @endforeach
@@ -1174,7 +1132,7 @@
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
+                <div class="icc-rank-grid">
                     @php
                         $bowlingFormats = [
                             'TEST' => ['title' => 'TEST - BOWLING RANKINGS'],
@@ -1184,43 +1142,27 @@
                     @endphp
 
                     @foreach($bowlingFormats as $fmtKey => $fmtMeta)
-                        @php
-                            $fmtPlayers = $iccRankings['bowling'][$fmtKey] ?? collect();
-                            $topPlayer = $fmtPlayers->first();
-                        @endphp
-                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                            <div style="height: 2px; background: #38bdf8;"></div>
-                            
-                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
-                                {{ $fmtMeta['title'] }}
-                            </div>
-
-                            <div style="flex: 1; display: flex; flex-direction: column;">
+                        @php $fmtPlayers = $iccRankings['bowling'][$fmtKey] ?? collect(); @endphp
+                        <div class="icc-rank-card">
+                            <div class="icc-rank-accent"></div>
+                            <div class="icc-rank-header">{{ $fmtMeta['title'] }}</div>
+                            <div class="icc-rank-list">
                                 @forelse($fmtPlayers->take(5) as $player)
-                                    @php
-                                        $isRankOne = $loop->first;
-                                    @endphp
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '9px 14px' : '8px 14px' }}; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); {{ $isRankOne ? 'background: rgba(56, 189, 248, 0.04);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.06))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(56, 189, 248, 0.04)' : 'none' }}';">
-                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $isRankOne ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
-                                                    {{ sprintf('%02d', $player->current_rank) }}
-                                                </span>
-                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $isRankOne ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
+                                    @php $isRankOne = $loop->first; @endphp
+                                    <div class="icc-rank-row {{ $isRankOne ? 'rank-1' : '' }}">
+                                        <div class="icc-rank-left">
+                                            <div class="icc-rank-badge">
+                                                <span class="icc-rank-num">{{ sprintf('%02d', $player->current_rank) }}</span>
+                                                <span class="icc-rank-dot"></span>
                                             </div>
-                                            <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" style="width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ $player->player_name }}
-                                            </span>
+                                            <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" width="20" height="14" loading="lazy" decoding="async" class="icc-rank-flag" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
+                                            <span class="icc-rank-name">{{ $player->player_name }}</span>
                                         </div>
-
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff);">
-                                                {{ $player->rating }}
-                                            </div>
+                                        <div class="icc-rank-right">
+                                            <div class="icc-rank-val">{{ $player->rating }}</div>
                                             @if($isRankOne)
-                                                <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #0b1120; border: 1.5px solid #38bdf8; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
+                                                <div class="icc-rank-avatar">
+                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" width="36" height="36" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
                                                 </div>
                                             @endif
                                         </div>
@@ -1229,11 +1171,8 @@
                                     <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
-
-                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
-                                <a href="{{ route('rankings', ['category' => 'bowling', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
-                                    FULL RANKINGS &rsaquo;
-                                </a>
+                            <div class="icc-rank-footer">
+                                <a href="{{ route('rankings', ['category' => 'bowling', 'format' => $fmtKey, 'gender' => 'men']) }}">FULL RANKINGS &rsaquo;</a>
                             </div>
                         </div>
                     @endforeach
@@ -1251,7 +1190,7 @@
                     </a>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
+                <div class="icc-rank-grid">
                     @php
                         $allRounderFormats = [
                             'TEST' => ['title' => 'TEST - ALL-ROUNDER RANKINGS'],
@@ -1261,43 +1200,27 @@
                     @endphp
 
                     @foreach($allRounderFormats as $fmtKey => $fmtMeta)
-                        @php
-                            $fmtPlayers = $iccRankings['all_rounder'][$fmtKey] ?? collect();
-                            $topPlayer = $fmtPlayers->first();
-                        @endphp
-                        <div style="background: var(--bg-card, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 14px rgba(0,0,0,0.25);">
-                            <div style="height: 2px; background: #38bdf8;"></div>
-                            
-                            <div style="padding: 9px 14px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); font-weight: 800; font-size: 0.74rem; color: var(--text-muted, #94a3b8); letter-spacing: 0.06em; text-transform: uppercase; background: var(--bg-card-secondary, #0f172a);">
-                                {{ $fmtMeta['title'] }}
-                            </div>
-
-                            <div style="flex: 1; display: flex; flex-direction: column;">
+                        @php $fmtPlayers = $iccRankings['all_rounder'][$fmtKey] ?? collect(); @endphp
+                        <div class="icc-rank-card">
+                            <div class="icc-rank-accent"></div>
+                            <div class="icc-rank-header">{{ $fmtMeta['title'] }}</div>
+                            <div class="icc-rank-list">
                                 @forelse($fmtPlayers->take(5) as $player)
-                                    @php
-                                        $isRankOne = $loop->first;
-                                    @endphp
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: {{ $isRankOne ? '9px 14px' : '8px 14px' }}; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); {{ $isRankOne ? 'background: rgba(56, 189, 248, 0.04);' : '' }} transition: background 0.15s;" onmouseover="this.style.background='var(--bg-card-hover, rgba(56,189,248,0.06))';" onmouseout="this.style.background='{{ $isRankOne ? 'rgba(56, 189, 248, 0.04)' : 'none' }}';">
-                                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                            <div style="display: flex; align-items: center; gap: 5px; width: 30px; flex-shrink: 0;">
-                                                <span style="font-weight: 900; font-size: 0.85rem; color: {{ $isRankOne ? '#38bdf8' : 'var(--text-main, #ffffff)' }};">
-                                                    {{ sprintf('%02d', $player->current_rank) }}
-                                                </span>
-                                                <span style="display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: {{ $isRankOne ? '#38bdf8' : 'var(--text-dim, #64748b)' }};"></span>
+                                    @php $isRankOne = $loop->first; @endphp
+                                    <div class="icc-rank-row {{ $isRankOne ? 'rank-1' : '' }}">
+                                        <div class="icc-rank-left">
+                                            <div class="icc-rank-badge">
+                                                <span class="icc-rank-num">{{ sprintf('%02d', $player->current_rank) }}</span>
+                                                <span class="icc-rank-dot"></span>
                                             </div>
-                                            <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" style="width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0;" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
-                                            <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ $player->player_name }}
-                                            </span>
+                                            <img src="{{ $player->country_flag }}" alt="{{ $player->country }}" width="20" height="14" loading="lazy" decoding="async" class="icc-rank-flag" onerror="this.onerror=null; this.src='https://flagcdn.com/w80/in.png';">
+                                            <span class="icc-rank-name">{{ $player->player_name }}</span>
                                         </div>
-
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <div style="font-weight: 900; font-size: 0.88rem; color: var(--text-main, #ffffff);">
-                                                {{ $player->rating }}
-                                            </div>
+                                        <div class="icc-rank-right">
+                                            <div class="icc-rank-val">{{ $player->rating }}</div>
                                             @if($isRankOne)
-                                                <div style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #0b1120; border: 1.5px solid #38bdf8; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
+                                                <div class="icc-rank-avatar">
+                                                    <img src="{{ $player->photo_url }}" alt="{{ $player->player_name }}" width="36" height="36" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($player->player_name) }}&background=0b1120&color=38bdf8&bold=true&size=128&rounded=true';">
                                                 </div>
                                             @endif
                                         </div>
@@ -1306,11 +1229,8 @@
                                     <div style="padding: 16px 14px; text-align: center; color: var(--text-dim, #64748b); font-size: 0.8rem;">No ranking data recorded.</div>
                                 @endforelse
                             </div>
-
-                            <div style="padding: 9px 14px; text-align: center; background: var(--bg-card-secondary, #0f172a); border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));">
-                                <a href="{{ route('rankings', ['category' => 'all_rounder', 'format' => $fmtKey, 'gender' => 'men']) }}" style="font-size: 0.74rem; font-weight: 800; color: #38bdf8; text-decoration: none; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
-                                    FULL RANKINGS &rsaquo;
-                                </a>
+                            <div class="icc-rank-footer">
+                                <a href="{{ route('rankings', ['category' => 'all_rounder', 'format' => $fmtKey, 'gender' => 'men']) }}">FULL RANKINGS &rsaquo;</a>
                             </div>
                         </div>
                     @endforeach
@@ -1339,7 +1259,7 @@
                         <a href="{{ $term->url }}" style="text-decoration: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(56, 189, 248, 0.4)'; this.style.background='var(--bg-card-hover)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-card)';">
                             <!-- Poster Image or Letter Badge -->
                             @if(!empty($term->poster_image))
-                                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <img src="{{ $term->poster_image }}" alt="{{ $term->term }}" width="44" height="44" loading="lazy" decoding="async" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-color, #334155);" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div style="display: none; width: 36px; height: 36px; border-radius: 6px; background: rgba(37, 99, 235, 0.15); color: #38bdf8; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; flex-shrink: 0;">
                                     {{ strtoupper($term->letter ?: substr($term->term, 0, 1)) }}
                                 </div>

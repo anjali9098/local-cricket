@@ -16,6 +16,8 @@ use App\Models\Player;
 use App\Models\Venue;
 use App\Models\WebStory;
 use App\Models\GlossaryTerm;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -23,17 +25,21 @@ class HomeController extends Controller
     {
         $todayDate = \Carbon\Carbon::today()->toDateString();
 
-        $allApprovedMatches = CricketMatch::approved()
-            ->has('team1')->has('team2')
-            ->with(['team1', 'team2', 'venue', 'tournament'])
-            ->where(function($q) {
-                $q->whereNull('tournament_id')
-                  ->orWhereHas('tournament', function($tq) {
-                      $tq->where('is_approved', true);
-                  });
-            })
-            ->orderBy('id', 'desc')
-            ->get();
+        // 1. Live & Upcoming Matches (Cached for 45 seconds so live updates stay fast and avoid query spikes)
+        $allApprovedMatches = Cache::remember('home_approved_matches_v4', 45, function() {
+            return CricketMatch::approved()
+                ->has('team1')->has('team2')
+                ->with(['team1', 'team2', 'venue', 'tournament'])
+                ->where(function($q) {
+                    $q->whereNull('tournament_id')
+                      ->orWhereHas('tournament', function($tq) {
+                          $tq->where('is_approved', true);
+                      });
+                })
+                ->orderBy('id', 'desc')
+                ->take(20)
+                ->get();
+        });
 
         // 1. Live Matches (Active live matches playing right now or today)
         $liveMatches = $allApprovedMatches->filter(function($m) {
@@ -48,270 +54,293 @@ class HomeController extends Controller
         // Top carousel: strictly LIVE matches first, followed by UPCOMING matches (no completed matches)
         $allMatches = $liveMatches->merge($upcomingMatches);
 
-        // Fetch all approved tournaments with teams and recent matches
-        $allTournaments = Tournament::with([
-                'matches' => function($q) {
-                    $q->has('team1')->has('team2')->orderBy('id', 'desc')->take(3);
-                },
-                'matches.team1', 'matches.team2', 'teams'
-            ])
-            ->where(function($q) { $q->whereNull('is_approved')->orWhere('is_approved', true); })
-            ->where(function($q) { $q->whereNull('is_enabled')->orWhere('is_enabled', true); })
-            ->orderBy('id', 'desc')
-            ->get();
+        // 2. Series & Tournaments (Cached for 120 seconds)
+        $seriesData = Cache::remember('home_series_data_v3', 120, function() {
+            $allTournaments = Tournament::with([
+                    'matches' => function($q) {
+                        $q->has('team1')->has('team2')->orderBy('id', 'desc')->take(3);
+                    },
+                    'matches.team1', 'matches.team2', 'teams'
+                ])
+                ->where(function($q) { $q->whereNull('is_approved')->orWhere('is_approved', true); })
+                ->where(function($q) { $q->whereNull('is_enabled')->orWhere('is_enabled', true); })
+                ->orderBy('id', 'desc')
+                ->take(24)
+                ->get();
 
-        $liveSeries      = collect();
-        $ongoingSeries   = collect();
-        $upcomingSeries  = collect();
-        $completedSeries = collect();
-        $localSeries     = collect();
+            $liveSeries      = collect();
+            $ongoingSeries   = collect();
+            $upcomingSeries  = collect();
+            $completedSeries = collect();
+            $localSeries     = collect();
 
-        foreach ($allTournaments as $tournament) {
-            // Check if local grassroots tournament - always include in localSeries tab
-            if (strtoupper($tournament->series_type ?? '') === 'LOCAL' || strtolower($tournament->category ?? '') === 'local') {
-                $localSeries->push($tournament);
+            foreach ($allTournaments as $tournament) {
+                if (strtoupper($tournament->series_type ?? '') === 'LOCAL' || strtolower($tournament->category ?? '') === 'local') {
+                    $localSeries->push($tournament);
+                }
+
+                $matchStatuses = $tournament->matches->map(fn($m) => strtolower($m->effective_status ?? $m->status ?? ''))->toArray();
+                $tStatus = strtolower($tournament->status ?? 'upcoming');
+
+                if ($tStatus === 'live' || in_array('live', $matchStatuses)) {
+                    $liveSeries->push($tournament);
+                    $ongoingSeries->push($tournament);
+                } elseif ($tStatus === 'completed' || (!empty($matchStatuses) && count(array_filter($matchStatuses, fn($s) => $s === 'completed')) === count($matchStatuses))) {
+                    $completedSeries->push($tournament);
+                } elseif ($tStatus === 'ongoing' || (!empty($matchStatuses) && in_array('completed', $matchStatuses))) {
+                    $ongoingSeries->push($tournament);
+                } else {
+                    $upcomingSeries->push($tournament);
+                }
             }
 
-            $matchStatuses = $tournament->matches->map(fn($m) => strtolower($m->effective_status ?? $m->status ?? ''))->toArray();
-            $tStatus = strtolower($tournament->status ?? 'upcoming');
+            return compact('liveSeries', 'ongoingSeries', 'upcomingSeries', 'completedSeries', 'localSeries');
+        });
 
-            // 1. Live: Has active live match or tournament explicitly marked live
-            if ($tStatus === 'live' || in_array('live', $matchStatuses)) {
-                $liveSeries->push($tournament);
-                $ongoingSeries->push($tournament); // Live tournaments are also ongoing!
-            }
-            // 2. Completed: Tournament marked completed or all matches completed
-            elseif ($tStatus === 'completed' || (!empty($matchStatuses) && count(array_filter($matchStatuses, fn($s) => $s === 'completed')) === count($matchStatuses))) {
-                $completedSeries->push($tournament);
-            }
-            // 3. Ongoing: Tournament explicitly marked ongoing, or has completed matches with more to play
-            elseif ($tStatus === 'ongoing' || (!empty($matchStatuses) && in_array('completed', $matchStatuses))) {
-                $ongoingSeries->push($tournament);
-            }
-            // 4. Upcoming: Tournament upcoming, draft, published, or all matches scheduled
-            else {
-                $upcomingSeries->push($tournament);
-            }
-        }
+        $liveSeries      = $seriesData['liveSeries'];
+        $ongoingSeries   = $seriesData['ongoingSeries'];
+        $upcomingSeries  = $seriesData['upcomingSeries'];
+        $completedSeries = $seriesData['completedSeries'];
+        $localSeries     = $seriesData['localSeries'];
 
-        $predictions = Prediction::where('tag', '!=', 'MATCH PREVIEW')->orderBy('id', 'desc')->take(6)->get();
-        $fantasyTips = FantasyTip::orderBy('id', 'desc')->take(6)->get();
-        $matchPreviews = Prediction::where('tag', 'MATCH PREVIEW')->orderBy('id', 'desc')->take(6)->get();
-        $articles = Article::orderBy('id', 'desc')->take(6)->get();
-        $newsList = News::orderBy('id', 'desc')->take(6)->get();
+        // 3. Editorial & Static Content (Cached for 5 minutes)
+        $editorial = Cache::remember('home_editorial_v3', 300, function() {
+            return [
+                'predictions'   => Prediction::where('tag', '!=', 'MATCH PREVIEW')->orderBy('id', 'desc')->take(6)->get(),
+                'fantasyTips'   => FantasyTip::orderBy('id', 'desc')->take(6)->get(),
+                'matchPreviews' => Prediction::where('tag', 'MATCH PREVIEW')->orderBy('id', 'desc')->take(6)->get(),
+                'articles'      => Article::orderBy('id', 'desc')->take(6)->get(),
+                'newsList'      => News::orderBy('id', 'desc')->take(6)->get(),
+                'popularTeams'  => Team::orderBy('id', 'desc')->take(6)->get(),
+                'teamRankings'  => TeamRanking::orderBy('rank_num', 'asc')->take(10)->get(),
+                'venues'        => Venue::orderBy('id', 'desc')->take(6)->get(),
+                'webStories'    => WebStory::where(function($q) {
+                    $q->whereNull('is_enabled')->orWhere('is_enabled', true);
+                })->orderBy('id', 'desc')->take(6)->get(),
+                'glossaryTerms' => GlossaryTerm::orderBy('id', 'desc')->take(6)->get(),
+            ];
+        });
 
-        // 6 Latest Popular Teams for Homepage
-        $popularTeams = Team::orderBy('id', 'desc')->take(6)->get();
+        $predictions   = $editorial['predictions'];
+        $fantasyTips   = $editorial['fantasyTips'];
+        $matchPreviews = $editorial['matchPreviews'];
+        $articles      = $editorial['articles'];
+        $newsList      = $editorial['newsList'];
+        $popularTeams  = $editorial['popularTeams'];
+        $teamRankings  = $editorial['teamRankings'];
+        $venues        = $editorial['venues'];
+        $webStories    = $editorial['webStories'];
+        $glossaryTerms = $editorial['glossaryTerms'];
 
-        $teamRankings = TeamRanking::orderBy('rank_num', 'asc')->take(10)->get();
+        // 4. ICC Multi-format Rankings for Homepage (Cached for 30 minutes, eliminates 12 DB queries!)
+        $iccRankings = Cache::remember('home_icc_rankings_v3', 1800, function() {
+            return [
+                'teams' => [
+                    'TEST' => TeamRanking::where('gender', 'men')->where('format', 'TEST')->orderBy('rank_num')->take(5)->get(),
+                    'ODI'  => TeamRanking::where('gender', 'men')->where('format', 'ODI')->orderBy('rank_num')->take(5)->get(),
+                    'T20'  => TeamRanking::where('gender', 'men')->where('format', 'T20')->orderBy('rank_num')->take(5)->get(),
+                ],
+                'batting' => [
+                    'TEST' => IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                    'ODI'  => IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                    'T20'  => IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                ],
+                'bowling' => [
+                    'TEST' => IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                    'ODI'  => IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                    'T20'  => IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                ],
+                'all_rounder' => [
+                    'TEST' => IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                    'ODI'  => IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                    'T20'  => IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
+                ],
+            ];
+        });
 
-        // ICC Multi-format Rankings for Homepage Widget
-        $iccRankings = [
-            'teams' => [
-                'TEST' => TeamRanking::where('gender', 'men')->where('format', 'TEST')->orderBy('rank_num')->take(5)->get(),
-                'ODI' => TeamRanking::where('gender', 'men')->where('format', 'ODI')->orderBy('rank_num')->take(5)->get(),
-                'T20' => TeamRanking::where('gender', 'men')->where('format', 'T20')->orderBy('rank_num')->take(5)->get(),
-            ],
-            'batting' => [
-                'TEST' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-                'ODI' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-                'T20' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'batting')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-            ],
-            'bowling' => [
-                'TEST' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-                'ODI' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-                'T20' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'bowling')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-            ],
-            'all_rounder' => [
-                'TEST' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'TEST')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-                'ODI' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'ODI')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-                'T20' => \App\Models\IccPlayerRanking::where('gender', 'men')->where('category', 'all_rounder')->where('format', 'T20')->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')->take(5)->get(),
-            ],
-        ];
-
-        // 100% Dynamic Real Batting Rankings from match batting scores
-        $battingRankings = \Illuminate\Support\Facades\DB::table('player_batting_stats')
-            ->select('player_name', \Illuminate\Support\Facades\DB::raw('SUM(runs) as stat_value'))
-            ->groupBy('player_name')
-            ->orderByDesc('stat_value')
-            ->take(10)
-            ->get()
-            ->map(function($item, $index) {
-                $item->rank_num = $index + 1;
-                $cleanName = preg_replace('/[^A-Za-z]/', '', $item->player_name);
-                $item->badge_text = strtoupper(substr($cleanName, 0, 3));
-                return $item;
-            });
-
-        if ($battingRankings->isEmpty()) {
-            $battingRankings = \App\Models\IccPlayerRanking::where('category', 'batting')
-                ->whereNotNull('current_rank')
-                ->where('current_rank', '!=', '--')
-                ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+        // 5. Dynamic Batting, Bowling Rankings & Points Table (Cached for 10 minutes)
+        $statsAndPoints = Cache::remember('home_stats_and_points_v3', 600, function() {
+            // Batting Rankings
+            $battingRankings = DB::table('player_batting_stats')
+                ->select('player_name', DB::raw('SUM(runs) as stat_value'))
+                ->groupBy('player_name')
+                ->orderByDesc('stat_value')
                 ->take(10)
                 ->get()
-                ->map(function($r, $idx) {
-                    return (object)[
-                        'rank_num' => $idx + 1,
-                        'player_name' => $r->player_name,
-                        'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
-                        'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
-                    ];
+                ->map(function($item, $index) {
+                    $item->rank_num = $index + 1;
+                    $cleanName = preg_replace('/[^A-Za-z]/', '', $item->player_name);
+                    $item->badge_text = strtoupper(substr($cleanName, 0, 3));
+                    return $item;
                 });
-        }
 
-        // 100% Dynamic Real Bowling Rankings from match bowling scores
-        $bowlingRankings = \Illuminate\Support\Facades\DB::table('player_bowling_stats')
-            ->select('player_name', \Illuminate\Support\Facades\DB::raw('SUM(wickets) as stat_value'), \Illuminate\Support\Facades\DB::raw('SUM(runs) as runs_conceded'))
-            ->groupBy('player_name')
-            ->orderByDesc('stat_value')
-            ->orderBy('runs_conceded', 'asc')
-            ->take(10)
-            ->get()
-            ->map(function($item, $index) {
-                $item->rank_num = $index + 1;
-                $cleanName = preg_replace('/[^A-Za-z]/', '', $item->player_name);
-                $item->badge_text = strtoupper(substr($cleanName, 0, 3));
-                return $item;
-            });
-
-        if ($bowlingRankings->isEmpty()) {
-            $bowlingRankings = \App\Models\IccPlayerRanking::where('category', 'bowling')
-                ->whereNotNull('current_rank')
-                ->where('current_rank', '!=', '--')
-                ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
-                ->take(10)
-                ->get()
-                ->map(function($r, $idx) {
-                    return (object)[
-                        'rank_num' => $idx + 1,
-                        'player_name' => $r->player_name,
-                        'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
-                        'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
-                    ];
-                });
-        }
-
-        // 100% Dynamic Real Points Table from active tournament & matches
-        $activeTournament = Tournament::whereHas('teams')
-            ->whereHas('matches')
-            ->get()
-            ->sortByDesc(function($t) {
-                $completed = $t->matches->filter(fn($m) => in_array($m->status, ['completed', 'live']))->count();
-                return ($completed * 100) + $t->teams->count();
-            })
-            ->first();
-
-        if (!$activeTournament) {
-            $activeTournament = Tournament::whereHas('teams')->first() ?? Tournament::first();
-        }
-
-        $pointsTable = collect();
-        if ($activeTournament) {
-            $tournamentMatches = CricketMatch::where('tournament_id', $activeTournament->id)->get();
-            $teamIds = $activeTournament->teams()->pluck('teams.id')->toArray();
-            foreach ($tournamentMatches as $tm) {
-                if ($tm->team1_id && !in_array($tm->team1_id, $teamIds)) $teamIds[] = $tm->team1_id;
-                if ($tm->team2_id && !in_array($tm->team2_id, $teamIds)) $teamIds[] = $tm->team2_id;
+            if ($battingRankings->isEmpty()) {
+                $battingRankings = IccPlayerRanking::where('category', 'batting')
+                    ->whereNotNull('current_rank')
+                    ->where('current_rank', '!=', '--')
+                    ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+                    ->take(10)
+                    ->get()
+                    ->map(function($r, $idx) {
+                        return (object)[
+                            'rank_num' => $idx + 1,
+                            'player_name' => $r->player_name,
+                            'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
+                            'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
+                        ];
+                    });
             }
 
-            $tournamentTeams = Team::whereIn('id', $teamIds)->get();
-            foreach ($tournamentTeams as $team) {
-                $played = 0;
-                $won = 0;
-                $lost = 0;
-                $points = 0;
+            // Bowling Rankings
+            $bowlingRankings = DB::table('player_bowling_stats')
+                ->select('player_name', DB::raw('SUM(wickets) as stat_value'), DB::raw('SUM(runs) as runs_conceded'))
+                ->groupBy('player_name')
+                ->orderByDesc('stat_value')
+                ->orderBy('runs_conceded', 'asc')
+                ->take(10)
+                ->get()
+                ->map(function($item, $index) {
+                    $item->rank_num = $index + 1;
+                    $cleanName = preg_replace('/[^A-Za-z]/', '', $item->player_name);
+                    $item->badge_text = strtoupper(substr($cleanName, 0, 3));
+                    return $item;
+                });
 
+            if ($bowlingRankings->isEmpty()) {
+                $bowlingRankings = IccPlayerRanking::where('category', 'bowling')
+                    ->whereNotNull('current_rank')
+                    ->where('current_rank', '!=', '--')
+                    ->orderByRaw('CAST(current_rank AS UNSIGNED) ASC')
+                    ->take(10)
+                    ->get()
+                    ->map(function($r, $idx) {
+                        return (object)[
+                            'rank_num' => $idx + 1,
+                            'player_name' => $r->player_name,
+                            'badge_text' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $r->country ?: $r->player_name), 0, 3)),
+                            'stat_value' => $r->best_rank && $r->best_rank !== '--' ? 'Best #' . $r->best_rank : '--',
+                        ];
+                    });
+            }
+
+            // Points Table
+            $activeTournament = Tournament::whereHas('teams')
+                ->whereHas('matches')
+                ->take(10)
+                ->get()
+                ->sortByDesc(function($t) {
+                    $completed = $t->matches->filter(fn($m) => in_array($m->status, ['completed', 'live']))->count();
+                    return ($completed * 100) + $t->teams->count();
+                })
+                ->first();
+
+            if (!$activeTournament) {
+                $activeTournament = Tournament::whereHas('teams')->first() ?? Tournament::first();
+            }
+
+            $pointsTable = collect();
+            if ($activeTournament) {
+                $tournamentMatches = CricketMatch::where('tournament_id', $activeTournament->id)->get();
+                $teamIds = $activeTournament->teams()->pluck('teams.id')->toArray();
                 foreach ($tournamentMatches as $tm) {
-                    if ($tm->team1_id == $team->id || $tm->team2_id == $team->id) {
-                        $status = strtolower($tm->effective_status ?? $tm->status ?? '');
-                        if (in_array($status, ['completed', 'live'])) {
-                            $played++;
-                        }
-                        if ($status === 'completed') {
-                            $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($tm->team1_score ?? '0'))[0] ?? '0');
-                            $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($tm->team2_score ?? '0'))[0] ?? '0');
+                    if ($tm->team1_id && !in_array($tm->team1_id, $teamIds)) $teamIds[] = $tm->team1_id;
+                    if ($tm->team2_id && !in_array($tm->team2_id, $teamIds)) $teamIds[] = $tm->team2_id;
+                }
 
-                            $winnerId = null;
-                            if ($s1 > $s2) {
-                                $winnerId = $tm->team1_id;
-                            } elseif ($s2 > $s1) {
-                                $winnerId = $tm->team2_id;
+                $tournamentTeams = Team::whereIn('id', $teamIds)->get();
+                foreach ($tournamentTeams as $team) {
+                    $played = 0;
+                    $won = 0;
+                    $lost = 0;
+                    $points = 0;
+
+                    foreach ($tournamentMatches as $tm) {
+                        if ($tm->team1_id == $team->id || $tm->team2_id == $team->id) {
+                            $status = strtolower($tm->effective_status ?? $tm->status ?? '');
+                            if (in_array($status, ['completed', 'live'])) {
+                                $played++;
                             }
+                            if ($status === 'completed') {
+                                $s1 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($tm->team1_score ?? '0'))[0] ?? '0');
+                                $s2 = (int) preg_replace('/[^0-9]/', '', explode('/', (string)($tm->team2_score ?? '0'))[0] ?? '0');
 
-                            if ($winnerId && $winnerId == $team->id) {
-                                $won++;
-                                $points += 2;
-                            } elseif ($winnerId && $winnerId != $team->id) {
-                                $lost++;
-                            } elseif ($s1 > 0 && $s1 === $s2) {
-                                $points += 1;
+                                $winnerId = null;
+                                if ($s1 > $s2) {
+                                    $winnerId = $tm->team1_id;
+                                } elseif ($s2 > $s1) {
+                                    $winnerId = $tm->team2_id;
+                                }
+
+                                if ($winnerId && $winnerId == $team->id) {
+                                    $won++;
+                                    $points += 2;
+                                } elseif ($winnerId && $winnerId != $team->id) {
+                                    $lost++;
+                                } elseif ($s1 > 0 && $s1 === $s2) {
+                                    $points += 1;
+                                }
                             }
                         }
                     }
+
+                    $teamCode = $team->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $team->name), 0, 3));
+                    $pointsTable->push((object)[
+                        'team_code' => $teamCode,
+                        'team_name' => $team->name,
+                        'played' => $played,
+                        'won' => $won,
+                        'lost' => $lost,
+                        'points' => $points,
+                        'tournament_name' => $activeTournament->name
+                    ]);
                 }
 
-                $teamCode = $team->short_name ?: strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $team->name), 0, 3));
-                $pointsTable->push((object)[
-                    'team_code' => $teamCode,
-                    'team_name' => $team->name,
-                    'played' => $played,
-                    'won' => $won,
-                    'lost' => $lost,
-                    'points' => $points,
-                    'tournament_name' => $activeTournament->name
-                ]);
+                $pointsTable = $pointsTable->sortByDesc('points')->values();
             }
 
-            $pointsTable = $pointsTable->sortByDesc('points')->values();
-        }
+            return compact('battingRankings', 'bowlingRankings', 'pointsTable');
+        });
 
-        if ($pointsTable->isEmpty()) {
-            $pointsTable = PointsTable::orderBy('points', 'desc')->orderBy('won', 'desc')->take(6)->get();
-        }
+        $battingRankings = $statsAndPoints['battingRankings'];
+        $bowlingRankings = $statsAndPoints['bowlingRankings'];
+        $pointsTable     = $statsAndPoints['pointsTable'];
 
-        // Real Player Birthdays from DB (Only players with explicit Date of Birth set)
-        $today = \Carbon\Carbon::today();
-        $playerBirthdays = Player::whereNotNull('date_of_birth')
-            ->with('team')
-            ->get()
-            ->map(function($player) use ($today) {
-                try {
-                    $dob = \Carbon\Carbon::parse($player->date_of_birth);
-                } catch (\Exception $e) {
-                    return null;
-                }
-                $thisYearBirthday = \Carbon\Carbon::create($today->year, $dob->month, $dob->day)->startOfDay();
-                if ($thisYearBirthday->isPast() && !$thisYearBirthday->isToday()) {
-                    $nextBirthday = \Carbon\Carbon::create($today->year + 1, $dob->month, $dob->day)->startOfDay();
-                } else {
-                    $nextBirthday = $thisYearBirthday;
-                }
-                $daysLeft = (int)ceil($today->diffInDays($nextBirthday, false));
-                if ($daysLeft < 0) $daysLeft = 0;
+        // 6. Real Player Birthdays (Cached for 1 hour)
+        $playerBirthdays = Cache::remember('home_player_birthdays_' . $todayDate, 3600, function() {
+            $today = \Carbon\Carbon::today();
+            return Player::whereNotNull('date_of_birth')
+                ->with('team')
+                ->take(120)
+                ->get()
+                ->map(function($player) use ($today) {
+                    try {
+                        $dob = \Carbon\Carbon::parse($player->date_of_birth);
+                    } catch (\Exception $e) {
+                        return null;
+                    }
+                    $thisYearBirthday = \Carbon\Carbon::create($today->year, $dob->month, $dob->day)->startOfDay();
+                    if ($thisYearBirthday->isPast() && !$thisYearBirthday->isToday()) {
+                        $nextBirthday = \Carbon\Carbon::create($today->year + 1, $dob->month, $dob->day)->startOfDay();
+                    } else {
+                        $nextBirthday = $thisYearBirthday;
+                    }
+                    $daysLeft = (int)ceil($today->diffInDays($nextBirthday, false));
+                    if ($daysLeft < 0) $daysLeft = 0;
 
-                $player->days_until_birthday = $daysLeft;
-                $player->is_today_birthday = $today->isSameDay($thisYearBirthday);
-                $player->current_age = $dob->age;
-                $player->turning_age = $player->is_today_birthday ? $dob->age : $dob->age + 1;
-                $player->formatted_dob = $dob->format('d M Y');
-                $player->birthday_date_text = $dob->format('d M');
-                return $player;
-            })->filter()->sortBy('days_until_birthday')->values()->take(6);
+                    $player->days_until_birthday = $daysLeft;
+                    $player->is_today_birthday = $today->isSameDay($thisYearBirthday);
+                    $player->current_age = $dob->age;
+                    $player->turning_age = $player->is_today_birthday ? $dob->age : $dob->age + 1;
+                    $player->formatted_dob = $dob->format('d M Y');
+                    $player->birthday_date_text = $dob->format('d M');
+                    return $player;
+                })->filter()->sortBy('days_until_birthday')->values()->take(6);
+        });
 
-        // 6 Latest Popular Players for Homepage
-        $popularPlayers = Player::with('team')->orderByRaw("CASE WHEN is_popular = 1 THEN 1 ELSE 2 END")->orderBy('id', 'desc')->take(6)->get();
-
-        // 6 Latest Venues for Homepage
-        $venues = Venue::orderBy('id', 'desc')->take(6)->get();
-
-        // 6 Latest Web Stories for Homepage
-        $webStories = WebStory::where(function($q) {
-            $q->whereNull('is_enabled')->orWhere('is_enabled', true);
-        })->orderBy('id', 'desc')->take(6)->get();
-
-        // 6 Latest Glossary Terms for Homepage
-        $glossaryTerms = GlossaryTerm::orderBy('id', 'desc')->take(6)->get();
+        // 7. Popular Players (Cached for 10 minutes)
+        $popularPlayers = Cache::remember('home_popular_players_v3', 600, function() {
+            return Player::with('team')->orderByRaw("CASE WHEN is_popular = 1 THEN 1 ELSE 2 END")->orderBy('id', 'desc')->take(6)->get();
+        });
 
         return view('home', compact(
             'allMatches',

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        $middleware->append(\App\Http\Middleware\GzipEncodeResponse::class);
         $middleware->alias([
             'superadmin' => \App\Http\Middleware\IsSuperAdmin::class,
             'localadmin' => \App\Http\Middleware\IsLocalAdmin::class,
@@ -69,4 +70,11 @@ return Application::configure(basePath: dirname(__DIR__))
             return null;
         });
     })->create();
+
+$storagePath = env('LARAVEL_STORAGE_PATH') ?: ($_ENV['LARAVEL_STORAGE_PATH'] ?? ($_SERVER['LARAVEL_STORAGE_PATH'] ?? null));
+if ($storagePath) {
+    $app->useStoragePath($storagePath);
+}
+
+return $app;
 

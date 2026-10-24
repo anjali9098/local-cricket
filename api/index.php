@@ -144,9 +144,10 @@ if (empty($_ENV['CACHE_STORE']) && empty($_SERVER['CACHE_STORE'])) {
     $_SERVER['CACHE_STORE'] = 'array';
 }
 if (empty($_ENV['SESSION_DRIVER']) && empty($_SERVER['SESSION_DRIVER'])) {
-    putenv('SESSION_DRIVER=database');
-    $_ENV['SESSION_DRIVER'] = 'database';
-    $_SERVER['SESSION_DRIVER'] = 'database';
+    $driver = getenv('SESSION_DRIVER') ?: 'cookie';
+    putenv("SESSION_DRIVER={$driver}");
+    $_ENV['SESSION_DRIVER'] = $driver;
+    $_SERVER['SESSION_DRIVER'] = $driver;
 }
 if (empty($_ENV['SESSION_SECURE_COOKIE']) && empty($_SERVER['SESSION_SECURE_COOKIE'])) {
     putenv('SESSION_SECURE_COOKIE=true');

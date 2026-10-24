@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('pageTitle', $pageTitle ?? 'CricketKaScore — Live Scores, Series & Local Cricket')</title>
 
+
     <!-- Core SEO Meta Tags -->
     <meta name="description" content="@yield('meta_description', 'Live cricket scores, ball-by-ball commentary, today match predictions, fantasy cricket tips, match previews, upcoming series schedules, player stats, and grassroots local cricket on CricketKaScore.')">
     <meta name="keywords" content="@yield('meta_keywords', 'CricketKaScore, live cricket score, today match prediction, fantasy cricket tips, dream11 prediction, match preview, cricket series, local cricket score, player stats, live cricket updates, cricket news, cricket tournaments')">
@@ -57,36 +58,24 @@
     </script>
     @yield('additional_schema')
 
-    <!-- Favicon Icon -->
+    <!-- Favicon Icon (Optimized) -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/favicon.png') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+
+    <!-- DNS Prefetch & Preconnect for Fast Connection Setup -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Tailwind CSS (Full Responsive & Utility System) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            corePlugins: {
-                container: false
-            },
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'cricket-dark': '#000000',
-                        'cricket-card': '#0d1117',
-                        'cricket-card-hover': '#161b22',
-                        'cricket-border': '#30363d',
-                        'cricket-blue': '#2563eb',
-                        'cricket-sky': '#38bdf8',
-                        'cricket-green': '#22c55e',
-                    }
-                }
-            }
-        }
-    </script>
+
+    <!-- Preload Critical Above-The-Fold Logo Image -->
+    <link rel="preload" as="image" href="{{ asset('images/logo.webp') }}" type="image/webp" fetchpriority="high">
+
+    <!-- Fonts: Core weights with font-display:swap for instant text rendering -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap"></noscript>
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ file_exists(public_path('assets/css/style.css')) ? filemtime(public_path('assets/css/style.css')) : '1.1' }}">
     <script>
         if (localStorage.getItem('theme') === 'light') {
             document.documentElement.classList.add('light-theme');
@@ -99,9 +88,12 @@
     <!-- Main Lovable Navbar -->
     <nav class="main-navbar">
         <div class="navbar-container">
-            <!-- Logo -->
+            <!-- Logo with WebP Modern Format -->
             <a href="{{ route('home') }}" class="brand-logo" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
-                <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" class="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg bg-white p-0.5 shadow-sm">
+                <picture>
+                    <source srcset="{{ asset('images/logo.webp') }}" type="image/webp">
+                    <img src="{{ asset('images/logo.png') }}" alt="CricketKaScore" width="36" height="36" fetchpriority="high" decoding="async" class="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg bg-white p-0.5 shadow-sm">
+                </picture>
                 <div class="brand-text font-black text-base sm:text-lg tracking-tight" style="color: var(--text-main);">CRICKET<span style="color: #38bdf8;">KASCORE</span></div>
             </a>
 
@@ -786,6 +778,13 @@
                 left: pillLeft - (containerWidth / 2) + (pillWidth / 2),
                 behavior: 'smooth'
             });
+        }
+
+        // Clean InfinityFree temporary anti-bot ?i=1 parameter from URL bar
+        if (window.location.search.includes('i=')) {
+            const cleanUrl = new URL(window.location);
+            cleanUrl.searchParams.delete('i');
+            window.history.replaceState({}, document.title, cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : '') + cleanUrl.hash);
         }
     });
     </script>
