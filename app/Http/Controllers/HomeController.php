@@ -23,6 +23,15 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $isGuest = !auth()->check();
+        $cacheKey = 'home_page_full_html_cache_v2';
+        if ($isGuest && Cache::has($cacheKey)) {
+            $cachedHtml = Cache::get($cacheKey);
+            if (!empty($cachedHtml)) {
+                return response($cachedHtml);
+            }
+        }
+
         $todayDate = \Carbon\Carbon::today()->toDateString();
 
         // 1. Live & Upcoming Matches (Cached for 45 seconds so live updates stay fast and avoid query spikes)
@@ -342,7 +351,7 @@ class HomeController extends Controller
             return Player::with('team')->orderByRaw("CASE WHEN is_popular = 1 THEN 1 ELSE 2 END")->orderBy('id', 'desc')->take(6)->get();
         });
 
-        return view('home', compact(
+        $view = view('home', compact(
             'allMatches',
             'liveSeries',
             'ongoingSeries',
@@ -366,5 +375,13 @@ class HomeController extends Controller
             'glossaryTerms',
             'iccRankings'
         ));
+
+        if ($isGuest) {
+            $rendered = $view->render();
+            Cache::put($cacheKey, $rendered, 60);
+            return response($rendered);
+        }
+
+        return $view;
     }
 }

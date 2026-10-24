@@ -75,7 +75,7 @@
     <!-- Fonts: Core weights with font-display:swap for instant text rendering -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap"></noscript>
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ file_exists(public_path('assets/css/style.css')) ? filemtime(public_path('assets/css/style.css')) : '1.1' }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.min.css') }}?v={{ file_exists(public_path('assets/css/style.min.css')) ? filemtime(public_path('assets/css/style.min.css')) : '1.2' }}">
     <script>
         if (localStorage.getItem('theme') === 'light') {
             document.documentElement.classList.add('light-theme');
